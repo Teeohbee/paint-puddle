@@ -4,6 +4,9 @@ extends RefCounted
 ## the given size around the centre.
 
 static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: float, colour: Color) -> void:
+	if kind.begins_with("text:"):
+		draw_big_text(canvas, kind.trim_prefix("text:"), centre, size, colour)
+		return
 	match kind:
 		"play", "resume": draw_play(canvas, centre, size, colour)
 		"options": draw_cog(canvas, centre, size, colour)
@@ -20,6 +23,14 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"jump": draw_jump_arc(canvas, centre, size, colour)
 		"reset": draw_bin(canvas, centre, size, colour)
 		"controller": draw_controller(canvas, centre, size, colour)
+
+
+## Big chunky text in place of a picture, e.g. a level number.
+static func draw_big_text(canvas: CanvasItem, text: String, centre: Vector2, size: float, colour: Color) -> void:
+	var font: Font = canvas.get_tree().root.theme.default_font
+	var font_size: int = int(size * 1.3)
+	var width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	canvas.draw_string(font, centre + Vector2(-width / 2.0, font_size * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, colour)
 
 
 static func draw_play(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
