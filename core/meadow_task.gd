@@ -19,11 +19,14 @@ var target: String = ""
 
 var letters_done: int = 0
 var collected: int = 0
+## What the task was made from, so a fresh copy can be made to play it again.
+var source: Dictionary = {}
 
 
 ## Returns null (and warns) for a task that's missing something or makes no sense.
 static func from_dictionary(details: Dictionary) -> MeadowTask:
 	var task: MeadowTask = MeadowTask.new()
+	task.source = details
 	task.type = str(details.get("type", ""))
 	task.text = str(details.get("text", ""))
 	task.paint = str(details.get("paint", ""))
@@ -76,6 +79,11 @@ static func load_list(path: String) -> Array[MeadowTask]:
 			if task != null:
 				tasks.append(task)
 	return tasks
+
+
+## The same task with nothing done yet.
+func fresh_copy() -> MeadowTask:
+	return from_dictionary(source)
 
 
 ## What to write on the stones this task puts in the grass.

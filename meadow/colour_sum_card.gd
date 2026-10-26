@@ -5,7 +5,7 @@ extends Control
 
 const CARD_SIZE: Vector2 = Vector2(820, 190)
 const SECONDS_SHOWN: float = 2.8
-const SHOWN_Y: float = 24.0
+const SHOWN_Y: float = 160.0
 const HIDDEN_Y: float = -230.0
 
 var first_paint: String = "red"
