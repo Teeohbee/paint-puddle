@@ -7,6 +7,9 @@ signal bumped_into_something
 
 var mover: TopDownMover = TopDownMover.new()
 var was_moving: bool = false
+## Which paint the blob is wearing - see PaintMixing.
+var paint_name: String = "clean"
+var colour_tween: Tween
 
 @onready var look: PaintBlobLook = $Look
 
@@ -14,6 +17,17 @@ var was_moving: bool = false
 func _ready() -> void:
 	motion_mode = MOTION_MODE_FLOATING
 	wall_min_slide_angle = 0.0
+	look.paint_colour = PaintMixing.colour_of(paint_name)
+
+
+## Changes the blob's paint with a quick blend and a big wobble.
+func change_paint(new_paint_name: String) -> void:
+	paint_name = new_paint_name
+	if colour_tween != null:
+		colour_tween.kill()
+	colour_tween = create_tween()
+	colour_tween.tween_property(look, "paint_colour", PaintMixing.colour_of(new_paint_name), 0.3)
+	look.squash_stretch.kick(Vector2(-12, 12))
 
 
 func _physics_process(delta: float) -> void:
