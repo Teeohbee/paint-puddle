@@ -10,11 +10,13 @@ const RADIUS: float = 46.0
 
 var paint_name: String = "red"
 var is_filled: bool = false
+var magnet_radius: float = RADIUS + 50.0
 var wobble_tween: Tween
 var hint_pulse: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("magnets")
 	var shape: CircleShape2D = CircleShape2D.new()
 	shape.radius = RADIUS * 0.5
 	var collision: CollisionShape2D = CollisionShape2D.new()

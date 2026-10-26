@@ -5,6 +5,9 @@ extends CharacterBody2D
 
 signal bumped_into_something
 
+const MAGNET_PULL_RATE: float = 1600.0
+const MAGNET_TOP_SPEED: float = 240.0
+
 var mover: TopDownMover = TopDownMover.new()
 var was_moving: bool = false
 ## Which paint the blob is wearing - see PaintMixing.
@@ -32,13 +35,36 @@ func change_paint(new_paint_name: String) -> void:
 
 func _physics_process(delta: float) -> void:
 	var input_direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = mover.next_velocity(velocity, input_direction, delta)
+	var magnet: Node2D = nearby_magnet() if input_direction == Vector2.ZERO else null
+	if magnet != null:
+		pull_towards(magnet, delta)
+	else:
+		velocity = mover.next_velocity(velocity, input_direction, delta)
 	var speed_before_moving: float = velocity.length()
 	move_and_slide()
 	react_to_bumps(speed_before_moving)
 	react_to_starting_and_stopping(input_direction)
 	if input_direction != Vector2.ZERO:
 		look.look_direction = look.look_direction.lerp(input_direction.normalized(), 12.0 * delta).normalized()
+
+
+## When the D-pad is let go near a puddle, pot or fountain, the blob drifts
+## gently onto it, so stopping in the right place is easy.
+func nearby_magnet() -> Node2D:
+	var nearest_magnet: Node2D = null
+	var nearest_distance: float = INF
+	for magnet in get_tree().get_nodes_in_group("magnets"):
+		var distance: float = global_position.distance_to(magnet.global_position)
+		if distance < magnet.magnet_radius and distance < nearest_distance:
+			nearest_magnet = magnet
+			nearest_distance = distance
+	return nearest_magnet
+
+
+func pull_towards(magnet: Node2D, delta: float) -> void:
+	var to_magnet: Vector2 = magnet.global_position - global_position
+	var wanted_velocity: Vector2 = (to_magnet * 5.0).limit_length(MAGNET_TOP_SPEED)
+	velocity = velocity.move_toward(wanted_velocity, MAGNET_PULL_RATE * delta)
 
 
 func react_to_bumps(speed_before_moving: float) -> void:

@@ -9,12 +9,15 @@ const RADIUS: float = 78.0
 
 @export var paint_name: String = "red"
 
+## Pull the blob gently onto the puddle when it stops nearby.
+var magnet_radius: float = RADIUS + 70.0
 var edge_wobbles: Array[float] = []
 var ripple_age: float = 99.0
 var wobble_time: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("magnets")
 	var shape: CircleShape2D = CircleShape2D.new()
 	shape.radius = RADIUS * 0.45
 	var collision: CollisionShape2D = CollisionShape2D.new()

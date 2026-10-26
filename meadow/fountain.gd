@@ -6,11 +6,13 @@ signal blob_entered
 
 const POOL_RADIUS: float = 80.0
 
+var magnet_radius: float = POOL_RADIUS + 60.0
 var spray_time: float = 0.0
 var splash_age: float = 99.0
 
 
 func _ready() -> void:
+	add_to_group("magnets")
 	var shape: CircleShape2D = CircleShape2D.new()
 	shape.radius = POOL_RADIUS * 0.45
 	var collision: CollisionShape2D = CollisionShape2D.new()
