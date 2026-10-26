@@ -15,6 +15,8 @@ var blob: MeadowBlob
 
 
 func _ready() -> void:
+	Music.play_track("meadow")
+	add_to_group("gameplay")
 	add_child(MeadowGround.new())
 	var trail: PaintTrail = PaintTrail.new()
 	add_child(trail)
@@ -32,5 +34,9 @@ func _ready() -> void:
 	blob.position = Vector2(960, 540)
 	things_on_the_grass.add_child(blob)
 	trail.follow(blob)
+	blob.bumped_into_something.connect(func(): Sound.play("bump"))
 	add_child(Hedge.new())
 	add_child(CloudShadows.new())
+	var pause_menu: PauseMenu = PauseMenu.new()
+	pause_menu.name = "PauseMenu"
+	add_child(pause_menu)

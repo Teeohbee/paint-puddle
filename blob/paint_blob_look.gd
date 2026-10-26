@@ -9,13 +9,15 @@ const EYE_SPACING: float = 15.0
 const EYE_RADIUS: float = 11.0
 const PUPIL_RADIUS: float = 6.0
 
-@export var paint_colour: Color = Color(1.0, 0.36, 0.43):
+@export var paint_colour: Color = PaintColours.RED:
 	set(new_colour):
 		paint_colour = new_colour
 		queue_redraw()
 
 ## Which way the eyes look, and which way the squash-stretch points.
 var look_direction: Vector2 = Vector2.DOWN
+## Off for things that hop, which squash up and down whichever way they look.
+var stretch_follows_look: bool = true
 var squash_stretch: SquashStretchSpring = SquashStretchSpring.new()
 
 var wobble_time: float = 0.0
@@ -42,7 +44,7 @@ func update_blink(delta: float) -> void:
 
 func _draw() -> void:
 	draw_shadow()
-	var stretch_angle: float = look_direction.angle()
+	var stretch_angle: float = look_direction.angle() if stretch_follows_look else -PI / 2.0
 	# The squash-stretch runs along the direction of travel
 	draw_set_transform(Vector2.ZERO, stretch_angle, squash_stretch.scale)
 	draw_colored_polygon(body_outline_points(BODY_RADIUS + 4.0, -stretch_angle), paint_colour.darkened(0.35))
@@ -85,11 +87,11 @@ func draw_face() -> void:
 		var eye_centre: Vector2 = Vector2(side * EYE_SPACING, -6.0) + face_offset
 		if is_blinking:
 			draw_line(eye_centre - Vector2(EYE_RADIUS * 0.8, 0), eye_centre + Vector2(EYE_RADIUS * 0.8, 0),
-				Color(0.17, 0.13, 0.25), 3.0, true)
+				PaintColours.INK, 3.0, true)
 			continue
 		draw_circle(eye_centre, EYE_RADIUS, Color.WHITE)
 		var pupil_centre: Vector2 = eye_centre + look_direction.limit_length(1.0) * 3.5
-		draw_circle(pupil_centre, PUPIL_RADIUS, Color(0.17, 0.13, 0.25))
+		draw_circle(pupil_centre, PUPIL_RADIUS, PaintColours.INK)
 		draw_circle(pupil_centre + Vector2(-2, -2), 2.0, Color.WHITE)
 	var mouth_centre: Vector2 = Vector2(0, 10) + face_offset
-	draw_arc(mouth_centre, 7.0, 0.35, PI - 0.35, 12, Color(0.17, 0.13, 0.25), 3.0, true)
+	draw_arc(mouth_centre, 7.0, 0.35, PI - 0.35, 12, PaintColours.INK, 3.0, true)
