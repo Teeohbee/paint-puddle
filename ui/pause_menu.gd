@@ -94,11 +94,11 @@ func open() -> void:
 	Music.duck(true)
 	Sound.play("pop", 0.0, 0.8)
 	blur_material.set_shader_parameter("amount", 0.0)
-	create_tween().tween_method(func(amount): blur_material.set_shader_parameter("amount", amount), 0.0, 1.0, 0.25)
+	create_tween().set_ignore_time_scale(true).tween_method(func(amount): blur_material.set_shader_parameter("amount", amount), 0.0, 1.0, 0.25)
 	tiles_holder.scale = Vector2(0.85, 0.85)
 	tiles_holder.pivot_offset = Vector2(960, 540)
 	tiles_holder.modulate.a = 0.0
-	var pop_in: Tween = create_tween().set_parallel()
+	var pop_in: Tween = create_tween().set_parallel().set_ignore_time_scale(true)
 	pop_in.tween_property(tiles_holder, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	pop_in.tween_property(tiles_holder, "modulate:a", 1.0, 0.2)
 	tiles_holder.set_process(true)

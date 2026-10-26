@@ -65,7 +65,7 @@ func on_focus_exited() -> void:
 func on_pressed() -> void:
 	if is_locked:
 		Sound.play("locked", 0.0)
-		var wobble: Tween = create_tween()
+		var wobble: Tween = create_tween().set_ignore_time_scale(true)
 		for swing in [0.12, -0.1, 0.07, -0.04, 0.0]:
 			wobble.tween_property(self, "rotation", swing, 0.06)
 		return
@@ -78,7 +78,8 @@ func on_pressed() -> void:
 func tween_scale_to(target_scale: Vector2, seconds: float) -> void:
 	if scale_tween != null:
 		scale_tween.kill()
-	scale_tween = create_tween()
+	# Menus move at full speed even when the grown-ups have slowed the game down
+	scale_tween = create_tween().set_ignore_time_scale(true)
 	scale_tween.tween_property(self, "scale", target_scale, seconds).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
