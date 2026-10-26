@@ -95,6 +95,12 @@ func build_sounds() -> void:
 		Synth.add_note(chime, note_index * 0.08, Synth.note_frequency(chime_notes[note_index]), 0.8, "bell", 0.25)
 	sounds["chime"] = Synth.to_stream(chime)
 
+	var wash: PackedFloat32Array = Synth.empty_buffer(0.6)
+	Synth.add_squelch(wash, 0.0, 0.55, 0.22)
+	for bubble_index in 5:
+		Synth.add_slide(wash, 0.05 + bubble_index * 0.09, 500 + bubble_index * 120, 1100 + bubble_index * 150, 0.08, 0.2)
+	sounds["wash"] = Synth.to_stream(wash)
+
 	var wobble: PackedFloat32Array = Synth.empty_buffer(0.3)
 	Synth.add_slide(wobble, 0.0, 420, 380, 0.12, 0.3)
 	Synth.add_slide(wobble, 0.12, 400, 350, 0.15, 0.3)
