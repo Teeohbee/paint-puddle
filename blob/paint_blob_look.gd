@@ -16,6 +16,8 @@ const PUPIL_RADIUS: float = 6.0
 
 ## Which way the eyes look, and which way the squash-stretch points.
 var look_direction: Vector2 = Vector2.DOWN
+## Off for things that hop, which squash up and down whichever way they look.
+var stretch_follows_look: bool = true
 var squash_stretch: SquashStretchSpring = SquashStretchSpring.new()
 
 var wobble_time: float = 0.0
@@ -42,7 +44,7 @@ func update_blink(delta: float) -> void:
 
 func _draw() -> void:
 	draw_shadow()
-	var stretch_angle: float = look_direction.angle()
+	var stretch_angle: float = look_direction.angle() if stretch_follows_look else -PI / 2.0
 	# The squash-stretch runs along the direction of travel
 	draw_set_transform(Vector2.ZERO, stretch_angle, squash_stretch.scale)
 	draw_colored_polygon(body_outline_points(BODY_RADIUS + 4.0, -stretch_angle), paint_colour.darkened(0.35))

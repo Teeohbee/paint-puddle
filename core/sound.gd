@@ -24,11 +24,11 @@ func _ready() -> void:
 		players.append(player)
 
 
-func play(sound_name: String, pitch_wobble: float = 0.04) -> void:
+func play(sound_name: String, pitch_wobble: float = 0.04, base_pitch: float = 1.0) -> void:
 	var player: AudioStreamPlayer = players[next_player_index]
 	next_player_index = (next_player_index + 1) % players.size()
 	player.stream = sounds[sound_name]
-	player.pitch_scale = 1.0 + randf_range(-pitch_wobble, pitch_wobble)
+	player.pitch_scale = base_pitch + randf_range(-pitch_wobble, pitch_wobble)
 	player.play()
 
 
