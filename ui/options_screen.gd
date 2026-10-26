@@ -17,6 +17,7 @@ var reset_confirm_seconds_left: float = 0.0
 
 
 func _ready() -> void:
+	Music.play_track("title")
 	add_child(MenuBackdrop.new())
 	make_heading("Options", 60)
 	rows = VBoxContainer.new()

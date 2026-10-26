@@ -4,6 +4,7 @@ extends MenuScreen
 
 
 func _ready() -> void:
+	Music.play_track("title")
 	add_child(MenuBackdrop.new())
 	var logo: RainbowLogo = RainbowLogo.new()
 	logo.position = Vector2(960, 330)

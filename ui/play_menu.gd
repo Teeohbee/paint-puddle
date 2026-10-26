@@ -3,6 +3,7 @@ extends MenuScreen
 
 
 func _ready() -> void:
+	Music.play_track("title")
 	add_child(MenuBackdrop.new())
 	make_heading("Where shall we play?", 150)
 	var row: HBoxContainer = make_tile_row(360)

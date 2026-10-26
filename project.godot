@@ -21,6 +21,7 @@ boot_splash/show_image=false
 
 GameSettings="*res://core/game_settings.gd"
 Sound="*res://core/sound.gd"
+Music="*res://core/music.gd"
 SceneManager="*res://core/scene_manager.gd"
 
 [display]

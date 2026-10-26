@@ -15,6 +15,7 @@ var blob: MeadowBlob
 
 
 func _ready() -> void:
+	Music.play_track("meadow")
 	add_to_group("gameplay")
 	add_child(MeadowGround.new())
 	var trail: PaintTrail = PaintTrail.new()
