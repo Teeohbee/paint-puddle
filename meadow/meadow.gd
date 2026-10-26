@@ -15,6 +15,7 @@ var blob: MeadowBlob
 
 
 func _ready() -> void:
+	add_to_group("gameplay")
 	add_child(MeadowGround.new())
 	var trail: PaintTrail = PaintTrail.new()
 	add_child(trail)

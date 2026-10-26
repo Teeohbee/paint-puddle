@@ -9,7 +9,7 @@ const EYE_SPACING: float = 15.0
 const EYE_RADIUS: float = 11.0
 const PUPIL_RADIUS: float = 6.0
 
-@export var paint_colour: Color = Color(1.0, 0.36, 0.43):
+@export var paint_colour: Color = PaintColours.RED:
 	set(new_colour):
 		paint_colour = new_colour
 		queue_redraw()
@@ -85,11 +85,11 @@ func draw_face() -> void:
 		var eye_centre: Vector2 = Vector2(side * EYE_SPACING, -6.0) + face_offset
 		if is_blinking:
 			draw_line(eye_centre - Vector2(EYE_RADIUS * 0.8, 0), eye_centre + Vector2(EYE_RADIUS * 0.8, 0),
-				Color(0.17, 0.13, 0.25), 3.0, true)
+				PaintColours.INK, 3.0, true)
 			continue
 		draw_circle(eye_centre, EYE_RADIUS, Color.WHITE)
 		var pupil_centre: Vector2 = eye_centre + look_direction.limit_length(1.0) * 3.5
-		draw_circle(pupil_centre, PUPIL_RADIUS, Color(0.17, 0.13, 0.25))
+		draw_circle(pupil_centre, PUPIL_RADIUS, PaintColours.INK)
 		draw_circle(pupil_centre + Vector2(-2, -2), 2.0, Color.WHITE)
 	var mouth_centre: Vector2 = Vector2(0, 10) + face_offset
-	draw_arc(mouth_centre, 7.0, 0.35, PI - 0.35, 12, Color(0.17, 0.13, 0.25), 3.0, true)
+	draw_arc(mouth_centre, 7.0, 0.35, PI - 0.35, 12, PaintColours.INK, 3.0, true)
