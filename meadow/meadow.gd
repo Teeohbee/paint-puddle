@@ -7,16 +7,16 @@ const BUSH_LAYOUT: Array[Dictionary] = [
 	{"position": Vector2(250, 250), "radius": 72.0, "berries": PaintColours.RED},
 	{"position": Vector2(1670, 250), "radius": 72.0, "berries": PaintColours.PURPLE},
 	{"position": Vector2(1690, 640), "radius": 62.0, "berries": PaintColours.YELLOW},
-	{"position": Vector2(720, 975), "radius": 48.0, "berries": PaintColours.BLUE},
-	{"position": Vector2(1200, 975), "radius": 48.0, "berries": PaintColours.RED},
+	{"position": Vector2(690, 975), "radius": 48.0, "berries": PaintColours.BLUE},
+	{"position": Vector2(1230, 975), "radius": 48.0, "berries": PaintColours.RED},
 ]
 const PUDDLE_LAYOUT: Dictionary = {
 	"red": Vector2(470, 830),
-	"yellow": Vector2(960, 860),
+	"yellow": Vector2(960, 900),
 	"blue": Vector2(1450, 830),
 }
 const FOUNTAIN_POSITION: Vector2 = Vector2(240, 600)
-const RAINBOW_CENTRE: Vector2 = Vector2(960, 440)
+const RAINBOW_CENTRE: Vector2 = Vector2(960, 500)
 
 var blob: MeadowBlob
 var rainbow: RainbowBoard
@@ -24,6 +24,7 @@ var puddles: Dictionary = {}
 var fountain: Fountain
 var sum_card: ColourSumCard
 var effects_layer: Node2D
+var task_runner: TaskRunner
 var is_celebrating: bool = false
 
 
@@ -61,7 +62,7 @@ func _ready() -> void:
 		bush.berry_colour = bush_details.berries
 		things_on_the_grass.add_child(bush)
 	blob = BLOB_SCENE.instantiate()
-	blob.position = Vector2(960, 690)
+	blob.position = Vector2(960, 740)
 	things_on_the_grass.add_child(blob)
 	trail.follow(blob)
 	blob.bumped_into_something.connect(func(): Sound.play("bump"))
@@ -75,6 +76,14 @@ func _ready() -> void:
 	add_child(hud)
 	sum_card = ColourSumCard.new()
 	hud.add_child(sum_card)
+	var task_banner: TaskBanner = TaskBanner.new()
+	hud.add_child(task_banner)
+	var stones_layer: Node2D = Node2D.new()
+	stones_layer.name = "StonesAndDrops"
+	things_on_the_grass.add_sibling(stones_layer)
+	move_child(stones_layer, things_on_the_grass.get_index())
+	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
+	add_child(task_runner)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
@@ -85,6 +94,8 @@ func on_puddle_entered(puddle: PaintPuddle) -> void:
 	var paint_after: String = PaintMixing.mix(paint_before, puddle.paint_name)
 	PaintSplash.burst(effects_layer, blob.position, PaintMixing.colour_of(puddle.paint_name))
 	Sound.play("plop")
+	task_runner.handle({"kind": "visited", "target": "puddle:" + puddle.paint_name})
+	task_runner.handle({"kind": "paint_changed", "paint": paint_after})
 	if paint_after == paint_before:
 		blob.look.squash_stretch.kick(Vector2(-6, 6))
 		return
@@ -95,6 +106,7 @@ func on_puddle_entered(puddle: PaintPuddle) -> void:
 
 
 func on_fountain_entered() -> void:
+	task_runner.handle({"kind": "visited", "target": "fountain"})
 	if blob.paint_name == "clean":
 		return
 	PaintSplash.burst(effects_layer, blob.position, Color(0.85, 0.97, 1.0), 18, 600)
@@ -116,10 +128,12 @@ func on_pot_entered(pot: PaintPot) -> void:
 			stripes_painted_before += 1
 	Sound.play("pick", 0.0, 1.0 + stripes_painted_before * 0.08)
 	rainbow.paint_stripe(pot.paint_name)
+	task_runner.handle({"kind": "pot_filled", "paint": pot.paint_name})
 
 
 func celebrate() -> void:
 	is_celebrating = true
+	task_runner.handle({"kind": "rainbow_finished"})
 	Sound.play("chime", 0.0)
 	var confetti: Confetti = Confetti.new()
 	$PauseMenu.add_sibling(confetti)

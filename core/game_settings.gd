@@ -19,6 +19,7 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"hills_levels_completed": 0,
 	"rainbows_painted": 0,
 	"tasks_completed": 0,
+	"next_task_index": 0,
 }
 
 var save_file_path: String = "user://save.json"
