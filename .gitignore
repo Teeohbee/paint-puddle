@@ -1,0 +1,7 @@
+# Godot 4+ specific ignores
+.godot/
+/build/
+.nomedia
+export.cfg
+export_credentials.cfg
+.DS_Store
