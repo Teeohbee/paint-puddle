@@ -10,11 +10,11 @@ func _ready() -> void:
 	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(240, 240))
 	var meadow: MenuTile = make_tile("Meadow", "meadow", PaintColours.RED, Vector2(360, 360))
 	var hills: MenuTile = make_tile("Hills", "hills", PaintColours.BLUE, Vector2(360, 360))
-	hills.is_locked = true
 	for tile in [back, meadow, hills]:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
 	meadow.chosen.connect(func(): SceneManager.go_to("res://meadow/meadow.tscn"))
+	hills.chosen.connect(func(): SceneManager.go_to("res://ui/hills_menu.tscn"))
 	first_focus = meadow
 	meadow.grab_focus_quietly.call_deferred()
