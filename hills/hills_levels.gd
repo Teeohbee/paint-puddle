@@ -82,6 +82,55 @@ const LEVELS: Array[Dictionary] = [
 			{"kind": "flat", "length": 900},
 		],
 	},
+	{
+		"name": "Bumps", "word": "BUMPY", "paint": "red",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 350, "rise": -80},
+			{"kind": "flat", "length": 200}, {"kind": "slope", "length": 350, "rise": 80},
+			{"kind": "gap", "width": 120},
+			{"kind": "flat", "length": 250}, {"kind": "slope", "length": 350, "rise": -80},
+			{"kind": "flat", "length": 200}, {"kind": "slope", "length": 350, "rise": 80},
+			{"kind": "gap", "width": 130},
+			{"kind": "flat", "length": 250}, {"kind": "slope", "length": 350, "rise": -100},
+			{"kind": "flat", "length": 300}, {"kind": "slope", "length": 350, "rise": 100},
+			{"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 250}, {"kind": "slope", "length": 350, "rise": -80},
+			{"kind": "flat", "length": 200}, {"kind": "slope", "length": 350, "rise": 80},
+			{"kind": "flat", "length": 700},
+		],
+	},
+	{
+		"name": "Tower", "word": "CLOUD", "paint": "blue",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 220}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 220}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 400}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 220}, {"kind": "step", "rise": -60},
+			{"kind": "flat", "length": 220}, {"kind": "step", "rise": -60},
+			{"kind": "flat", "length": 500}, {"kind": "slope", "length": 500, "rise": 110},
+			{"kind": "flat", "length": 250}, {"kind": "slope", "length": 500, "rise": 110},
+			{"kind": "flat", "length": 250}, {"kind": "slope", "length": 500, "rise": 110},
+			{"kind": "flat", "length": 700},
+		],
+	},
+	{
+		# A step down just before a gap makes the far side lower, so it's an easy landing
+		"name": "Star", "word": "STAR", "paint": "yellow",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 400}, {"kind": "step", "rise": 50}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 120},
+			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -60},
+			{"kind": "flat", "length": 400}, {"kind": "step", "rise": 60}, {"kind": "gap", "width": 160},
+			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 400, "rise": -80},
+			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 300}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 400, "rise": 80},
+			{"kind": "flat", "length": 800},
+		],
+	},
 ]
 
 
