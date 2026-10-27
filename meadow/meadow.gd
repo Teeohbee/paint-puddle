@@ -83,6 +83,7 @@ func _ready() -> void:
 	things_on_the_grass.add_sibling(stones_layer)
 	move_child(stones_layer, things_on_the_grass.get_index())
 	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
+	task_runner.blob_to_keep_clear_of = blob
 	add_child(task_runner)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"

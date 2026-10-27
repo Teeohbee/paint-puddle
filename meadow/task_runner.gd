@@ -8,7 +8,8 @@ signal task_finished
 
 const TASKS_PATH: String = "res://data/tasks.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
-const DISTRACTOR_DROP_COUNT: int = 2
+## Nothing new appears this close to the blob, or it would be picked for free.
+const CLEAR_DISTANCE_FROM_BLOB: float = 150.0
 ## Clear patches of grass where stones and drops can go.
 const FREE_SPOTS: Array[Vector2] = [
 	Vector2(200, 420), Vector2(1720, 450), Vector2(715, 800), Vector2(1205, 800),
@@ -24,6 +25,8 @@ var things_in_the_grass: Array[Node2D] = []
 var grass_layer: Node2D
 var effects_layer: Node2D
 var banner: TaskBanner
+## The blob, so new stones and drops keep away from it. Can be left null.
+var blob_to_keep_clear_of: Node2D
 
 
 func _init(layer_for_stones: Node2D, layer_for_effects: Node2D, task_banner: TaskBanner) -> void:
@@ -47,7 +50,7 @@ func start_task(task_index: int) -> void:
 
 
 func put_things_in_the_grass() -> void:
-	var spots: Array[Vector2] = FREE_SPOTS.duplicate()
+	var spots: Array[Vector2] = spots_away_from_the_blob()
 	spots.shuffle()
 	var delay: float = 0.4
 	for value in current_task.stone_values():
@@ -60,13 +63,23 @@ func put_things_in_the_grass() -> void:
 		delay += 0.08
 	if current_task.type == "collect":
 		var distractor_paint: String = "red" if current_task.paint != "red" else "blue"
-		for drop_index in current_task.count + DISTRACTOR_DROP_COUNT:
+		for drop_index in current_task.count + MeadowTask.DISTRACTOR_DROP_COUNT:
 			var drop: PaintDrop = PaintDrop.new()
 			drop.paint_name = current_task.paint if drop_index < current_task.count else distractor_paint
 			drop.position = spots.pop_back()
 			drop.blob_entered.connect(on_drop_entered)
 			add_to_grass(drop, delay)
 			delay += 0.08
+
+
+func spots_away_from_the_blob() -> Array[Vector2]:
+	var spots: Array[Vector2] = []
+	for spot in FREE_SPOTS:
+		var is_near_the_blob: bool = blob_to_keep_clear_of != null \
+			and spot.distance_to(blob_to_keep_clear_of.position) < CLEAR_DISTANCE_FROM_BLOB
+		if not is_near_the_blob:
+			spots.append(spot)
+	return spots
 
 
 func add_to_grass(thing: Node2D, delay: float) -> void:

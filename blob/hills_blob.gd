@@ -87,8 +87,3 @@ func react_to_landing() -> void:
 		Sound.play("plop", 0.05, 0.7)
 		landed.emit()
 	was_on_floor = on_floor_now
-
-
-## Where the cloud puts the blob back: a little way back from the edge it fell from.
-func safe_spot() -> Vector2:
-	return last_ground_position - Vector2(facing * 90.0, 30.0)

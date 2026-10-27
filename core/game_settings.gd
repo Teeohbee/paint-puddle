@@ -77,6 +77,9 @@ func load_from_disk() -> void:
 	for setting_name in SETTING_LIMITS:
 		var limits: Dictionary = SETTING_LIMITS[setting_name]
 		settings[setting_name] = clampi(settings[setting_name], limits.smallest, limits.largest)
+	# Progress only ever counts up from 0; a negative count would lock level 1
+	for progress_name in progress:
+		progress[progress_name] = maxi(progress[progress_name], 0)
 
 
 ## Only names we know about are copied, and only whole numbers.

@@ -9,13 +9,14 @@ const SECONDS_TO_CARRY: float = 1.3
 var puff_time: float = 0.0
 
 
-static func rescue(blob: HillsBlob, parent: Node) -> void:
+## safe_spot is where the blob's centre ends up.
+static func rescue(blob: HillsBlob, parent: Node, safe_spot: Vector2) -> void:
 	var cloud: RescueCloud = RescueCloud.new()
 	parent.add_child(cloud)
-	cloud.carry(blob)
+	cloud.carry(blob, safe_spot)
 
 
-func carry(blob: HillsBlob) -> void:
+func carry(blob: HillsBlob, safe_spot: Vector2) -> void:
 	blob.is_being_carried = true
 	blob.velocity = Vector2.ZERO
 	var catch_spot: Vector2 = blob.position + Vector2(0, 40)
@@ -27,7 +28,6 @@ func carry(blob: HillsBlob) -> void:
 	catching.tween_property(self, "modulate:a", 1.0, 0.2)
 	await catching.finished
 	blob.look.squash_stretch.kick(Vector2(-10, 10))
-	var safe_spot: Vector2 = blob.safe_spot()
 	var start: Vector2 = blob.position
 	var carrying: Tween = create_tween()
 	carrying.tween_method(func(how_far: float):

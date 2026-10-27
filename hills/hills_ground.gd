@@ -6,6 +6,7 @@ extends Node2D
 const START_HEIGHT: float = 760.0
 const BOTTOM: float = 1700.0
 const GRASS_THICKNESS: float = 26.0
+const SAFE_DISTANCE_FROM_EDGE: float = 120.0
 
 ## Each solid stretch of ground, as its top edge from left to right.
 var ground_tops: Array[PackedVector2Array] = []
@@ -68,6 +69,30 @@ func height_at(x: float) -> float:
 					return minf(left.y, right.y)
 				return lerpf(left.y, right.y, (x - left.x) / (right.x - left.x))
 	return INF
+
+
+## Where a rescued blob is put down: on the stretch of ground nearest x, at
+## least SAFE_DISTANCE_FROM_EDGE in from either end so it's not on a lip.
+func safe_ground_point_near(x: float) -> Vector2:
+	var nearest_top: PackedVector2Array = ground_tops[0]
+	var nearest_distance: float = INF
+	for top in ground_tops:
+		var left: float = top[0].x
+		var right: float = top[top.size() - 1].x
+		var distance: float = 0.0
+		if x < left:
+			distance = left - x
+		elif x > right:
+			distance = x - right
+		if distance < nearest_distance:
+			nearest_top = top
+			nearest_distance = distance
+	var safe_left: float = nearest_top[0].x + SAFE_DISTANCE_FROM_EDGE
+	var safe_right: float = nearest_top[nearest_top.size() - 1].x - SAFE_DISTANCE_FROM_EDGE
+	var safe_x: float = (safe_left + safe_right) / 2.0
+	if safe_left <= safe_right:
+		safe_x = clampf(x, safe_left, safe_right)
+	return Vector2(safe_x, height_at(safe_x))
 
 
 func scatter_decorations() -> void:
