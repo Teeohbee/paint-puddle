@@ -119,7 +119,9 @@ func add_camera() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if not blob.is_being_carried and blob.position.y > lowest_ground + FALL_LINE_BELOW_GROUND:
-		RescueCloud.rescue(blob, effects_layer)
+		var ground_point: Vector2 = ground.safe_ground_point_near(blob.last_ground_position.x)
+		var safe_spot: Vector2 = ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0)
+		RescueCloud.rescue(blob, effects_layer, safe_spot)
 
 
 func finish() -> void:
