@@ -8,7 +8,6 @@ signal task_finished
 
 const TASKS_PATH: String = "res://data/tasks.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
-const DISTRACTOR_DROP_COUNT: int = 2
 ## Nothing new appears this close to the blob, or it would be picked for free.
 const CLEAR_DISTANCE_FROM_BLOB: float = 150.0
 ## Clear patches of grass where stones and drops can go.
@@ -64,7 +63,7 @@ func put_things_in_the_grass() -> void:
 		delay += 0.08
 	if current_task.type == "collect":
 		var distractor_paint: String = "red" if current_task.paint != "red" else "blue"
-		for drop_index in current_task.count + DISTRACTOR_DROP_COUNT:
+		for drop_index in current_task.count + MeadowTask.DISTRACTOR_DROP_COUNT:
 			var drop: PaintDrop = PaintDrop.new()
 			drop.paint_name = current_task.paint if drop_index < current_task.count else distractor_paint
 			drop.position = spots.pop_back()

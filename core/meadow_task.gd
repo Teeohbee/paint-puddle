@@ -5,7 +5,11 @@ extends RefCounted
 ## come from data/tasks.json, which can be edited without touching code.
 
 const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow"]
-const MOST_STONES: int = 14
+## The meadow has 15 free spots and up to 2 can be too near the blob, so 13
+## stones and drops is all that's sure to fit.
+const MOST_THINGS_IN_THE_GRASS: int = 13
+## Wrong-colour drops put out alongside the right ones in a collect task.
+const DISTRACTOR_DROP_COUNT: int = 2
 
 var type: String = ""
 var text: String = ""
@@ -53,12 +57,15 @@ func problem() -> String:
 		"make", "collect":
 			if not PaintMixing.COLOURS.has(paint) or paint == "clean":
 				return "unknown paint"
-			if type == "collect" and (count < 1 or count > MOST_STONES):
-				return "count must be 1 to %d" % MOST_STONES
+			var most_drops: int = MOST_THINGS_IN_THE_GRASS - DISTRACTOR_DROP_COUNT
+			if type == "collect" and (count < 1 or count > most_drops):
+				return "count must be 1 to %d" % most_drops
 		"spell":
-			if word == "" or word.length() > MOST_STONES:
-				return "word must be 1 to %d letters" % MOST_STONES
+			if word == "" or word.length() > MOST_THINGS_IN_THE_GRASS:
+				return "word must be 1 to %d letters" % MOST_THINGS_IN_THE_GRASS
 		"sum":
+			if choices.size() > MOST_THINGS_IN_THE_GRASS:
+				return "no more than %d choices" % MOST_THINGS_IN_THE_GRASS
 			if not choices.has(answer):
 				return "the answer must be one of the choices"
 		"visit":
