@@ -118,6 +118,13 @@ func close() -> void:
 	get_viewport().gui_release_focus()
 
 
+## Home and Restart leave without closing the menu, so the music needs its
+## volume back here or it stays quiet in every scene after.
+func _exit_tree() -> void:
+	if is_open:
+		Music.duck(false)
+
+
 func on_joy_connection_changed(_device: int, connected: bool) -> void:
 	if not connected and Input.get_connected_joypads().is_empty():
 		open()
