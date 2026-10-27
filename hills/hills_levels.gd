@@ -37,6 +37,51 @@ const LEVELS: Array[Dictionary] = [
 			{"kind": "flat", "length": 800},
 		],
 	},
+	{
+		"name": "Climb", "word": "HILL", "paint": "green",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -45},
+			{"kind": "flat", "length": 260}, {"kind": "step", "rise": -45},
+			{"kind": "flat", "length": 260}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 450}, {"kind": "slope", "length": 500, "rise": 140},
+			{"kind": "flat", "length": 400}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 260}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 400, "rise": 105},
+			{"kind": "flat", "length": 700},
+		],
+	},
+	{
+		"name": "Skip", "word": "FROG", "paint": "orange",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 120},
+			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 120},
+			{"kind": "flat", "length": 350}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 150},
+			{"kind": "flat", "length": 350}, {"kind": "slope", "length": 400, "rise": 100},
+			{"kind": "flat", "length": 300}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 350}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 300}, {"kind": "gap", "width": 120},
+			{"kind": "flat", "length": 700},
+		],
+	},
+	{
+		"name": "Rainbow", "word": "RAINBOW", "paint": "purple",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 400, "rise": -90},
+			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 130},
+			{"kind": "flat", "length": 400}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 350}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 150},
+			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 500, "rise": 190},
+			{"kind": "flat", "length": 350}, {"kind": "step", "rise": -60},
+			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 160},
+			{"kind": "flat", "length": 400}, {"kind": "step", "rise": 60},
+			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 400, "rise": -80},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 120},
+			{"kind": "flat", "length": 900},
+		],
+	},
 ]
 
 
