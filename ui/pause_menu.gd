@@ -125,9 +125,16 @@ func _exit_tree() -> void:
 		Music.duck(false)
 
 
-func on_joy_connection_changed(_device: int, connected: bool) -> void:
+func on_joy_connection_changed(device: int, connected: bool) -> void:
 	if not connected and Input.get_connected_joypads().is_empty():
 		open()
+		# open() does nothing mid-wipe, so try again once the paint has gone.
+		# Hiding the tiles now would leave the next pause with only the notice.
+		if not is_open:
+			await get_tree().create_timer(SceneManager.SECONDS_TO_UNCOVER + 0.1).timeout
+			if Input.get_connected_joypads().is_empty():
+				on_joy_connection_changed(device, false)
+			return
 		tiles_holder.visible = false
 		unplugged_notice.visible = true
 	elif connected and unplugged_notice.visible:
