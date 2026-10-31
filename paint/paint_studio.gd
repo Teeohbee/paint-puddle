@@ -23,6 +23,7 @@ var fountain: Fountain
 var sponge: Sponge
 var effects_layer: Node2D
 var last_brush_position: Vector2
+var controls_hint: ControlsHint
 
 
 func _ready() -> void:
@@ -59,6 +60,12 @@ func _ready() -> void:
 	effects_layer = Node2D.new()
 	add_child(effects_layer)
 	add_child(Hedge.new())
+	var hud: CanvasLayer = CanvasLayer.new()
+	hud.layer = 10
+	add_child(hud)
+	controls_hint = ControlsHint.new()
+	controls_hint.shows_jump = false
+	hud.add_child(controls_hint)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)

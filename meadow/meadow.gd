@@ -25,6 +25,7 @@ var fountain: Fountain
 var sum_card: ColourSumCard
 var effects_layer: Node2D
 var task_runner: TaskRunner
+var controls_hint: ControlsHint
 var is_celebrating: bool = false
 
 
@@ -78,6 +79,9 @@ func _ready() -> void:
 	hud.add_child(sum_card)
 	var task_banner: TaskBanner = TaskBanner.new()
 	hud.add_child(task_banner)
+	controls_hint = ControlsHint.new()
+	controls_hint.shows_jump = false
+	hud.add_child(controls_hint)
 	var stones_layer: Node2D = Node2D.new()
 	stones_layer.name = "StonesAndDrops"
 	things_on_the_grass.add_sibling(stones_layer)
