@@ -14,6 +14,7 @@ var level: Dictionary
 var ground: HillsGround
 var blob: HillsBlob
 var word_bar: WordBar
+var controls_hint: ControlsHint
 var effects_layer: Node2D
 var lowest_ground: float = 0.0
 var is_finished: bool = false
@@ -44,6 +45,8 @@ func _ready() -> void:
 	word_bar = WordBar.new()
 	hud.add_child(word_bar)
 	word_bar.set_word(level.word)
+	controls_hint = ControlsHint.new()
+	hud.add_child(controls_hint)
 	place_balloons()
 
 	var flag: RainbowFlag = RainbowFlag.new()
