@@ -12,6 +12,7 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"options": draw_cog(canvas, centre, size, colour)
 		"quit": draw_door(canvas, centre, size, colour)
 		"meadow": draw_flower(canvas, centre, size, colour)
+		"paint": draw_brush(canvas, centre, size, colour)
 		"hills": draw_hills(canvas, centre, size, colour)
 		"restart": draw_restart(canvas, centre, size, colour)
 		"home": draw_house(canvas, centre, size, colour)
@@ -64,6 +65,19 @@ static func draw_flower(canvas: CanvasItem, centre: Vector2, size: float, colour
 			- Vector2(0, size * 0.08)
 		canvas.draw_circle(petal_centre, size * 0.16, colour)
 	canvas.draw_circle(centre - Vector2(0, size * 0.08), size * 0.12, PaintColours.YELLOW)
+
+
+static func draw_brush(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
+	var along: Vector2 = Vector2(1, -1).normalized()
+	var across: Vector2 = along.orthogonal()
+	var tip: Vector2 = centre + Vector2(-size * 0.3, size * 0.3)
+	var neck: Vector2 = tip + along * size * 0.28
+	canvas.draw_line(neck, centre + Vector2(size * 0.42, -size * 0.42), colour, size * 0.12, true)
+	canvas.draw_line(neck - along * size * 0.02, neck + along * size * 0.12, colour.darkened(0.3), size * 0.17, true)
+	canvas.draw_colored_polygon(PackedVector2Array([
+		neck + across * size * 0.1, neck - across * size * 0.1, tip - across * size * 0.03 - along * size * 0.04,
+		tip + across * size * 0.03 - along * size * 0.04]), colour)
+	canvas.draw_circle(tip + Vector2(-size * 0.04, size * 0.12), size * 0.06, colour)
 
 
 static func draw_hills(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
