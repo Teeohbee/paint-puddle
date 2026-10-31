@@ -1,28 +1,39 @@
 class_name ControlsHint
 extends Control
-## A soft reminder of the controls in the corner of the sky: the D-pad to
-## walk and the A button to jump. Each part lights up while it's pressed,
-## so it shows which thumb does what.
+## A soft reminder of the controls in the top corner: the D-pad to move and,
+## in the hills, the A button to jump. Each part lights up while it's
+## pressed, so it shows which thumb does what.
 
 const CARD_SIZE: Vector2 = Vector2(300, 120)
+const DPAD_ONLY_CARD_SIZE: Vector2 = Vector2(172, 120)
 const DPAD_CENTRE: Vector2 = Vector2(86, 60)
 const BUTTON_CENTRE: Vector2 = Vector2(220, 60)
 const ARM_LENGTH: float = 40.0
 const ARM_WIDTH: float = 34.0
 const BUTTON_RADIUS: float = 36.0
-const RESTING_COLOUR: Color = Color(1, 1, 1, 0.75)
+const RESTING_COLOUR: Color = Color(1, 1, 1, 0.85)
 const ARROW_COLOUR: Color = Color(PaintColours.INK, 0.45)
 const FADE_SPEED: float = 3.0
 
+## Set before adding: false shows all four arrows and no jump button.
+var shows_jump: bool = true
 ## How lit each part is, from 0 (resting) to 1 (pressed).
-var glow: Dictionary = {"left": 0.0, "right": 0.0, "jump": 0.0}
-var actions: Dictionary = {"left": "move_left", "right": "move_right", "jump": "act"}
+var glow: Dictionary = {}
+var actions: Dictionary = {}
 
 
 func _ready() -> void:
 	position = Vector2(24, 14)
-	size = CARD_SIZE
+	size = CARD_SIZE if shows_jump else DPAD_ONLY_CARD_SIZE
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	actions = {"left": "move_left", "right": "move_right"}
+	if shows_jump:
+		actions["jump"] = "act"
+	else:
+		actions["up"] = "move_up"
+		actions["down"] = "move_down"
+	for part in actions:
+		glow[part] = 0.0
 
 
 func _process(delta: float) -> void:
@@ -41,7 +52,8 @@ func _draw() -> void:
 	card.anti_aliasing = true
 	draw_style_box(card, Rect2(Vector2.ZERO, size))
 	draw_dpad()
-	draw_jump_button()
+	if shows_jump:
+		draw_jump_button()
 
 
 func draw_dpad() -> void:
@@ -62,7 +74,7 @@ func draw_dpad() -> void:
 		var arm_size: Vector2 = Vector2(ARM_LENGTH, ARM_WIDTH) if direction.y == 0.0 else Vector2(ARM_WIDTH, ARM_LENGTH)
 		if lit > 0.0:
 			draw_rect(Rect2(arm_centre - arm_size / 2.0, arm_size), Color(PaintColours.YELLOW, lit))
-		if arm == "up" or arm == "down":
+		if not glow.has(arm):
 			continue
 		var tip: Vector2 = arm_centre + direction * (8.0 + lit * 3.0)
 		var side: Vector2 = direction.orthogonal() * 10.0
