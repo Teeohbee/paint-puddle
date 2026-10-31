@@ -68,7 +68,7 @@ func _physics_process(_delta: float) -> void:
 	var brush_position: Vector2 = blob.position + BRUSH_OFFSET
 	var has_moved: bool = brush_position != last_brush_position
 	if has_moved and blob.paint_name != "clean":
-		canvas.paint_line(last_brush_position, brush_position, PaintMixing.colour_of(blob.paint_name))
+		canvas.paint_line(last_brush_position, brush_position, blob.paint_name)
 	last_brush_position = brush_position
 
 
