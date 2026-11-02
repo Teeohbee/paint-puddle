@@ -149,6 +149,24 @@ func draw_decoration(decoration: Dictionary) -> void:
 		"tuft":
 			for blade in [-6.0, 0.0, 6.0]:
 				draw_line(base, base + Vector2(blade, -14 + absf(blade)), scene.top_edge, 3.0, true)
+		"snow tuft":
+			for lump in [Vector3(-9, -2, 8), Vector3(0, -6, 10), Vector3(10, -1, 7)]:
+				draw_circle(base + Vector2(lump.x, lump.y), lump.z, Color(1, 1, 1))
+		"little pine":
+			var tip: Vector2 = base - Vector2(0, 40)
+			draw_line(base, base - Vector2(0, 8), Color(0.45, 0.36, 0.34), 5.0, true)
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-14, -6), base + Vector2(14, -6), tip]), scene.stalks)
+			draw_colored_polygon(PackedVector2Array([tip.lerp(base + Vector2(-14, -6), 0.35), tip.lerp(base + Vector2(14, -6), 0.35), tip]), Color(1, 1, 1))
+		"snowman":
+			var belly: Vector2 = base - Vector2(0, 14)
+			var head: Vector2 = base - Vector2(0, 36)
+			draw_circle(belly, 15, Color(1, 1, 1))
+			draw_circle(head, 10, Color(1, 1, 1))
+			draw_circle(head + Vector2(-4, -2), 1.8, PaintColours.INK)
+			draw_circle(head + Vector2(4, -2), 1.8, PaintColours.INK)
+			draw_colored_polygon(PackedVector2Array([head + Vector2(0, 0), head + Vector2(0, 4), head + Vector2(11, 2)]), PaintColours.ORANGE)
+			for button in 2:
+				draw_circle(belly + Vector2(0, -5 + button * 9), 1.8, PaintColours.INK)
 
 
 ## Moves a line of points straight down, so the grass sits on the ground's top.

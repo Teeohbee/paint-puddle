@@ -3,12 +3,17 @@ extends Node2D
 ## Sky, sun, drifting clouds and two rows of distant hills that scroll more
 ## slowly than the ground, for depth. A sea of clouds sits below the level,
 ## so a fall looks soft. Colours come from the level's scene - see HillsScenes.
+##
+## A scene can also stand trees along the near hills and send weather - snow,
+## leaves - drifting down in front of everything but the word and controls.
 
 const SCREEN_SIZE: Vector2 = Vector2(1920, 1080)
 
 var level_length: float = 4000.0
 var scene: Dictionary = HillsScenes.SCENES[HillsScenes.DEFAULT_SCENE]
 var sun_time: float = 0.0
+## Each snowflake or leaf: where it starts, how fast it falls, how big it is.
+var weather_bits: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -22,10 +27,12 @@ func _ready() -> void:
 	sky_layer.add_child(sky)
 	sky.set_process(true)
 	add_parallax_hills(0.25, scene.far_hills, 380.0, 140.0, 11)
-	add_parallax_hills(0.5, scene.near_hills, 520.0, 110.0, 23)
+	add_parallax_hills(0.5, scene.near_hills, 520.0, 110.0, 23, scene.trees)
+	if scene.weather != "":
+		add_weather()
 
 
-func add_parallax_hills(scroll_scale: float, colour: Color, top: float, height: float, seed_number: int) -> void:
+func add_parallax_hills(scroll_scale: float, colour: Color, top: float, height: float, seed_number: int, trees: String = "") -> void:
 	var parallax: Parallax2D = Parallax2D.new()
 	parallax.scroll_scale = Vector2(scroll_scale, 1.0)
 	parallax.repeat_size = Vector2(SCREEN_SIZE.x, 0)
@@ -41,12 +48,75 @@ func add_parallax_hills(scroll_scale: float, colour: Color, top: float, height: 
 		var bump_phases: Array[float] = [random.randf_range(0, TAU), random.randf_range(0, TAU)]
 		for x_step in 65:
 			var x: float = x_step * SCREEN_SIZE.x / 64.0
-			var wave: float = sin(x / SCREEN_SIZE.x * TAU * 2.0 + bump_phases[0]) * 0.6 \
-				+ sin(x / SCREEN_SIZE.x * TAU * 3.0 + bump_phases[1]) * 0.4
-			points.append(Vector2(x, top - wave * height))
+			points.append(Vector2(x, hill_top_at(x, top, height, bump_phases)))
 		points.append(Vector2(SCREEN_SIZE.x, 1700))
 		points.append(Vector2(0, 1700))
+		if trees != "":
+			# Behind the hill's edge, so they stand in it rather than on it
+			var x: float = random.randf_range(40, 160)
+			while x < SCREEN_SIZE.x - 80:
+				var size: float = random.randf_range(0.75, 1.2)
+				draw_tree(hills, trees, Vector2(x, hill_top_at(x, top, height, bump_phases) + 18), size, random)
+				x += random.randf_range(110, 260)
 		hills.draw_colored_polygon(points, colour))
+
+
+static func hill_top_at(x: float, top: float, height: float, bump_phases: Array[float]) -> float:
+	var wave: float = sin(x / SCREEN_SIZE.x * TAU * 2.0 + bump_phases[0]) * 0.6 \
+		+ sin(x / SCREEN_SIZE.x * TAU * 3.0 + bump_phases[1]) * 0.4
+	return top - wave * height
+
+
+## One tree in the distance, standing on base, scaled by size.
+func draw_tree(canvas: CanvasItem, kind: String, base: Vector2, size: float, random: RandomNumberGenerator) -> void:
+	match kind:
+		"pines":
+			var trunk: Color = Color(0.45, 0.36, 0.34)
+			var needles: Color = Color(0.32, 0.5, 0.5)
+			canvas.draw_rect(Rect2(base.x - 7 * size, base.y - 30 * size, 14 * size, 30 * size), trunk)
+			for tier in 3:
+				var tier_base: float = base.y - (24 + tier * 34) * size
+				var half_width: float = (58 - tier * 14) * size
+				var tip: Vector2 = Vector2(base.x, tier_base - 62 * size)
+				canvas.draw_colored_polygon(PackedVector2Array([Vector2(base.x - half_width, tier_base), Vector2(base.x + half_width, tier_base), tip]), needles)
+				# Snow on each tier's top
+				canvas.draw_colored_polygon(PackedVector2Array([tip.lerp(Vector2(base.x - half_width, tier_base), 0.4), tip.lerp(Vector2(base.x + half_width, tier_base), 0.4), tip]), Color(1, 1, 1))
+
+
+func add_weather() -> void:
+	var random: RandomNumberGenerator = RandomNumberGenerator.new()
+	random.seed = 5
+	for bit_index in 70:
+		weather_bits.append({
+			"start": Vector2(random.randf_range(0, SCREEN_SIZE.x), random.randf_range(0, SCREEN_SIZE.y)),
+			"fall_speed": random.randf_range(40, 95),
+			"size": random.randf_range(0.6, 1.3),
+			"phase": random.randf_range(0, TAU),
+			"tint": random.randi_range(0, 2),
+		})
+	var weather_layer: CanvasLayer = CanvasLayer.new()
+	# In front of the level, behind the word bar and controls (layer 10)
+	weather_layer.layer = 5
+	add_child(weather_layer)
+	var weather: Control = Control.new()
+	weather.set_anchors_preset(Control.PRESET_FULL_RECT)
+	weather.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	weather.draw.connect(draw_weather.bind(weather))
+	weather_layer.add_child(weather)
+
+
+func draw_weather(weather: Control) -> void:
+	# Drift against the camera a little, so the weather feels like it's in the world
+	var camera: Camera2D = get_viewport().get_camera_2d()
+	var camera_x: float = camera.get_screen_center_position().x if camera != null else 0.0
+	var wrap_size: Vector2 = SCREEN_SIZE + Vector2(80, 80)
+	for bit in weather_bits:
+		var sway: float = sin(sun_time * 0.9 + bit.phase) * 30.0
+		var x: float = fposmod(bit.start.x - camera_x * 0.6 + sway, wrap_size.x) - 40.0
+		var y: float = fposmod(bit.start.y + sun_time * bit.fall_speed, wrap_size.y) - 40.0
+		match scene.weather:
+			"snow":
+				weather.draw_circle(Vector2(x, y), 5.0 * bit.size, Color(1, 1, 1, 0.85))
 
 
 func _process(delta: float) -> void:
