@@ -22,7 +22,7 @@ func _ready() -> void:
 	level_rows.add_theme_constant_override("separation", TILE_GAP + 20)
 	row.add_child(level_rows)
 	var level_row: HBoxContainer = null
-	var tile_to_start_on: MenuTile = null
+	var level_tiles: Array[MenuTile] = []
 	for level_index in HillsLevels.level_count():
 		if level_index % LEVELS_PER_ROW == 0:
 			level_row = HBoxContainer.new()
@@ -34,8 +34,8 @@ func _ready() -> void:
 		tile.is_locked = not HillsLevels.is_unlocked(level_index)
 		tile.chosen.connect(play_level.bind(level_index))
 		level_row.add_child(tile)
-		if not tile.is_locked:
-			tile_to_start_on = tile
+		level_tiles.append(tile)
+	var tile_to_start_on: MenuTile = level_tiles[level_to_start_on()]
 	first_focus = tile_to_start_on
 	tile_to_start_on.grab_focus_quietly.call_deferred()
 
@@ -43,3 +43,14 @@ func _ready() -> void:
 func play_level(level_index: int) -> void:
 	HillsLevel.level_to_play = level_index
 	SceneManager.go_to("res://hills/hills_level.tscn")
+
+
+## The level after the one just finished, or the latest open level.
+func level_to_start_on() -> int:
+	var last_level: int = HillsLevels.level_count() - 1
+	var latest_unlocked: int = mini(GameSettings.get_progress("hills_levels_completed"), last_level)
+	var just_finished: int = HillsLevel.level_just_finished
+	HillsLevel.level_just_finished = -1
+	if just_finished < 0:
+		return latest_unlocked
+	return mini(just_finished + 1, last_level)
