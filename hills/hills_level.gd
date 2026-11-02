@@ -6,6 +6,8 @@ extends Node2D
 const HILLS_MENU: String = "res://ui/hills_menu.tscn"
 const FALL_LINE_BELOW_GROUND: float = 260.0
 const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
+## High enough to need a jump, low enough that any jump reaches it.
+const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
 
 ## Which level to play next; set by the hills menu before it opens this scene.
 static var level_to_play: int = 0
@@ -19,6 +21,8 @@ var blob: HillsBlob
 var word_bar: WordBar
 var controls_hint: ControlsHint
 var effects_layer: Node2D
+var blob_paint: String
+var colour_tween: Tween
 var lowest_ground: float = 0.0
 var is_finished: bool = false
 
@@ -60,7 +64,9 @@ func _ready() -> void:
 	blob = HillsBlob.new()
 	blob.position = Vector2(160, ground.height_at(160) - HillsBlob.BODY_RADIUS - 2)
 	add_child(blob)
-	blob.look.paint_colour = PaintMixing.colour_of(level.paint)
+	blob_paint = level.paint
+	blob.look.paint_colour = PaintMixing.colour_of(blob_paint)
+	place_paint_pot()
 	blob.landed.connect(func(): PaintSplash.burst(effects_layer, blob.position + Vector2(0, 40), Color(1, 1, 1, 0.8), 8, 220))
 	add_camera()
 	var pause_menu: PauseMenu = PauseMenu.new()
@@ -96,6 +102,26 @@ func place_balloons() -> void:
 		balloon.position = Vector2(x, ground.height_at(x) - BALLOON_HEIGHT_ABOVE_GROUND)
 		balloon.popped.connect(func(popped_balloon): word_bar.pop_letter(popped_balloon.letter_index))
 		effects_layer.add_child(balloon)
+
+
+## One pot of paint about two-thirds of the way along, up where it takes a jump.
+func place_paint_pot() -> void:
+	var x: float = nearest_ground_x(ground.level_length * 0.66)
+	var pot: PaintPot = PaintPot.new()
+	pot.paint_name = level.pickup
+	pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
+	pot.touched.connect(func(touched_pot): mix_into_blob(touched_pot.paint_name))
+	effects_layer.add_child(pot)
+
+
+func mix_into_blob(added_paint: String) -> void:
+	blob_paint = PaintMixing.mix(blob_paint, added_paint)
+	if colour_tween != null:
+		colour_tween.kill()
+	colour_tween = create_tween()
+	colour_tween.tween_property(blob.look, "paint_colour", PaintMixing.colour_of(blob_paint), 0.3)
+	FloatingText.show_at(effects_layer, blob.position - Vector2(0, 160), PaintMixing.word_for(blob_paint) + "!",
+		PaintMixing.colour_of(blob_paint), 90, 1.8, 50.0)
 
 
 ## Moves x out of a gap, and away from a step, onto plain ground.
