@@ -27,7 +27,10 @@ func _ready() -> void:
 	sky_layer.add_child(sky)
 	sky.set_process(true)
 	add_parallax_hills(0.25, scene.far_hills, 380.0, 140.0, 11)
-	add_parallax_hills(0.5, scene.near_hills, 520.0, 110.0, 23, scene.trees)
+	if scene.near_layer == "sea":
+		add_parallax_sea(0.5, scene.near_hills, 600.0)
+	else:
+		add_parallax_hills(0.5, scene.near_hills, 520.0, 110.0, 23, scene.trees)
 	if scene.weather != "":
 		add_weather()
 
@@ -59,6 +62,35 @@ func add_parallax_hills(scroll_scale: float, colour: Color, top: float, height: 
 				draw_tree(hills, trees, Vector2(x, hill_top_at(x, top, height, bump_phases) + 18), size, random)
 				x += random.randf_range(110, 260)
 		hills.draw_colored_polygon(points, colour))
+
+
+## A flat sea out to the horizon, with lighter wave lines and a sailing boat.
+func add_parallax_sea(scroll_scale: float, colour: Color, horizon: float) -> void:
+	var parallax: Parallax2D = Parallax2D.new()
+	parallax.scroll_scale = Vector2(scroll_scale, 1.0)
+	parallax.repeat_size = Vector2(SCREEN_SIZE.x, 0)
+	parallax.repeat_times = 3
+	parallax.z_index = -5
+	add_child(parallax)
+	var sea: Node2D = Node2D.new()
+	parallax.add_child(sea)
+	sea.draw.connect(func():
+		sea.draw_rect(Rect2(0, horizon, SCREEN_SIZE.x, 1700 - horizon), colour)
+		sea.draw_line(Vector2(0, horizon), Vector2(SCREEN_SIZE.x, horizon), colour.lightened(0.25), 4.0)
+		var random: RandomNumberGenerator = RandomNumberGenerator.new()
+		random.seed = 31
+		for wave_index in 26:
+			var wave_spot: Vector2 = Vector2(random.randf_range(30, SCREEN_SIZE.x - 60), random.randf_range(horizon + 30, horizon + 320))
+			sea.draw_arc(wave_spot, 14, PI + 0.5, TAU - 0.5, 8, colour.lightened(0.3), 4.0, true)
+			sea.draw_arc(wave_spot + Vector2(24, 0), 14, PI + 0.5, TAU - 0.5, 8, colour.lightened(0.3), 4.0, true)
+		draw_boat(sea, Vector2(1300, horizon + 70)))
+
+
+func draw_boat(canvas: CanvasItem, waterline: Vector2) -> void:
+	canvas.draw_colored_polygon(PackedVector2Array([waterline + Vector2(-70, -26), waterline + Vector2(70, -26), waterline + Vector2(48, 6), waterline + Vector2(-48, 6)]), PaintColours.RED)
+	canvas.draw_line(waterline + Vector2(0, -26), waterline + Vector2(0, -150), Color(0.45, 0.36, 0.34), 5.0)
+	canvas.draw_colored_polygon(PackedVector2Array([waterline + Vector2(6, -146), waterline + Vector2(6, -34), waterline + Vector2(70, -34)]), Color(1, 1, 1))
+	canvas.draw_colored_polygon(PackedVector2Array([waterline + Vector2(-6, -120), waterline + Vector2(-6, -34), waterline + Vector2(-50, -34)]), PaintColours.YELLOW)
 
 
 static func hill_top_at(x: float, top: float, height: float, bump_phases: Array[float]) -> float:
@@ -143,6 +175,14 @@ func draw_weather(weather: Control) -> void:
 		var x: float = fposmod(bit.start.x - camera_x * 0.6 + sway, wrap_size.x) - 40.0
 		var y: float = fposmod(bit.start.y + sun_time * bit.fall_speed, wrap_size.y) - 40.0
 		match scene.weather:
+			"gulls":
+				# A few birds gliding across high up
+				if bit.phase > 0.5:
+					continue
+				var gull: Vector2 = Vector2(fposmod(bit.start.x + sun_time * bit.fall_speed - camera_x * 0.3, wrap_size.x) - 40.0, 80.0 + bit.start.y * 0.3 + sin(sun_time + bit.phase * 3.0) * 12.0)
+				var flap: float = 0.35 + 0.25 * sin(sun_time * 4.0 + bit.phase * 5.0)
+				weather.draw_arc(gull + Vector2(-12, 0), 12, PI + flap, TAU - 0.2, 8, PaintColours.INK, 3.5, true)
+				weather.draw_arc(gull + Vector2(12, 0), 12, PI + 0.2, TAU - flap, 8, PaintColours.INK, 3.5, true)
 			"fireflies":
 				# Fewer of them, wandering low down rather than falling
 				if bit.tint == 0:
