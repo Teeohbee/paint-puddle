@@ -113,6 +113,25 @@ func draw_tree(canvas: CanvasItem, kind: String, base: Vector2, size: float, ran
 				canvas.draw_colored_polygon(PackedVector2Array([Vector2(base.x - half_width, tier_base), Vector2(base.x + half_width, tier_base), tip]), needles)
 				# Snow on each tier's top
 				canvas.draw_colored_polygon(PackedVector2Array([tip.lerp(Vector2(base.x - half_width, tier_base), 0.4), tip.lerp(Vector2(base.x + half_width, tier_base), 0.4), tip]), Color(1, 1, 1))
+		"palms":
+			var trunk_colour: Color = Color(0.5, 0.36, 0.24)
+			var crown: Vector2 = base + Vector2(random.randf_range(-24, 24), -170) * size
+			canvas.draw_polyline(PackedVector2Array([base, base.lerp(crown, 0.5) + Vector2(10, 0) * size, crown]), trunk_colour, 14 * size, true)
+			for frond_index in 6:
+				var frond_angle: float = PI + 0.2 + frond_index * (PI - 0.4) / 5.0
+				var frond_tip: Vector2 = crown + Vector2.from_angle(frond_angle) * 70 * size + Vector2(0, 26) * size
+				draw_leaf(canvas, crown.lerp(frond_tip, 0.5), 42 * size, frond_angle, Color(0.18, 0.46, 0.26))
+		"acacia":
+			var bark: Color = Color(0.36, 0.25, 0.2)
+			var fork: Vector2 = base + Vector2(0, -70) * size
+			canvas.draw_line(base, fork, bark, 10 * size, true)
+			canvas.draw_line(fork, fork + Vector2(-40, -44) * size, bark, 7 * size, true)
+			canvas.draw_line(fork, fork + Vector2(36, -48) * size, bark, 7 * size, true)
+			var canopy: PackedVector2Array = PackedVector2Array()
+			for point_index in 20:
+				var around: float = TAU * point_index / 20.0
+				canopy.append(fork + Vector2(0, -56) * size + Vector2(cos(around) * 110, sin(around) * 24) * size)
+			canvas.draw_colored_polygon(canopy, Color(0.42, 0.5, 0.24))
 		"autumn":
 			var leaves: Color = HillsScenes.AUTUMN_LEAVES[random.randi_range(0, HillsScenes.AUTUMN_LEAVES.size() - 1)]
 			canvas.draw_rect(Rect2(base.x - 8 * size, base.y - 70 * size, 16 * size, 70 * size), Color(0.45, 0.3, 0.22))
@@ -175,6 +194,28 @@ func draw_weather(weather: Control) -> void:
 		var x: float = fposmod(bit.start.x - camera_x * 0.6 + sway, wrap_size.x) - 40.0
 		var y: float = fposmod(bit.start.y + sun_time * bit.fall_speed, wrap_size.y) - 40.0
 		match scene.weather:
+			"vines":
+				# The first few hang from the top; two parrots fly through
+				if bit.tint == 2 and bit.phase < 1.0:
+					var parrot: Vector2 = Vector2(fposmod(bit.start.x + sun_time * 120.0 - camera_x * 0.4, wrap_size.x) - 40.0, 180.0 + bit.start.y * 0.2 + sin(sun_time * 2.0 + bit.phase) * 20.0)
+					weather.draw_circle(parrot, 14, PaintColours.RED)
+					weather.draw_circle(parrot + Vector2(14, -8), 9, PaintColours.RED)
+					weather.draw_colored_polygon(PackedVector2Array([parrot + Vector2(22, -10), parrot + Vector2(30, -6), parrot + Vector2(21, -3)]), PaintColours.YELLOW)
+					weather.draw_circle(parrot + Vector2(16, -10), 2.0, PaintColours.INK)
+					weather.draw_colored_polygon(PackedVector2Array([parrot + Vector2(-14, 0), parrot + Vector2(-34, 6), parrot + Vector2(-14, 8)]), PaintColours.BLUE)
+					var wing_lift: float = sin(sun_time * 10.0 + bit.phase) * 14.0
+					weather.draw_colored_polygon(PackedVector2Array([parrot + Vector2(-6, -2), parrot + Vector2(6, -2), parrot + Vector2(-2, -18 - wing_lift)]), PaintColours.YELLOW)
+				if bit.tint != 0 or bit.phase > 1.8:
+					continue
+				var vine_x: float = fposmod(bit.start.x - camera_x * 0.8, wrap_size.x) - 40.0
+				var vine_length: float = 90.0 + bit.start.y * 0.15
+				var vine: PackedVector2Array = PackedVector2Array()
+				for vine_step in 9:
+					var down: float = vine_length * vine_step / 8.0
+					vine.append(Vector2(vine_x + sin(down * 0.04 + sun_time * 0.8 + bit.phase) * 6.0 * vine_step / 8.0, down))
+				weather.draw_polyline(vine, Color(0.2, 0.45, 0.22), 5.0, true)
+				for leaf_step in [3, 5, 7, 8]:
+					draw_leaf(weather, vine[leaf_step] + Vector2(8 if leaf_step % 2 == 0 else -8, 0), 11.0, 0.6 if leaf_step % 2 == 0 else -0.6, Color(0.28, 0.6, 0.3))
 			"gulls":
 				# A few birds gliding across high up
 				if bit.phase > 0.5:
@@ -224,6 +265,13 @@ func draw_sky(sky: Control) -> void:
 		"moon":
 			draw_stars(sky)
 			draw_moon(sky, Vector2(1650, 170))
+		"low sun":
+			var low_sun: Vector2 = Vector2(1500, 290)
+			sky.draw_circle(low_sun, 190, Color(1, 0.8, 0.5, 0.25))
+			sky.draw_circle(low_sun, 140, Color(1.0, 0.68, 0.32))
+			sky.draw_circle(low_sun + Vector2(-34, -16), 10, PaintColours.INK)
+			sky.draw_circle(low_sun + Vector2(34, -16), 10, PaintColours.INK)
+			sky.draw_arc(low_sun + Vector2(0, 10), 30, 0.4, PI - 0.4, 12, PaintColours.INK, 6.0, true)
 	for cloud_index in 4:
 		var drift: float = fmod(sun_time * (14.0 + cloud_index * 5.0) + cloud_index * 520.0, SCREEN_SIZE.x + 400.0) - 200.0
 		var cloud_centre: Vector2 = Vector2(drift, 120 + cloud_index * 70)
