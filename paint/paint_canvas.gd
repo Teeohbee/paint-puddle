@@ -1,8 +1,11 @@
 class_name PaintCanvas
 extends Node2D
 ## The picture in paint mode. The paper is split into little squares that
-## remember which paints have touched them, so painting red across blue
-## makes purple where they cross - the same mixing as the meadow.
+## remember which paint is on them, so painting red across blue makes
+## purple where they cross - the same mixing as dipping the blob.
+##
+## A square mixes once each time the brush passes over it, like one dip in a
+## puddle: black across pink makes red, and a second pass makes dark red.
 ##
 ## Each square is one pixel of a small picture, stretched over the paper
 ## with smoothing and a soft edge so strokes look round rather than blocky.
@@ -12,12 +15,24 @@ const PICTURE_SIZE: Vector2i = Vector2i(1920, 1080)
 const CELL_SIZE: int = 4
 const DAB_RADIUS: float = 30.0
 const DAB_SPACING: float = 6.0
+## How many different paints a square can hold, one for each bit pattern.
+const BIT_PATTERNS: int = PaintMixing.PRIMARY_BITS + PaintMixing.SHADE_BITS + 1
 
 var dabs_painted: int = 0
 var columns: int = ceili(float(PICTURE_SIZE.x) / CELL_SIZE)
 var rows: int = ceili(float(PICTURE_SIZE.y) / CELL_SIZE)
-## Which paints have touched each square, as bits - see PaintMixing.
+## Which paint is on each square, as bits - see PaintMixing.
 var cells: PackedByteArray = PackedByteArray()
+## The pass that last painted each square. A pass is a run of brush lines
+## in one paint, so a square stays in the same pass while the brush is over it.
+var last_pass_painted: PackedInt32Array = PackedInt32Array()
+## Counts up by one for each brush line; a square that wasn't painted by the
+## line before this one has had the brush leave it, so it mixes again.
+var line_number: int = 0
+var last_line_paint_bits: int = 0
+## What each paint makes on top of each paint, worked out once:
+## mixed_bits_table[square bits * BIT_PATTERNS + paint bits].
+var mixed_bits_table: PackedByteArray = PackedByteArray()
 ## How much of each square is painted, from 0 to 1, for smooth edges.
 var coverage: PackedFloat32Array = PackedFloat32Array()
 var paint_names_by_bits: Array[String] = []
@@ -36,12 +51,18 @@ var wipe_tween: Tween
 func _init() -> void:
 	cells.resize(columns * rows)
 	coverage.resize(columns * rows)
+	last_pass_painted.resize(columns * rows)
+	last_pass_painted.fill(-1)
 	name_paints_by_bits()
+	mixed_bits_table.resize(BIT_PATTERNS * BIT_PATTERNS)
+	for square_bits in BIT_PATTERNS:
+		for paint_bits in BIT_PATTERNS:
+			mixed_bits_table[square_bits * BIT_PATTERNS + paint_bits] = PaintMixing.mix_bits(square_bits, paint_bits)
 
 
 func name_paints_by_bits() -> void:
 	paint_names_by_bits.clear()
-	for bits in PaintMixing.PRIMARY_BITS + PaintMixing.SHADE_BITS + 1:
+	for bits in BIT_PATTERNS:
 		paint_names_by_bits.append(PaintMixing.paint_made_of(bits, colour_set))
 
 
@@ -68,6 +89,9 @@ func _process(_delta: float) -> void:
 ## Paints a smooth line of round dabs from one point to another, mixing
 ## with whatever paint is already on the paper.
 func paint_line(from: Vector2, to: Vector2, paint_bits: int) -> void:
+	# A new paint starts a new pass, so it mixes even where the brush already is
+	line_number += 2 if paint_bits != last_line_paint_bits else 1
+	last_line_paint_bits = paint_bits
 	var points: PackedVector2Array = dab_points(from, to, DAB_SPACING)
 	for point in points:
 		dab(point, paint_bits)
@@ -88,7 +112,9 @@ func dab(centre: Vector2, paint_bits: int) -> void:
 			if cover <= 0.0:
 				continue
 			var index: int = row * columns + column
-			var mixed_bits: int = cells[index] | paint_bits
+			var is_same_pass: bool = last_pass_painted[index] >= line_number - 1
+			last_pass_painted[index] = line_number
+			var mixed_bits: int = cells[index] if is_same_pass else mixed_bits_table[cells[index] * BIT_PATTERNS + paint_bits]
 			var mixed_cover: float = maxf(coverage[index], cover)
 			if mixed_bits == cells[index] and mixed_cover == coverage[index]:
 				continue
@@ -139,6 +165,8 @@ func wipe() -> void:
 func clear_paper() -> void:
 	cells.fill(0)
 	coverage.fill(0.0)
+	# The fresh paper takes paint even where the brush is sitting
+	line_number += 2
 	if picture != null:
 		picture.fill(Color.TRANSPARENT)
 		picture_changed = true
