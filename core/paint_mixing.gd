@@ -113,15 +113,21 @@ static func bits_of(paint_name: String, colour_set: String = "paint") -> int:
 ## Adds one paint to another, as when the blob drives into a puddle: every
 ## white or black dip counts, up to one step lighter or darker.
 static func mix(current_paint: String, added_paint: String, colour_set: String = "paint") -> String:
-	var current_bits: int = bits_of(current_paint, colour_set)
-	var added_bits: int = bits_of(added_paint, colour_set)
+	var mixed_bits: int = mix_bits(bits_of(current_paint, colour_set), bits_of(added_paint, colour_set))
+	return paint_made_of(mixed_bits, colour_set)
+
+
+## The same mixing on bits. Keep the bits rather than the name when a paint
+## will be mixed again: some names stand for more than one paint, like
+## printer black, which is either black ink or all three inks together.
+static func mix_bits(current_bits: int, added_bits: int) -> int:
 	var primaries: int = (current_bits | added_bits) & PRIMARY_BITS
 	var shade: int = clampi(shade_of(current_bits) + shade_of(added_bits), -1, 1)
 	var has_any_shade: bool = (current_bits | added_bits) & SHADE_BITS != 0
 	if primaries == 0 and shade == 0 and has_any_shade:
-		return "grey"
+		return LIGHT | DARK
 	var shade_bits: int = LIGHT if shade == 1 else DARK if shade == -1 else 0
-	return paint_made_of(primaries | shade_bits, colour_set)
+	return primaries | shade_bits
 
 
 ## +1 for a light paint, -1 for a dark one, 0 otherwise.
