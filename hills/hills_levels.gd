@@ -136,7 +136,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Splash", "word": "SPLASH", "paint": "sky blue", "pickup": "yellow",
+		"name": "Splash", "word": "SPLASH", "paint": "sky blue", "pickup": "yellow", "scene": "seaside",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 130},
 			{"kind": "flat", "length": 360}, {"kind": "gap", "width": 140},

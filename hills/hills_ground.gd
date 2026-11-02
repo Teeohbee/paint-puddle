@@ -176,6 +176,24 @@ func draw_decoration(decoration: Dictionary) -> void:
 			draw_colored_polygon(PackedVector2Array([base + Vector2(-13, -12), base + Vector2(-9, -22), base + Vector2(0, -26), base + Vector2(9, -22), base + Vector2(13, -12)]), Color(0.85, 0.25, 0.22))
 			draw_circle(base + Vector2(-5, -18), 2.2, Color(1, 1, 1))
 			draw_circle(base + Vector2(5, -20), 2.0, Color(1, 1, 1))
+		"shell":
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-9, 0), base + Vector2(-8, -8), base + Vector2(0, -12), base + Vector2(8, -8), base + Vector2(9, 0)]), Color(1.0, 0.75, 0.72))
+			for rib in [-4.0, 0.0, 4.0]:
+				draw_line(base + Vector2(rib * 0.4, -1), base + Vector2(rib, -9), Color(0.92, 0.6, 0.58), 1.5, true)
+		"starfish":
+			var arms: PackedVector2Array = PackedVector2Array()
+			for point_index in 10:
+				var reach: float = 11.0 if point_index % 2 == 0 else 4.5
+				arms.append(base + Vector2(0, -9) + Vector2.from_angle(-PI / 2.0 + TAU * point_index / 10.0) * reach)
+			draw_colored_polygon(arms, PaintColours.ORANGE)
+		"dune grass":
+			for blade in [-8.0, -3.0, 3.0, 8.0]:
+				draw_line(base, base + Vector2(blade * 1.6, -24 + absf(blade)), scene.stalks, 3.0, true)
+		"bucket":
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-10, -22), base + Vector2(10, -22), base + Vector2(7, 0), base + Vector2(-7, 0)]), PaintColours.BLUE)
+			draw_arc(base + Vector2(0, -22), 10, PI, TAU, 8, Color(0.35, 0.35, 0.42), 2.0, true)
+			draw_line(base + Vector2(12, -2), base + Vector2(20, -26), Color(0.35, 0.35, 0.42), 3.0, true)
+			draw_rect(Rect2(base.x + 14, base.y - 6, 10, 6), PaintColours.YELLOW)
 		"acorn":
 			draw_circle(base + Vector2(0, -7), 6.5, Color(0.72, 0.5, 0.28))
 			draw_rect(Rect2(base.x - 7, base.y - 15, 14, 6), Color(0.45, 0.3, 0.2))
