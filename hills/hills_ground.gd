@@ -2,6 +2,7 @@ class_name HillsGround
 extends Node2D
 ## Builds the ground for a level from its pieces: solid hills with a grassy
 ## top, cut where there are gaps. Also answers "how high is the ground here?"
+## Colours and what grows on top come from the level's scene - see HillsScenes.
 
 const START_HEIGHT: float = 760.0
 const BOTTOM: float = 1700.0
@@ -12,6 +13,7 @@ const SAFE_DISTANCE_FROM_EDGE: float = 120.0
 var ground_tops: Array[PackedVector2Array] = []
 var level_length: float = 0.0
 var decorations: Array[Dictionary] = []
+var scene: Dictionary = HillsScenes.SCENES[HillsScenes.DEFAULT_SCENE]
 
 
 func build(pieces: Array, gap_scale: float) -> void:
@@ -104,10 +106,20 @@ func scatter_decorations() -> void:
 		if ground_y != INF:
 			decorations.append({
 				"position": Vector2(x, ground_y - GRASS_THICKNESS * 0.4),
-				"kind": "flower" if random.randf() < 0.35 else "tuft",
+				"kind": pick_decoration(random.randf()),
 				"colour": PaintColours.RAINBOW[random.randi_range(0, 5)],
 			})
 		x += random.randf_range(50, 110)
+
+
+## Which decoration a roll from 0 to 1 lands on, by the scene's weights.
+func pick_decoration(roll: float) -> String:
+	var weight_so_far: float = 0.0
+	for decoration in scene.decorations:
+		weight_so_far += decoration[1]
+		if roll < weight_so_far:
+			return decoration[0]
+	return scene.decorations[scene.decorations.size() - 1][0]
 
 
 func _draw() -> void:
@@ -115,23 +127,28 @@ func _draw() -> void:
 		var body_outline: PackedVector2Array = top.duplicate()
 		body_outline.append(Vector2(top[top.size() - 1].x, BOTTOM))
 		body_outline.append(Vector2(top[0].x, BOTTOM))
-		draw_colored_polygon(body_outline, Color(0.96, 0.83, 0.6))
+		draw_colored_polygon(body_outline, scene.soil)
 		draw_pebbles(top)
-		draw_polyline(offset_points(top, GRASS_THICKNESS * 0.5 + 4.0), Color(0.3, 0.6, 0.28), GRASS_THICKNESS + 8.0, true)
-		draw_polyline(offset_points(top, GRASS_THICKNESS * 0.5), Color(0.45, 0.78, 0.36), GRASS_THICKNESS, true)
-		draw_circle(top[0] + Vector2(0, GRASS_THICKNESS * 0.5), GRASS_THICKNESS * 0.6, Color(0.45, 0.78, 0.36))
-		draw_circle(top[top.size() - 1] + Vector2(0, GRASS_THICKNESS * 0.5), GRASS_THICKNESS * 0.6, Color(0.45, 0.78, 0.36))
+		draw_polyline(offset_points(top, GRASS_THICKNESS * 0.5 + 4.0), scene.top_edge, GRASS_THICKNESS + 8.0, true)
+		draw_polyline(offset_points(top, GRASS_THICKNESS * 0.5), scene.top, GRASS_THICKNESS, true)
+		draw_circle(top[0] + Vector2(0, GRASS_THICKNESS * 0.5), GRASS_THICKNESS * 0.6, scene.top)
+		draw_circle(top[top.size() - 1] + Vector2(0, GRASS_THICKNESS * 0.5), GRASS_THICKNESS * 0.6, scene.top)
 	for decoration in decorations:
-		if decoration.kind == "flower":
-			var centre: Vector2 = decoration.position - Vector2(0, 16)
-			draw_line(decoration.position, centre, Color(0.3, 0.55, 0.25), 3.0, true)
+		draw_decoration(decoration)
+
+
+func draw_decoration(decoration: Dictionary) -> void:
+	var base: Vector2 = decoration.position
+	match decoration.kind:
+		"flower":
+			var centre: Vector2 = base - Vector2(0, 16)
+			draw_line(base, centre, scene.stalks, 3.0, true)
 			for petal_index in 5:
 				draw_circle(centre + Vector2.from_angle(TAU * petal_index / 5.0) * 7.0, 5.5, decoration.colour)
 			draw_circle(centre, 4.5, PaintColours.YELLOW)
-		else:
-			var base: Vector2 = decoration.position
+		"tuft":
 			for blade in [-6.0, 0.0, 6.0]:
-				draw_line(base, base + Vector2(blade, -14 + absf(blade)), Color(0.3, 0.6, 0.28), 3.0, true)
+				draw_line(base, base + Vector2(blade, -14 + absf(blade)), scene.top_edge, 3.0, true)
 
 
 ## Moves a line of points straight down, so the grass sits on the ground's top.
@@ -150,4 +167,4 @@ func draw_pebbles(top: PackedVector2Array) -> void:
 	for pebble_index in int((right - left) / 30.0):
 		var x: float = random.randf_range(left + 20, right - 20)
 		var y: float = random.randf_range(height_at(x) + 60, START_HEIGHT + 500)
-		draw_circle(Vector2(x, y), random.randf_range(5, 12), Color(0.9, 0.75, 0.52))
+		draw_circle(Vector2(x, y), random.randf_range(5, 12), scene.pebbles)

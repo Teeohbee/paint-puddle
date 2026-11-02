@@ -31,17 +31,21 @@ func _ready() -> void:
 	add_to_group("gameplay")
 	Music.play_track("hills")
 	level = HillsLevels.LEVELS[level_to_play]
-	add_child(HillsBackdrop.new())
+	var scene: Dictionary = HillsScenes.scene_for(level)
+	var backdrop: HillsBackdrop = HillsBackdrop.new()
+	backdrop.scene = scene
+	add_child(backdrop)
 	var cloud_sea: Node2D = Node2D.new()
 	cloud_sea.z_index = -1
 	add_child(cloud_sea)
 	ground = HillsGround.new()
+	ground.scene = scene
 	add_child(ground)
 	ground.build(level.pieces, GameSettings.get_setting("gap_size_percent") / 100.0)
 	for top in ground.ground_tops:
 		for point in top:
 			lowest_ground = maxf(lowest_ground, point.y)
-	cloud_sea.draw.connect(func(): HillsBackdrop.draw_cloud_sea(cloud_sea, -400, ground.level_length + 400, lowest_ground + 150))
+	cloud_sea.draw.connect(func(): HillsBackdrop.draw_cloud_sea(cloud_sea, -400, ground.level_length + 400, lowest_ground + 150, scene.cloud_sea))
 	add_level_edges()
 
 	effects_layer = Node2D.new()
