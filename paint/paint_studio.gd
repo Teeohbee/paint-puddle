@@ -2,16 +2,19 @@ class_name PaintStudio
 extends Node2D
 ## Paint mode: no tasks, just a big sheet of paper. The blob paints wherever
 ## it goes in whatever colour it's wearing. Puddles mix colours like the
-## meadow, the fountain washes the blob clean, and the sponge wipes the picture.
+## meadow, white and black make them lighter and darker, the fountain washes
+## the blob clean, and the sponge wipes the picture.
 
 const BLOB_SCENE: PackedScene = preload("res://blob/meadow_blob.tscn")
 const PUDDLE_LAYOUT: Dictionary = {
-	"red": Vector2(560, 930),
-	"yellow": Vector2(960, 930),
-	"blue": Vector2(1360, 930),
+	"red": Vector2(480, 930),
+	"yellow": Vector2(740, 930),
+	"blue": Vector2(1000, 930),
+	"white": Vector2(1260, 930),
+	"black": Vector2(1520, 930),
 }
 const FOUNTAIN_POSITION: Vector2 = Vector2(200, 920)
-const SPONGE_POSITION: Vector2 = Vector2(1700, 900)
+const SPONGE_POSITION: Vector2 = Vector2(1780, 900)
 ## Paint comes off the bottom of the blob, not its middle.
 const BRUSH_OFFSET: Vector2 = Vector2(0, 24)
 const PAPER_COLOUR: Color = Color(1.0, 0.98, 0.94)
