@@ -20,6 +20,7 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"restart": draw_restart(canvas, centre, size, colour)
 		"home": draw_house(canvas, centre, size, colour)
 		"back": draw_back_arrow(canvas, centre, size, colour)
+		"more": draw_more_arrow(canvas, centre, size, colour)
 		"music": draw_music_note(canvas, centre, size, colour)
 		"sound": draw_speaker(canvas, centre, size, colour)
 		"speed": draw_snail(canvas, centre, size, colour)
@@ -128,6 +129,12 @@ static func draw_back_arrow(canvas: CanvasItem, centre: Vector2, size: float, co
 	canvas.draw_line(centre + Vector2(size * 0.38, 0), centre + Vector2(-size * 0.2, 0), colour, size * 0.16, true)
 	canvas.draw_colored_polygon(PackedVector2Array([centre + Vector2(-size * 0.44, 0),
 		centre + Vector2(-size * 0.08, -size * 0.32), centre + Vector2(-size * 0.08, size * 0.32)]), colour)
+
+
+static func draw_more_arrow(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
+	canvas.draw_line(centre + Vector2(-size * 0.38, 0), centre + Vector2(size * 0.2, 0), colour, size * 0.16, true)
+	canvas.draw_colored_polygon(PackedVector2Array([centre + Vector2(size * 0.44, 0),
+		centre + Vector2(size * 0.08, size * 0.32), centre + Vector2(size * 0.08, -size * 0.32)]), colour)
 
 
 static func draw_music_note(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
