@@ -1,9 +1,9 @@
-class_name PaintPot
+class_name HillsPaintPot
 extends Area2D
 ## A pot of paint floating up high. Jump into it and its paint mixes into
 ## the blob for the rest of the level. Missing it is fine.
 
-signal touched(pot: PaintPot)
+signal touched(pot: HillsPaintPot)
 
 const WIDTH: float = 64.0
 const HEIGHT: float = 70.0
