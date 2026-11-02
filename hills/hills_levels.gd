@@ -180,7 +180,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Castle", "word": "CASTLE", "paint": "lilac", "pickup": "black",
+		"name": "Castle", "word": "CASTLE", "paint": "lilac", "pickup": "black", "scene": "autumn",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60},
 			{"kind": "flat", "length": 250}, {"kind": "step", "rise": -60},
@@ -299,6 +299,25 @@ const LEVELS: Array[Dictionary] = [
 			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 450}, {"kind": "gap", "width": 150},
 			{"kind": "flat", "length": 800},
+		],
+	},
+	{
+		# Hopping over logs; the green blob goes brown, like a leaf in autumn
+		"name": "Forest", "word": "LEAVES", "paint": "green", "pickup": "red", "scene": "autumn",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 250}, {"kind": "step", "rise": 50},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 350}, {"kind": "slope", "length": 400, "rise": -90},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 150},
+			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 250}, {"kind": "step", "rise": 55},
+			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 250}, {"kind": "step", "rise": 55},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 150},
+			{"kind": "flat", "length": 350}, {"kind": "slope", "length": 500, "rise": 120},
+			{"kind": "flat", "length": 300}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 900},
 		],
 	},
 ]

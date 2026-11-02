@@ -81,6 +81,12 @@ func draw_tree(canvas: CanvasItem, kind: String, base: Vector2, size: float, ran
 				canvas.draw_colored_polygon(PackedVector2Array([Vector2(base.x - half_width, tier_base), Vector2(base.x + half_width, tier_base), tip]), needles)
 				# Snow on each tier's top
 				canvas.draw_colored_polygon(PackedVector2Array([tip.lerp(Vector2(base.x - half_width, tier_base), 0.4), tip.lerp(Vector2(base.x + half_width, tier_base), 0.4), tip]), Color(1, 1, 1))
+		"autumn":
+			var leaves: Color = HillsScenes.AUTUMN_LEAVES[random.randi_range(0, HillsScenes.AUTUMN_LEAVES.size() - 1)]
+			canvas.draw_rect(Rect2(base.x - 8 * size, base.y - 70 * size, 16 * size, 70 * size), Color(0.45, 0.3, 0.22))
+			for puff in [Vector3(0, -110, 46), Vector3(-34, -82, 36), Vector3(34, -84, 38), Vector3(0, -70, 34)]:
+				canvas.draw_circle(base + Vector2(puff.x, puff.y) * size, puff.z * size, leaves)
+			canvas.draw_circle(base + Vector2(-14, -122) * size, 14 * size, leaves.lightened(0.2))
 
 
 func add_weather() -> void:
@@ -117,6 +123,17 @@ func draw_weather(weather: Control) -> void:
 		match scene.weather:
 			"snow":
 				weather.draw_circle(Vector2(x, y), 5.0 * bit.size, Color(1, 1, 1, 0.85))
+			"leaves":
+				draw_leaf(weather, Vector2(x, y), 11.0 * bit.size, sun_time * 1.5 + bit.phase, HillsScenes.AUTUMN_LEAVES[bit.tint])
+
+
+## A leaf: a pointed oval, turned by angle.
+static func draw_leaf(canvas: CanvasItem, centre: Vector2, length: float, angle: float, colour: Color) -> void:
+	var outline: PackedVector2Array = PackedVector2Array()
+	for point_index in 12:
+		var along: float = TAU * point_index / 12.0
+		outline.append(centre + Vector2(cos(along) * length, sin(along) * length * 0.45 * absf(cos(along * 0.5))).rotated(angle))
+	canvas.draw_colored_polygon(outline, colour)
 
 
 func _process(delta: float) -> void:
