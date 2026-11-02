@@ -12,7 +12,7 @@ const SCREEN_SIZE: Vector2 = Vector2(1920, 1080)
 var level_length: float = 4000.0
 var scene: Dictionary = HillsScenes.SCENES[HillsScenes.DEFAULT_SCENE]
 var sun_time: float = 0.0
-## Each snowflake or leaf: where it starts, how fast it falls, how big it is.
+## Each snowflake, leaf or firefly: where it starts, how fast it moves, how big it is.
 var weather_bits: Array[Dictionary] = []
 
 
@@ -89,6 +89,28 @@ func draw_tree(canvas: CanvasItem, kind: String, base: Vector2, size: float, ran
 			canvas.draw_circle(base + Vector2(-14, -122) * size, 14 * size, leaves.lightened(0.2))
 
 
+## Stars in fixed places, each twinkling at its own pace.
+func draw_stars(sky: Control) -> void:
+	var random: RandomNumberGenerator = RandomNumberGenerator.new()
+	random.seed = 17
+	for star_index in 60:
+		var spot: Vector2 = Vector2(random.randf_range(0, SCREEN_SIZE.x), random.randf_range(0, SCREEN_SIZE.y * 0.55))
+		var twinkle: float = 0.55 + 0.45 * sin(sun_time * random.randf_range(1.0, 2.5) + star_index)
+		sky.draw_circle(spot, random.randf_range(1.5, 3.5), Color(1, 0.97, 0.85, twinkle))
+
+
+func draw_moon(sky: Control, moon_centre: Vector2) -> void:
+	sky.draw_circle(moon_centre, 112, Color(1, 0.96, 0.8, 0.07))
+	sky.draw_circle(moon_centre, 96, Color(1, 0.96, 0.8, 0.07))
+	sky.draw_circle(moon_centre, 78, Color(0.99, 0.95, 0.78))
+	sky.draw_circle(moon_centre + Vector2(30, 34), 12, Color(0.93, 0.88, 0.7))
+	sky.draw_circle(moon_centre + Vector2(-38, 22), 8, Color(0.93, 0.88, 0.7))
+	# Asleep: closed eyes and a little smile
+	for eye_x in [-22.0, 22.0]:
+		sky.draw_arc(moon_centre + Vector2(eye_x, -14), 10, 0.3, PI - 0.3, 10, PaintColours.INK, 4.0, true)
+	sky.draw_arc(moon_centre + Vector2(0, 10), 14, 0.5, PI - 0.5, 10, PaintColours.INK, 4.0, true)
+
+
 func add_weather() -> void:
 	var random: RandomNumberGenerator = RandomNumberGenerator.new()
 	random.seed = 5
@@ -121,6 +143,14 @@ func draw_weather(weather: Control) -> void:
 		var x: float = fposmod(bit.start.x - camera_x * 0.6 + sway, wrap_size.x) - 40.0
 		var y: float = fposmod(bit.start.y + sun_time * bit.fall_speed, wrap_size.y) - 40.0
 		match scene.weather:
+			"fireflies":
+				# Fewer of them, wandering low down rather than falling
+				if bit.tint == 0:
+					continue
+				y = SCREEN_SIZE.y * 0.45 + bit.start.y * 0.45 + sin(sun_time * 0.7 + bit.phase * 2.0) * 40.0
+				var glow: float = 0.5 + 0.5 * sin(sun_time * 2.0 + bit.phase)
+				weather.draw_circle(Vector2(x, y), 12.0 * bit.size, Color(0.9, 1.0, 0.5, 0.18 * glow))
+				weather.draw_circle(Vector2(x, y), 3.5 * bit.size, Color(0.95, 1.0, 0.65, 0.4 + 0.6 * glow))
 			"snow":
 				weather.draw_circle(Vector2(x, y), 5.0 * bit.size, Color(1, 1, 1, 0.85))
 			"leaves":
@@ -151,6 +181,9 @@ func draw_sky(sky: Control) -> void:
 	match scene.sky_body:
 		"sun":
 			draw_sun(sky, Vector2(1650, 170))
+		"moon":
+			draw_stars(sky)
+			draw_moon(sky, Vector2(1650, 170))
 	for cloud_index in 4:
 		var drift: float = fmod(sun_time * (14.0 + cloud_index * 5.0) + cloud_index * 520.0, SCREEN_SIZE.x + 400.0) - 200.0
 		var cloud_centre: Vector2 = Vector2(drift, 120 + cloud_index * 70)
