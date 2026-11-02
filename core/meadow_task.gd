@@ -136,6 +136,6 @@ func handle(event: Dictionary) -> String:
 
 ## The meadow only has red, yellow and blue puddles, so no light or dark paints.
 static func can_be_made_in_the_meadow(paint_name: String) -> bool:
-	if not PaintMixing.PAINT_BITS.has(paint_name) or paint_name == "clean":
+	if not PaintMixing.paint_names().has(paint_name) or paint_name == "clean":
 		return false
 	return PaintMixing.bits_of(paint_name) & PaintMixing.SHADE_BITS == 0

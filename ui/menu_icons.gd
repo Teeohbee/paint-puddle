@@ -7,6 +7,9 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 	if kind.begins_with("text:"):
 		draw_big_text(canvas, kind.trim_prefix("text:"), centre, size, colour)
 		return
+	if kind.begins_with("colour_set:"):
+		draw_three_paints(canvas, kind.trim_prefix("colour_set:"), centre, size, colour)
+		return
 	match kind:
 		"play", "resume": draw_play(canvas, centre, size, colour)
 		"options": draw_cog(canvas, centre, size, colour)
@@ -32,6 +35,15 @@ static func draw_big_text(canvas: CanvasItem, text: String, centre: Vector2, siz
 	var font_size: int = int(size * 1.3)
 	var width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	canvas.draw_string(font, centre + Vector2(-width / 2.0, font_size * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, colour)
+
+
+## A colour set's three primaries as overlapping blobs, ringed in the icon colour.
+static func draw_three_paints(canvas: CanvasItem, colour_set: String, centre: Vector2, size: float, colour: Color) -> void:
+	var primaries: Array = PaintMixing.puddles_for(colour_set).slice(0, 3)
+	for primary_index in primaries.size():
+		var blob_centre: Vector2 = centre + Vector2.from_angle(TAU * primary_index / 3.0 - PI / 2.0) * size * 0.2
+		canvas.draw_circle(blob_centre, size * 0.27, colour)
+		canvas.draw_circle(blob_centre, size * 0.22, PaintMixing.colour_of(primaries[primary_index]))
 
 
 static func draw_play(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
