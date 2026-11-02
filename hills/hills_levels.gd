@@ -226,7 +226,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Jungle", "word": "MONKEY", "paint": "mint", "pickup": "black",
+		"name": "Jungle", "word": "MONKEY", "paint": "mint", "pickup": "black", "scene": "jungle",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 350, "rise": -80},
 			{"kind": "flat", "length": 200}, {"kind": "slope", "length": 350, "rise": 80},
@@ -245,7 +245,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Long", "word": "ELEPHANT", "paint": "peach", "pickup": "black",
+		"name": "Long", "word": "ELEPHANT", "paint": "peach", "pickup": "black", "scene": "savanna",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 140},
 			{"kind": "flat", "length": 350}, {"kind": "slope", "length": 400, "rise": -90},

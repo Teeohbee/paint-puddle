@@ -194,6 +194,20 @@ func draw_decoration(decoration: Dictionary) -> void:
 			draw_arc(base + Vector2(0, -22), 10, PI, TAU, 8, Color(0.35, 0.35, 0.42), 2.0, true)
 			draw_line(base + Vector2(12, -2), base + Vector2(20, -26), Color(0.35, 0.35, 0.42), 3.0, true)
 			draw_rect(Rect2(base.x + 14, base.y - 6, 10, 6), PaintColours.YELLOW)
+		"fern":
+			for frond in [-1.0, -0.4, 0.4, 1.0]:
+				var tip: Vector2 = base + Vector2(frond * 22, -20 + absf(frond) * 8)
+				draw_line(base, tip, scene.stalks, 3.0, true)
+				HillsBackdrop.draw_leaf(self, base.lerp(tip, 0.6), 10.0, (base - tip).angle(), scene.top)
+		"big leaf":
+			HillsBackdrop.draw_leaf(self, base + Vector2(-8, -14), 18.0, -1.1, scene.stalks)
+			HillsBackdrop.draw_leaf(self, base + Vector2(9, -12), 15.0, -2.0, scene.top.lightened(0.1))
+		"tall grass":
+			for blade in [-10.0, -5.0, 0.0, 5.0, 10.0]:
+				draw_line(base, base + Vector2(blade * 1.2, -34 + absf(blade) * 1.2), scene.stalks, 3.0, true)
+		"rock":
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-16, 0), base + Vector2(-12, -12), base + Vector2(0, -17), base + Vector2(13, -11), base + Vector2(17, 0)]), Color(0.62, 0.55, 0.52))
+			draw_line(base + Vector2(-8, -10), base + Vector2(2, -14), Color(0.72, 0.66, 0.62), 3.0, true)
 		"acorn":
 			draw_circle(base + Vector2(0, -7), 6.5, Color(0.72, 0.5, 0.28))
 			draw_rect(Rect2(base.x - 7, base.y - 15, 14, 6), Color(0.45, 0.3, 0.2))
