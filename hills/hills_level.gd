@@ -107,7 +107,7 @@ func place_balloons() -> void:
 ## One pot of paint about two-thirds of the way along, up where it takes a jump.
 func place_paint_pot() -> void:
 	var x: float = nearest_ground_x(ground.level_length * 0.66)
-	var pot: PaintPot = PaintPot.new()
+	var pot: HillsPaintPot = HillsPaintPot.new()
 	pot.paint_name = level.pickup
 	pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
 	pot.touched.connect(func(touched_pot): mix_into_blob(touched_pot.paint_name))
