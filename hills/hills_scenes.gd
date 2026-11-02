@@ -47,7 +47,27 @@ const SCENES: Dictionary = {
 		"trees": "pines",
 		"weather": "snow",
 	},
+	"autumn": {
+		"sky_top": Color(0.62, 0.76, 0.92),
+		"sky_bottom": Color(1.0, 0.9, 0.76),
+		"sky_body": "sun",
+		"cloud_colour": Color(1, 0.98, 0.94, 0.9),
+		"far_hills": Color(0.88, 0.74, 0.64),
+		"near_hills": Color(0.74, 0.58, 0.42),
+		"soil": Color(0.62, 0.44, 0.31),
+		"pebbles": Color(0.54, 0.37, 0.26),
+		"top_edge": Color(0.62, 0.33, 0.14),
+		"top": Color(0.88, 0.53, 0.22),
+		"decorations": [["leaf pile", 0.45], ["mushroom", 0.3], ["acorn", 0.25]],
+		"stalks": Color(0.45, 0.3, 0.2),
+		"cloud_sea": Color(1, 0.97, 0.92, 0.95),
+		"trees": "autumn",
+		"weather": "leaves",
+	},
 }
+
+## The colours autumn trees and falling leaves come in.
+const AUTUMN_LEAVES: Array[Color] = [Color(0.93, 0.45, 0.2), Color(0.85, 0.28, 0.2), Color(0.96, 0.72, 0.25)]
 
 
 ## The scene for a level, falling back to the meadow.

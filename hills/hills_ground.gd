@@ -167,6 +167,19 @@ func draw_decoration(decoration: Dictionary) -> void:
 			draw_colored_polygon(PackedVector2Array([head + Vector2(0, 0), head + Vector2(0, 4), head + Vector2(11, 2)]), PaintColours.ORANGE)
 			for button in 2:
 				draw_circle(belly + Vector2(0, -5 + button * 9), 1.8, PaintColours.INK)
+		"leaf pile":
+			for leaf_index in 4:
+				var leaf_colour: Color = HillsScenes.AUTUMN_LEAVES[(leaf_index + int(base.x)) % HillsScenes.AUTUMN_LEAVES.size()]
+				HillsBackdrop.draw_leaf(self, base + Vector2(-12 + leaf_index * 8, -3 - (leaf_index % 2) * 4), 8.0, leaf_index * 0.9, leaf_colour)
+		"mushroom":
+			draw_rect(Rect2(base.x - 3, base.y - 14, 6, 14), Color(0.97, 0.93, 0.85))
+			draw_colored_polygon(PackedVector2Array([base + Vector2(-13, -12), base + Vector2(-9, -22), base + Vector2(0, -26), base + Vector2(9, -22), base + Vector2(13, -12)]), Color(0.85, 0.25, 0.22))
+			draw_circle(base + Vector2(-5, -18), 2.2, Color(1, 1, 1))
+			draw_circle(base + Vector2(5, -20), 2.0, Color(1, 1, 1))
+		"acorn":
+			draw_circle(base + Vector2(0, -7), 6.5, Color(0.72, 0.5, 0.28))
+			draw_rect(Rect2(base.x - 7, base.y - 15, 14, 6), Color(0.45, 0.3, 0.2))
+			draw_line(base + Vector2(0, -15), base + Vector2(2, -19), Color(0.45, 0.3, 0.2), 2.0, true)
 
 
 ## Moves a line of points straight down, so the grass sits on the ground's top.
