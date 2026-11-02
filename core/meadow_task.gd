@@ -55,7 +55,7 @@ func problem() -> String:
 		return "no text"
 	match type:
 		"make", "collect":
-			if not PaintMixing.COLOURS.has(paint) or paint == "clean":
+			if not can_be_made_in_the_meadow(paint):
 				return "unknown paint"
 			var most_drops: int = MOST_THINGS_IN_THE_GRASS - DISTRACTOR_DROP_COUNT
 			if type == "collect" and (count < 1 or count > most_drops):
@@ -132,3 +132,10 @@ func handle(event: Dictionary) -> String:
 			if event.kind == "rainbow_finished":
 				return "done"
 	return "ignored"
+
+
+## The meadow only has red, yellow and blue puddles, so no light or dark paints.
+static func can_be_made_in_the_meadow(paint_name: String) -> bool:
+	if not PaintMixing.PAINT_BITS.has(paint_name) or paint_name == "clean":
+		return false
+	return PaintMixing.bits_of(paint_name) & PaintMixing.SHADE_BITS == 0

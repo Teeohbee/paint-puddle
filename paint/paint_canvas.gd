@@ -12,12 +12,11 @@ const PICTURE_SIZE: Vector2i = Vector2i(1920, 1080)
 const CELL_SIZE: int = 4
 const DAB_RADIUS: float = 30.0
 const DAB_SPACING: float = 6.0
-const PRIMARY_BITS: Dictionary = {"red": 1, "yellow": 2, "blue": 4}
 
 var dabs_painted: int = 0
 var columns: int = ceili(float(PICTURE_SIZE.x) / CELL_SIZE)
 var rows: int = ceili(float(PICTURE_SIZE.y) / CELL_SIZE)
-## Which primaries are on each square, as bits - see PRIMARY_BITS.
+## Which paints have touched each square, as bits - see PaintMixing.
 var cells: PackedByteArray = PackedByteArray()
 ## How much of each square is painted, from 0 to 1, for smooth edges.
 var coverage: PackedFloat32Array = PackedFloat32Array()
@@ -32,12 +31,8 @@ var wipe_tween: Tween
 func _init() -> void:
 	cells.resize(columns * rows)
 	coverage.resize(columns * rows)
-	for bits in 8:
-		var primaries: Array = []
-		for primary in PRIMARY_BITS:
-			if bits & PRIMARY_BITS[primary]:
-				primaries.append(primary)
-		paint_names_by_bits.append(PaintMixing.paint_made_of(primaries))
+	for bits in PaintMixing.PRIMARY_BITS + PaintMixing.SHADE_BITS + 1:
+		paint_names_by_bits.append(PaintMixing.paint_made_of(bits))
 
 
 func _ready() -> void:
@@ -63,7 +58,7 @@ func _process(_delta: float) -> void:
 ## Paints a smooth line of round dabs from one point to another, mixing
 ## with whatever paint is already on the paper.
 func paint_line(from: Vector2, to: Vector2, paint_name: String) -> void:
-	var paint_bits: int = bits_of(paint_name)
+	var paint_bits: int = PaintMixing.bits_of(paint_name)
 	var points: PackedVector2Array = dab_points(from, to, DAB_SPACING)
 	for point in points:
 		dab(point, paint_bits)
@@ -103,13 +98,6 @@ func paint_at(point: Vector2) -> String:
 	if cell.x < 0 or cell.y < 0 or cell.x >= columns or cell.y >= rows:
 		return "clean"
 	return paint_names_by_bits[cells[cell.y * columns + cell.x]]
-
-
-func bits_of(paint_name: String) -> int:
-	var bits: int = 0
-	for primary in PaintMixing.PRIMARIES_IN[paint_name]:
-		bits |= PRIMARY_BITS[primary]
-	return bits
 
 
 ## Points from just after `from` up to and including `to`, never further
