@@ -120,7 +120,7 @@ const LEVELS: Array[Dictionary] = [
 	},
 	{
 		# A step down just before a gap makes the far side lower, so it's an easy landing
-		"name": "Star", "word": "STAR", "paint": "yellow", "pickup": "red",
+		"name": "Star", "word": "STAR", "paint": "yellow", "pickup": "red", "scene": "night",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -50},

@@ -64,6 +64,24 @@ const SCENES: Dictionary = {
 		"trees": "autumn",
 		"weather": "leaves",
 	},
+	"night": {
+		"sky_top": Color(0.1, 0.12, 0.3),
+		"sky_bottom": Color(0.27, 0.28, 0.52),
+		# A sleepy moon, with stars
+		"sky_body": "moon",
+		"cloud_colour": Color(0.31, 0.34, 0.57),
+		"far_hills": Color(0.2, 0.23, 0.42),
+		"near_hills": Color(0.16, 0.28, 0.36),
+		"soil": Color(0.37, 0.31, 0.38),
+		"pebbles": Color(0.31, 0.26, 0.32),
+		"top_edge": Color(0.13, 0.32, 0.27),
+		"top": Color(0.22, 0.47, 0.35),
+		"decorations": [["flower", 0.3], ["tuft", 0.7]],
+		"stalks": Color(0.16, 0.36, 0.27),
+		"cloud_sea": Color(0.58, 0.62, 0.82, 0.95),
+		"trees": "",
+		"weather": "fireflies",
+	},
 }
 
 ## The colours autumn trees and falling leaves come in.
