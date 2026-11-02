@@ -9,6 +9,9 @@ const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
 
 ## Which level to play next; set by the hills menu before it opens this scene.
 static var level_to_play: int = 0
+## The level just finished, so the menu can wait on the one after it. -1 when
+## the menu is opened some other way.
+static var level_just_finished: int = -1
 
 var level: Dictionary
 var ground: HillsGround
@@ -140,6 +143,7 @@ func finish() -> void:
 	confetti_layer.add_child(Confetti.new())
 	var completed: int = GameSettings.get_progress("hills_levels_completed")
 	GameSettings.record_progress("hills_levels_completed", maxi(completed, level_to_play + 1))
+	level_just_finished = level_to_play
 	for hop in 3:
 		blob.velocity.y = -700
 		blob.look.squash_stretch.kick(Vector2(12, -10))
