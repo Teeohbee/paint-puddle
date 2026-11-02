@@ -5,6 +5,9 @@ extends RefCounted
 ##   flat: walk along      slope: walk up or down (rise is negative going up)
 ##   step: a sudden change in height (negative is up)    gap: a hole to jump
 ## "paint" is the blob's colour; "pickup" is the paint pot that mixes into it.
+## "scene" is how the level looks - see HillsScenes; without one it's the meadow.
+## New levels go on the end: progress is a count, so one put in the middle
+## would count as done for anyone already past it.
 
 const LEVELS: Array[Dictionary] = [
 	{
@@ -208,7 +211,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Peak", "word": "MOUNTAIN", "paint": "dark green", "pickup": "white",
+		"name": "Peak", "word": "MOUNTAIN", "paint": "dark green", "pickup": "white", "scene": "snow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 500, "rise": -120},
 			{"kind": "flat", "length": 250}, {"kind": "step", "rise": -55},
@@ -262,7 +265,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		# The last one: a bit of everything, and the longest word
+		# A bit of everything, and the longest word
 		"name": "Party", "word": "FANTASTIC", "paint": "purple", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
@@ -279,6 +282,23 @@ const LEVELS: Array[Dictionary] = [
 			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 600, "rise": 170},
 			{"kind": "flat", "length": 450}, {"kind": "gap", "width": 150},
 			{"kind": "flat", "length": 1000},
+		],
+	},
+	{
+		# Sledging: long runs downhill, and a climb back up between them
+		"name": "Snow", "word": "SNOWMAN", "paint": "red", "pickup": "white", "scene": "snow",
+		"pieces": [
+			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 500, "rise": -110},
+			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 350}, {"kind": "slope", "length": 600, "rise": 150},
+			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 250}, {"kind": "step", "rise": -55},
+			{"kind": "flat", "length": 450}, {"kind": "gap", "width": 150},
+			{"kind": "flat", "length": 300}, {"kind": "gap", "width": 140},
+			{"kind": "flat", "length": 400}, {"kind": "slope", "length": 700, "rise": 170},
+			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -50},
+			{"kind": "flat", "length": 450}, {"kind": "gap", "width": 150},
+			{"kind": "flat", "length": 800},
 		],
 	},
 ]
