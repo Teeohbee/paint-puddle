@@ -18,6 +18,10 @@ const PAPER_COLOUR: Color = Color(1.0, 0.98, 0.94)
 static var colour_set: String = "paint"
 
 var blob: MeadowBlob
+## What the blob's paint is made of. The blob only knows the paint's name,
+## and printer black made from all three inks shares its name with black
+## ink, so the bits are kept here for mixing and painting.
+var blob_paint_bits: int = 0
 var canvas: PaintCanvas
 var puddles: Dictionary = {}
 var fountain: Fountain
@@ -78,26 +82,29 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	var brush_position: Vector2 = blob.position + BRUSH_OFFSET
 	var has_moved: bool = brush_position != last_brush_position
-	if has_moved and blob.paint_name != "clean":
-		canvas.paint_line(last_brush_position, brush_position, blob.paint_name)
+	if has_moved and blob_paint_bits != 0:
+		canvas.paint_line(last_brush_position, brush_position, blob_paint_bits)
 	last_brush_position = brush_position
 
 
 func on_puddle_entered(puddle: PaintPuddle) -> void:
-	var paint_after: String = PaintMixing.mix(blob.paint_name, puddle.paint_name, colour_set)
+	var puddle_bits: int = PaintMixing.bits_of(puddle.paint_name, colour_set)
+	var bits_after: int = PaintMixing.mix_bits(blob_paint_bits, puddle_bits)
 	PaintSplash.burst(effects_layer, blob.position, PaintMixing.colour_of(puddle.paint_name))
 	Sound.play("plop")
-	if paint_after == blob.paint_name:
+	if bits_after == blob_paint_bits:
 		blob.look.squash_stretch.kick(Vector2(-6, 6))
 		return
-	blob.change_paint(paint_after)
+	blob_paint_bits = bits_after
+	blob.change_paint(PaintMixing.paint_made_of(bits_after, colour_set))
 
 
 func on_fountain_entered() -> void:
-	if blob.paint_name == "clean":
+	if blob_paint_bits == 0:
 		return
 	PaintSplash.burst(effects_layer, blob.position, Color(0.85, 0.97, 1.0), 18, 600)
 	Sound.play("wash", 0.0)
+	blob_paint_bits = 0
 	blob.change_paint("clean")
 
 

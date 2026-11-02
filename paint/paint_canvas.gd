@@ -67,8 +67,7 @@ func _process(_delta: float) -> void:
 
 ## Paints a smooth line of round dabs from one point to another, mixing
 ## with whatever paint is already on the paper.
-func paint_line(from: Vector2, to: Vector2, paint_name: String) -> void:
-	var paint_bits: int = PaintMixing.bits_of(paint_name, colour_set)
+func paint_line(from: Vector2, to: Vector2, paint_bits: int) -> void:
 	var points: PackedVector2Array = dab_points(from, to, DAB_SPACING)
 	for point in points:
 		dab(point, paint_bits)
