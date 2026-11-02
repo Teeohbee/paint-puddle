@@ -95,6 +95,8 @@ static func make_colours() -> Dictionary:
 				colours[paint_name] = plain_colour.darkened(DARKEN_BY)
 			else:
 				colours[paint_name] = plain_colour
+	# Lightened orange came out almost the same as lemon, so peach leans pink
+	colours["peach"] = Color(1.0, 0.7, 0.52)
 	return colours
 
 
