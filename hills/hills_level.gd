@@ -8,6 +8,10 @@ const FALL_LINE_BELOW_GROUND: float = 260.0
 const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
 ## High enough to need a jump, low enough that any jump reaches it.
 const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
+## Far enough in that the blob isn't squeezed against the left of the screen,
+## with room to get going before the first jump: every level starts with 700
+## of flat ground.
+const BLOB_START_X: float = 300.0
 
 ## Which level to play next; set by the hills menu before it opens this scene.
 static var level_to_play: int = 0
@@ -66,7 +70,7 @@ func _ready() -> void:
 	add_child(flag)
 
 	blob = HillsBlob.new()
-	blob.position = Vector2(160, ground.height_at(160) - HillsBlob.BODY_RADIUS - 2)
+	blob.position = Vector2(BLOB_START_X, ground.height_at(BLOB_START_X) - HillsBlob.BODY_RADIUS - 2)
 	add_child(blob)
 	blob_paint = level.paint
 	blob.look.paint_colour = PaintMixing.colour_of(blob_paint)
