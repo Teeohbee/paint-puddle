@@ -1,6 +1,6 @@
 class_name PaintPuddle
 extends Area2D
-## A puddle of red, yellow or blue paint. Drive through it to pick up the
+## A puddle of paint. Drive through it to pick up the
 ## paint - or mix it with what's already on the blob.
 
 signal blob_entered(puddle: PaintPuddle)

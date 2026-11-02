@@ -17,6 +17,6 @@ func _ready() -> void:
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
 	meadow.chosen.connect(func(): SceneManager.go_to("res://meadow/meadow.tscn"))
 	hills.chosen.connect(func(): SceneManager.go_to("res://ui/hills_menu.tscn"))
-	paint.chosen.connect(func(): SceneManager.go_to("res://paint/paint_studio.tscn"))
+	paint.chosen.connect(func(): SceneManager.go_to("res://ui/paint_menu.tscn"))
 	first_focus = meadow
 	meadow.grab_focus_quietly.call_deferred()

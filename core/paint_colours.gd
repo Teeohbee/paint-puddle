@@ -9,6 +9,8 @@ const YELLOW: Color = Color(1.0, 0.85, 0.25)
 const GREEN: Color = Color(0.4, 0.8, 0.35)
 const BLUE: Color = Color(0.3, 0.55, 1.0)
 const PURPLE: Color = Color(0.62, 0.4, 0.9)
+const CYAN: Color = Color(0.2, 0.8, 0.92)
+const MAGENTA: Color = Color(0.95, 0.3, 0.72)
 
 const RAINBOW: Array[Color] = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE]
 

@@ -6,18 +6,16 @@ extends Node2D
 ## the blob clean, and the sponge wipes the picture.
 
 const BLOB_SCENE: PackedScene = preload("res://blob/meadow_blob.tscn")
-const PUDDLE_LAYOUT: Dictionary = {
-	"red": Vector2(480, 930),
-	"yellow": Vector2(740, 930),
-	"blue": Vector2(1000, 930),
-	"white": Vector2(1260, 930),
-	"black": Vector2(1520, 930),
-}
+const FIRST_PUDDLE_POSITION: Vector2 = Vector2(480, 930)
+const PUDDLE_SPACING: float = 260.0
 const FOUNTAIN_POSITION: Vector2 = Vector2(200, 920)
 const SPONGE_POSITION: Vector2 = Vector2(1780, 900)
 ## Paint comes off the bottom of the blob, not its middle.
 const BRUSH_OFFSET: Vector2 = Vector2(0, 24)
 const PAPER_COLOUR: Color = Color(1.0, 0.98, 0.94)
+
+## Paint colours or printer colours, picked on the way in.
+static var colour_set: String = "paint"
 
 var blob: MeadowBlob
 var canvas: PaintCanvas
@@ -38,11 +36,14 @@ func _ready() -> void:
 	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(paper)
 	canvas = PaintCanvas.new()
+	canvas.colour_set = colour_set
 	add_child(canvas)
-	for paint_name in PUDDLE_LAYOUT:
+	var puddle_names: Array = PaintMixing.puddles_for(colour_set)
+	for puddle_index in puddle_names.size():
+		var paint_name: String = puddle_names[puddle_index]
 		var puddle: PaintPuddle = PaintPuddle.new()
 		puddle.paint_name = paint_name
-		puddle.position = PUDDLE_LAYOUT[paint_name]
+		puddle.position = FIRST_PUDDLE_POSITION + Vector2(PUDDLE_SPACING * puddle_index, 0)
 		puddle.blob_entered.connect(on_puddle_entered)
 		add_child(puddle)
 		puddles[paint_name] = puddle
@@ -83,7 +84,7 @@ func _physics_process(_delta: float) -> void:
 
 
 func on_puddle_entered(puddle: PaintPuddle) -> void:
-	var paint_after: String = PaintMixing.mix(blob.paint_name, puddle.paint_name)
+	var paint_after: String = PaintMixing.mix(blob.paint_name, puddle.paint_name, colour_set)
 	PaintSplash.burst(effects_layer, blob.position, PaintMixing.colour_of(puddle.paint_name))
 	Sound.play("plop")
 	if paint_after == blob.paint_name:

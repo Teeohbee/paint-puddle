@@ -21,6 +21,11 @@ var cells: PackedByteArray = PackedByteArray()
 ## How much of each square is painted, from 0 to 1, for smooth edges.
 var coverage: PackedFloat32Array = PackedFloat32Array()
 var paint_names_by_bits: Array[String] = []
+## Which colour set's mixing the paper uses - see PaintMixing.
+var colour_set: String = "paint":
+	set(new_colour_set):
+		colour_set = new_colour_set
+		name_paints_by_bits()
 var picture: Image
 var picture_texture: ImageTexture
 var picture_sprite: Sprite2D
@@ -31,8 +36,13 @@ var wipe_tween: Tween
 func _init() -> void:
 	cells.resize(columns * rows)
 	coverage.resize(columns * rows)
+	name_paints_by_bits()
+
+
+func name_paints_by_bits() -> void:
+	paint_names_by_bits.clear()
 	for bits in PaintMixing.PRIMARY_BITS + PaintMixing.SHADE_BITS + 1:
-		paint_names_by_bits.append(PaintMixing.paint_made_of(bits))
+		paint_names_by_bits.append(PaintMixing.paint_made_of(bits, colour_set))
 
 
 func _ready() -> void:
@@ -58,7 +68,7 @@ func _process(_delta: float) -> void:
 ## Paints a smooth line of round dabs from one point to another, mixing
 ## with whatever paint is already on the paper.
 func paint_line(from: Vector2, to: Vector2, paint_name: String) -> void:
-	var paint_bits: int = PaintMixing.bits_of(paint_name)
+	var paint_bits: int = PaintMixing.bits_of(paint_name, colour_set)
 	var points: PackedVector2Array = dab_points(from, to, DAB_SPACING)
 	for point in points:
 		dab(point, paint_bits)
