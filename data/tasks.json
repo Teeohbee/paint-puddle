@@ -62,5 +62,15 @@
 	{"type": "spell", "word": "FISH", "thing": "fish", "text": "Can you spell FISH?"},
 	{"type": "spell", "word": "TREE", "thing": "tree", "text": "Spell TREE."},
 	{"type": "spell", "word": "BALL", "thing": "ball", "text": "Spell BALL."},
-	{"type": "spell", "word": "CAKE", "thing": "cake", "text": "Spell CAKE. Yum!"}
+	{"type": "spell", "word": "CAKE", "thing": "cake", "text": "Spell CAKE. Yum!"},
+	{"type": "change", "from": "CAT", "word": "HAT", "thing": "hat", "text": "Change one letter to make CAT into HAT!"},
+	{"type": "change", "from": "HAT", "word": "BAT", "thing": "bat", "text": "Make HAT into BAT."},
+	{"type": "change", "from": "DOG", "word": "LOG", "thing": "log", "text": "Make DOG into LOG."},
+	{"type": "change", "from": "HEN", "word": "PEN", "thing": "pen", "text": "Change one letter: HEN into PEN."},
+	{"type": "change", "from": "FOX", "word": "BOX", "thing": "box", "text": "Make FOX into BOX."},
+	{"type": "change", "from": "SUN", "word": "BUN", "thing": "bun", "text": "Make SUN into BUN."},
+	{"type": "change", "from": "BUS", "word": "BUG", "thing": "bug", "text": "Make BUS into BUG."},
+	{"type": "change", "from": "CAR", "word": "JAR", "thing": "jar", "text": "Make CAR into JAR."},
+	{"type": "change", "from": "FISH", "word": "DISH", "thing": "dish", "text": "Make FISH into DISH."},
+	{"type": "change", "from": "BALL", "word": "BELL", "thing": "bell", "text": "Make BALL into BELL."}
 ]

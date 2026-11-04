@@ -4,7 +4,9 @@ extends RefCounted
 ## meadow. handle() returns "progress", "wrong", "done" or "ignored". Tasks
 ## come from data/tasks.json, which can be edited without touching code.
 
-const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow"]
+const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow", "change"]
+## Wrong letters to put out beside the right one in a change task.
+const CHANGE_DECOY_LETTERS: String = "ABDEGHMOPSTU"
 ## The meadow has 15 free spots and up to 2 can be too near the blob, so 13
 ## stones and drops is all that's sure to fit.
 const MOST_THINGS_IN_THE_GRASS: int = 13
@@ -22,6 +24,8 @@ var choices: Array[int] = []
 var target: String = ""
 ## A spell task can bring a thing to life: spell DOG and a dog appears.
 var thing: String = ""
+## A change task starts from this word and changes one letter: DOG into LOG.
+var from_word: String = ""
 
 var letters_done: int = 0
 var collected: int = 0
@@ -44,6 +48,7 @@ static func from_dictionary(details: Dictionary) -> MeadowTask:
 		task.choices.append(int(choice))
 	task.target = str(details.get("target", ""))
 	task.thing = str(details.get("thing", ""))
+	task.from_word = str(details.get("from", "")).to_upper()
 	var problem: String = task.problem()
 	if problem != "":
 		push_warning("Skipping task %s: %s" % [JSON.stringify(details), problem])
@@ -75,6 +80,13 @@ func problem() -> String:
 				return "no more than %d choices" % MOST_THINGS_IN_THE_GRASS
 			if not choices.has(answer):
 				return "the answer must be one of the choices"
+		"change":
+			if from_word.length() != word.length() or word == "":
+				return "from and word must be the same length"
+			if changed_letter_index() == -1:
+				return "from and word must differ by exactly one letter"
+			if not ThingDrawings.can_draw(from_word.to_lower()) or not ThingDrawings.can_draw(thing) or thing.to_upper() != word:
+				return "both words need a picture, and the thing must be the word"
 		"visit":
 			if target != "fountain" and not target.begins_with("puddle:"):
 				return "target must be fountain or puddle:<colour>"
@@ -109,7 +121,29 @@ func stone_values() -> Array[String]:
 	elif type == "sum":
 		for choice in choices:
 			values.append(str(choice))
+	elif type == "change":
+		var new_letter: String = word[changed_letter_index()]
+		var old_letter: String = from_word[changed_letter_index()]
+		values.append_array([new_letter, old_letter])
+		# The same decoys every time for the same word
+		var random: RandomNumberGenerator = RandomNumberGenerator.new()
+		random.seed = hash(word)
+		while values.size() < 4:
+			var decoy: String = CHANGE_DECOY_LETTERS[random.randi_range(0, CHANGE_DECOY_LETTERS.length() - 1)]
+			if not values.has(decoy):
+				values.append(decoy)
 	return values
+
+
+## Which letter a change task changes, or -1 if it isn't exactly one.
+func changed_letter_index() -> int:
+	var changed_index: int = -1
+	for letter_index in mini(word.length(), from_word.length()):
+		if word[letter_index] != from_word[letter_index]:
+			if changed_index != -1:
+				return -1
+			changed_index = letter_index
+	return changed_index
 
 
 func handle(event: Dictionary) -> String:
@@ -132,6 +166,12 @@ func handle(event: Dictionary) -> String:
 		"sum":
 			if event.kind == "stone":
 				return "done" if event.value == str(answer) else "wrong"
+		"change":
+			if event.kind == "stone":
+				if event.value != word[changed_letter_index()]:
+					return "wrong"
+				letters_done = 1
+				return "done"
 		"visit":
 			if event.kind == "visited" and event.target == target:
 				return "done"
