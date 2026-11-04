@@ -7,9 +7,12 @@ signal setting_changed(setting_name: String, new_value: Variant)
 
 ## Version 2 added collections, and the second round of Meadow tasks.
 const SAVE_FORMAT_VERSION: int = 2
-## The first round of Meadow tasks. A version 1 save that has done them all
-## moves on to the first task of the second round instead of going round again.
+## The first round of Meadow tasks, as it was in version 1 saves. A version 1
+## save that has done them all moves on to the first task of the second round
+## (spelling CAT) instead of going round again.
 const TASKS_IN_THE_FIRST_ROUND: int = 44
+## Where spelling CAT is now: three of the first round's tasks have been cut.
+const FIRST_TASK_OF_THE_SECOND_ROUND: int = 41
 
 ## Each setting: its default, smallest and largest value.
 const SETTING_LIMITS: Dictionary = {
@@ -136,7 +139,7 @@ func load_from_disk() -> void:
 	var saved_version: Variant = saved.get("version", 1)
 	var is_from_before_collections: bool = not (saved_version is float or saved_version is int) or saved_version < 2
 	if is_from_before_collections and progress.tasks_completed >= TASKS_IN_THE_FIRST_ROUND:
-		progress.next_task_index = TASKS_IN_THE_FIRST_ROUND
+		progress.next_task_index = FIRST_TASK_OF_THE_SECOND_ROUND
 
 
 ## Only names we know about are copied, and only whole numbers.
