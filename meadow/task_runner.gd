@@ -34,6 +34,8 @@ var banner: TaskBanner
 var blob_to_keep_clear_of: Node2D
 ## The number stack trailing behind the blob in a join task, if any.
 var carried_stack: NumberStack
+## What's left after taking away, its number hidden until it's counted.
+var split_remainder: NumberStack
 
 
 func _init(layer_for_stones: Node2D, layer_for_effects: Node2D, task_banner: TaskBanner) -> void:
@@ -69,6 +71,12 @@ func put_things_in_the_grass() -> void:
 		stone.blob_entered.connect(on_stone_entered)
 		add_to_grass(stone, delay)
 		delay += 0.08
+	if current_task.type == "split":
+		var whole: NumberStack = NumberStack.new()
+		whole.value = current_task.start_number
+		whole.position = spots.pop_back()
+		whole.blob_entered.connect(on_stack_entered)
+		add_to_grass(whole, delay)
 	if current_task.type == "join":
 		for stack_value in current_task.stacks:
 			var stack: NumberStack = NumberStack.new()
@@ -110,6 +118,10 @@ func add_to_grass(thing: Node2D, delay: float) -> void:
 func on_stack_entered(stack: NumberStack) -> void:
 	if current_task == null or is_between_tasks:
 		return
+	if current_task.type == "split":
+		# Not in the middle of the collision: splitting adds a new stack
+		split_stack.call_deferred(stack)
+		return
 	if carried_stack == null or not is_instance_valid(carried_stack):
 		carried_stack = stack
 		stack.follow(blob_to_keep_clear_of)
@@ -134,10 +146,51 @@ func on_stack_entered(stack: NumberStack) -> void:
 	held_stack.leave()
 	stack.value = total
 	carried_stack = null
+	if result == "done":
+		stack.arrangement = current_task.finished_arrangement()
 	if result == "progress":
 		stack.hop()
 		carried_stack = stack
 		stack.follow(blob_to_keep_clear_of)
+
+
+## Take away: the taken part hops off and goes, what's left loses its
+## number so it can be counted, and stones ask how many are left.
+func split_stack(stack: NumberStack) -> void:
+	if current_task.has_split:
+		return
+	handle({"kind": "stack_split"})
+	var taken: NumberStack = NumberStack.new()
+	taken.value = current_task.take_away
+	taken.position = stack.position
+	grass_layer.add_child(taken)
+	taken.set_deferred("monitoring", false)
+	var hop_off: Tween = taken.create_tween()
+	hop_off.tween_property(taken, "position", stack.position + Vector2(120, -60), 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	hop_off.tween_interval(0.8)
+	hop_off.tween_callback(taken.leave)
+	stack.value = current_task.start_number - current_task.take_away
+	stack.shows_number = false
+	stack.set_deferred("monitoring", false)
+	split_remainder = stack
+	stack.hop()
+	Sound.play("pop", 0.0, 0.9)
+	FloatingText.show_at(effects_layer, stack.position - Vector2(0, 120), "Take away %d" % current_task.take_away, PaintColours.INK, 56, 1.6)
+	var spots: Array[Vector2] = []
+	for spot in spots_away_from_the_blob():
+		if spot.distance_to(stack.position) > 160.0:
+			spots.append(spot)
+	spots.shuffle()
+	var delay: float = 0.6
+	for choice in current_task.split_choices():
+		var choice_stone: LetterStone = LetterStone.new()
+		choice_stone.value = str(choice)
+		choice_stone.paint_colour = PaintColours.RAINBOW[things_in_the_grass.size() % PaintColours.RAINBOW.size()]
+		choice_stone.position = spots.pop_back()
+		choice_stone.blob_entered.connect(on_stone_entered)
+		add_to_grass(choice_stone, delay)
+		delay += 0.08
+	banner.queue_redraw()
 
 
 func clear_the_grass() -> void:
@@ -160,6 +213,10 @@ func handle(event: Dictionary) -> String:
 
 func on_stone_entered(stone: LetterStone) -> void:
 	var result: String = handle({"kind": "stone", "value": stone.value})
+	if result == "done" and split_remainder != null and is_instance_valid(split_remainder):
+		split_remainder.shows_number = true
+		split_remainder.queue_redraw()
+		split_remainder = null
 	if result == "wrong":
 		stone.wobble()
 		Sound.play("wobble", 0.0)

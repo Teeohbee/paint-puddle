@@ -4,9 +4,9 @@ extends RefCounted
 ## meadow. handle() returns "progress", "wrong", "done" or "ignored". Tasks
 ## come from data/tasks.json, which can be edited without touching code.
 
-const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow", "change", "join"]
-## The biggest number a stack can be.
-const BIGGEST_STACK: int = 10
+const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow", "change", "join", "split"]
+## The biggest number a stack can be: a ten and ten more.
+const BIGGEST_STACK: int = 20
 ## Wrong letters to put out beside the right one in a change task.
 const CHANGE_DECOY_LETTERS: String = "ABDEGHMOPSTU"
 ## The meadow has 15 free spots and up to 2 can be too near the blob, so 13
@@ -31,6 +31,13 @@ var from_word: String = ""
 ## A join task: number stacks in the grass to put together into the target.
 var stacks: Array[int] = []
 var target_number: int = 0
+## A join task can ask for a shape: "square", or "rows" with how many rows.
+var shape: String = ""
+var row_count: int = 0
+## A split task: take some away from a stack, then count what's left.
+var start_number: int = 0
+var take_away: int = 0
+var has_split: bool = false
 
 var letters_done: int = 0
 var collected: int = 0
@@ -57,6 +64,10 @@ static func from_dictionary(details: Dictionary) -> MeadowTask:
 	for stack in details.get("stacks", []):
 		task.stacks.append(int(stack))
 	task.target_number = int(details.get("target", 0)) if details.get("target", 0) is float or details.get("target", 0) is int else 0
+	task.shape = str(details.get("shape", ""))
+	task.row_count = int(details.get("rows", 0))
+	task.start_number = int(details.get("start", 0))
+	task.take_away = int(details.get("take", 0))
 	var problem: String = task.problem()
 	if problem != "":
 		push_warning("Skipping task %s: %s" % [JSON.stringify(details), problem])
@@ -107,6 +118,15 @@ func problem() -> String:
 					return "a stack can't already be the target"
 			if not some_stacks_make(target_number):
 				return "no stacks add up to the target"
+			if shape == "square" and int(round(sqrt(target_number))) ** 2 != target_number:
+				return "a square needs a square number"
+			if shape == "rows" and (row_count < 2 or target_number % row_count != 0):
+				return "the target must split into equal rows"
+			if shape != "" and shape != "square" and shape != "rows":
+				return "shape must be square or rows"
+		"split":
+			if start_number < 2 or start_number > BIGGEST_STACK or take_away < 1 or take_away >= start_number:
+				return "take away 1 or more from 2 to %d, leaving some" % BIGGEST_STACK
 		"visit":
 			if target != "fountain" and not target.begins_with("puddle:"):
 				return "target must be fountain or puddle:<colour>"
@@ -155,6 +175,25 @@ func stone_values() -> Array[String]:
 	return values
 
 
+## How a finished join task's stack lays out its squares.
+func finished_arrangement() -> String:
+	if shape == "square":
+		return "square"
+	if shape == "rows":
+		return "rows:%d" % row_count
+	return "column"
+
+
+## A split task's stones: how many are left, and one either side.
+func split_choices() -> Array[int]:
+	var left: int = start_number - take_away
+	var choices_around: Array[int] = []
+	for choice in [left - 1, left, left + 1]:
+		if choice >= 0:
+			choices_around.append(choice)
+	return choices_around
+
+
 ## True if two or more of the stacks add up to exactly this number.
 func some_stacks_make(number: int) -> bool:
 	for chosen_mask in range(1, 1 << stacks.size()):
@@ -200,6 +239,12 @@ func handle(event: Dictionary) -> String:
 		"sum":
 			if event.kind == "stone":
 				return "done" if event.value == str(answer) else "wrong"
+		"split":
+			if event.kind == "stack_split":
+				has_split = true
+				return "progress"
+			if event.kind == "stone" and has_split:
+				return "done" if event.value == str(start_number - take_away) else "wrong"
 		"join":
 			if event.kind == "stacks_joined":
 				if event.total > target_number:
