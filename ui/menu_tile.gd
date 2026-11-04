@@ -15,6 +15,10 @@ const CORNER_RADIUS: int = 48
 	set(new_is_locked):
 		is_locked = new_is_locked
 		queue_redraw()
+## Locked tiles show a padlock, unless it's something not found yet in the book.
+@export var shows_padlock: bool = true
+## A full-colour picture in place of the icon, like "thing:dog" - see MenuIcons.draw_picture.
+@export var picture: String = ""
 
 var bounce_time: float = 0.0
 var scale_tween: Tween
@@ -102,16 +106,20 @@ func _draw() -> void:
 		draw_style_box(outline, card)
 	var icon_centre: Vector2 = card.position + Vector2(size.x / 2.0, size.y * 0.42)
 	var icon_size: float = minf(size.x, size.y) * 0.42
-	MenuIcons.draw_icon(self, icon_kind, icon_centre + Vector2(0, 5), icon_size, Color(0, 0, 0, 0.15))
-	MenuIcons.draw_icon(self, icon_kind, icon_centre, icon_size, Color.WHITE)
-	if is_locked:
+	if picture != "":
+		MenuIcons.draw_picture(self, picture, icon_centre, icon_size * 1.4)
+	else:
+		MenuIcons.draw_icon(self, icon_kind, icon_centre + Vector2(0, 5), icon_size, Color(0, 0, 0, 0.15))
+		MenuIcons.draw_icon(self, icon_kind, icon_centre, icon_size, Color.WHITE)
+	if is_locked and shows_padlock:
 		MenuIcons.draw_padlock(self, card.position + Vector2(size.x * 0.78, size.y * 0.2), size.x * 0.28, PaintColours.INK)
 	draw_word(card)
 
 
 func draw_word(card: Rect2) -> void:
 	var font: Font = get_theme_default_font()
-	var font_size: int = 48
+	# Menu-sized tiles all share one size; only extra-big tiles (a close-up) grow it
+	var font_size: int = 48 if size.y <= 400.0 else int(size.y * 0.16)
 	var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var baseline: Vector2 = card.position + Vector2((size.x - word_width) / 2.0, size.y * 0.86)
 	draw_string_outline(font, baseline, word, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 14, paint_colour.darkened(0.45))

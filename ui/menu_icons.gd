@@ -20,6 +20,7 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"restart": draw_restart(canvas, centre, size, colour)
 		"home": draw_house(canvas, centre, size, colour)
 		"back": draw_back_arrow(canvas, centre, size, colour)
+		"book": draw_book(canvas, centre, size, colour)
 		"more": draw_more_arrow(canvas, centre, size, colour)
 		"music": draw_music_note(canvas, centre, size, colour)
 		"sound": draw_speaker(canvas, centre, size, colour)
@@ -203,3 +204,24 @@ static func draw_padlock(canvas: CanvasItem, centre: Vector2, size: float, colou
 	canvas.draw_line(centre + Vector2(size * 0.22, -size * 0.05), centre + Vector2(size * 0.22, size * 0.05), colour, size * 0.09)
 	canvas.draw_rect(Rect2(centre + Vector2(-size * 0.32, size * 0.02), Vector2(size * 0.64, size * 0.44)), colour)
 	canvas.draw_circle(centre + Vector2(0, size * 0.2), size * 0.07, colour.darkened(0.5))
+
+
+static func draw_book(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
+	for side in [-1.0, 1.0]:
+		canvas.draw_colored_polygon(PackedVector2Array([
+			centre + Vector2(side * size * 0.03, -size * 0.26), centre + Vector2(side * size * 0.46, -size * 0.34),
+			centre + Vector2(side * size * 0.46, size * 0.3), centre + Vector2(side * size * 0.03, size * 0.38),
+		]), colour)
+		for line_index in 3:
+			var line_y: float = -size * 0.14 + line_index * size * 0.14
+			canvas.draw_line(centre + Vector2(side * size * 0.12, line_y), centre + Vector2(side * size * 0.37, line_y - size * 0.03),
+				colour.darkened(0.3), size * 0.04, true)
+
+
+## A full-colour picture for a tile, instead of a white icon: "thing:dog".
+static func draw_picture(canvas: CanvasItem, picture: String, centre: Vector2, size: float) -> void:
+	if picture.begins_with("thing:"):
+		var scale: float = size / 110.0
+		canvas.draw_set_transform(centre + Vector2(0, -ThingDrawings.GROUND_Y * 0.3 * scale), 0.0, Vector2(scale, scale))
+		ThingDrawings.draw(canvas, picture.trim_prefix("thing:"))
+		canvas.draw_set_transform(Vector2.ZERO)
