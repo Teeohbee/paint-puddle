@@ -13,6 +13,10 @@ signal thing_changed(from_name: String, to_name: String)
 
 const TASKS_PATH: String = "res://data/tasks.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
+## "Drive through the red paint" then "Now wash in the fountain": a new game
+## starts with these two, and the wash only ever follows the red paint.
+const RED_PAINT_TASK_INDEX: int = 0
+const WASH_TASK_INDEX: int = 1
 ## Nothing new appears this close to the blob, or it would be picked for free.
 const CLEAR_DISTANCE_FROM_BLOB: float = 150.0
 ## Clear patches of grass where stones and drops can go.
@@ -61,12 +65,16 @@ func start_task(task_index: int) -> void:
 
 ## The next task, in a mixed-up order: tasks are dealt from a shuffled deck,
 ## so every task comes up once before any comes round again. The deck is
-## saved. A new deck never starts with the task just played.
+## saved. A new deck never starts with the task just played. The first two
+## tasks teach the game (red paint, then wash it off), so the wash always
+## comes straight after the red paint and is never dealt on its own.
 func deal_next_task_index(current_task_index: int) -> int:
 	if tasks.size() <= 1:
 		return 0
+	if current_task_index == RED_PAINT_TASK_INDEX:
+		return WASH_TASK_INDEX
 	var deck: Array[int] = GameSettings.get_task_deck().filter(
-		func(task_index: int) -> bool: return task_index < tasks.size() and task_index != current_task_index)
+		func(task_index: int) -> bool: return task_index < tasks.size() and task_index != current_task_index and task_index != WASH_TASK_INDEX)
 	if deck.is_empty():
 		deck = new_shuffled_deck(current_task_index)
 	var next_task_index: int = deck.pop_back()
@@ -74,10 +82,14 @@ func deal_next_task_index(current_task_index: int) -> int:
 	return next_task_index
 
 
-func new_shuffled_deck(task_index_to_leave_out: int) -> Array[int]:
+## Leaves out the task just played and the wash. Straight after the wash it
+## also leaves out the red paint, which was just played too.
+func new_shuffled_deck(task_index_just_played: int) -> Array[int]:
 	var deck: Array[int] = []
 	for task_index in tasks.size():
-		if task_index != task_index_to_leave_out:
+		var was_just_played: bool = task_index == task_index_just_played
+		var is_the_wash_pair_just_played: bool = task_index_just_played == WASH_TASK_INDEX and task_index == RED_PAINT_TASK_INDEX
+		if not was_just_played and task_index != WASH_TASK_INDEX and not is_the_wash_pair_just_played:
 			deck.append(task_index)
 	deck.shuffle()
 	return deck
