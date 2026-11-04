@@ -59,6 +59,16 @@ func start_task(task_index: int) -> void:
 	put_things_in_the_grass()
 
 
+## The next task. After the last one it goes round again from the start of
+## the second round, not back to the easy first tasks.
+func index_after(task_index: int) -> int:
+	if task_index + 1 < tasks.size():
+		return task_index + 1
+	if tasks.size() > GameSettings.TASKS_IN_THE_FIRST_ROUND:
+		return GameSettings.TASKS_IN_THE_FIRST_ROUND
+	return 0
+
+
 func put_things_in_the_grass() -> void:
 	var spots: Array[Vector2] = spots_away_from_the_blob()
 	spots.shuffle()
@@ -252,7 +262,7 @@ func finish_task() -> void:
 	var confetti: Confetti = Confetti.new()
 	effects_layer.add_child(confetti)
 	GameSettings.record_progress("tasks_completed", GameSettings.get_progress("tasks_completed") + 1)
-	var next_index: int = (GameSettings.get_progress("next_task_index") + 1) % tasks.size()
+	var next_index: int = index_after(GameSettings.get_progress("next_task_index"))
 	GameSettings.record_progress("next_task_index", next_index)
 	task_finished.emit()
 	clear_the_grass()
