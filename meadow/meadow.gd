@@ -66,7 +66,6 @@ func _ready() -> void:
 	blob.position = Vector2(960, 740)
 	things_on_the_grass.add_child(blob)
 	trail.follow(blob)
-	blob.bumped_into_something.connect(func(): Sound.play("bump"))
 	effects_layer = Node2D.new()
 	add_child(effects_layer)
 	add_child(Hedge.new())

@@ -81,10 +81,6 @@ func build_sounds() -> void:
 	Synth.add_slide(plop, 0.0, 260, 720, 0.15, 0.5)
 	sounds["plop"] = Synth.to_stream(plop)
 
-	var bump: PackedFloat32Array = Synth.empty_buffer(0.15)
-	Synth.add_slide(bump, 0.0, 150, 60, 0.14, 0.6)
-	sounds["bump"] = Synth.to_stream(bump)
-
 	var jump: PackedFloat32Array = Synth.empty_buffer(0.18)
 	Synth.add_slide(jump, 0.0, 380, 820, 0.17, 0.35)
 	sounds["jump"] = Synth.to_stream(jump)
