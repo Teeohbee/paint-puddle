@@ -77,24 +77,35 @@ func draw_task_text(font: Font, available_width: float) -> void:
 func progress_area_width(font: Font) -> float:
 	match task.type:
 		"spell", "change":
-			return task.word.length() * 50.0 + 30.0
+			return task.word.length() * letter_spacing() + 30.0
 		"collect":
 			return 190.0
 	return 0.0
+
+
+## Long words get closer, smaller letters so they still fit beside the sentence.
+func letter_spacing() -> float:
+	return 50.0 if task.word.length() <= 8 else 40.0
+
+
+func letter_size() -> int:
+	return 50 if task.word.length() <= 8 else 40
 
 
 func draw_progress(font: Font, progress_width: float) -> void:
 	var left: float = CARD_SIZE.x - progress_width
 	if task.type == "spell":
 		for letter_index in task.word.length():
-			var slot_centre: Vector2 = Vector2(left + letter_index * 50.0 + 20.0, CARD_SIZE.y / 2.0)
+			var slot_centre: Vector2 = Vector2(left + letter_index * letter_spacing() + 20.0, CARD_SIZE.y / 2.0)
+			var blank_half_width: float = letter_spacing() * 0.32
 			if letter_index < task.letters_done:
 				var letter: String = task.word[letter_index]
-				var width: float = font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 50).x
-				draw_string(font, slot_centre + Vector2(-width / 2.0, 18), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 50,
+				var width: float = font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, letter_size()).x
+				draw_string(font, slot_centre + Vector2(-width / 2.0, 18), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, letter_size(),
 					PaintColours.RAINBOW[letter_index % PaintColours.RAINBOW.size()])
 			else:
-				draw_line(slot_centre + Vector2(-16, 26), slot_centre + Vector2(16, 26), Color(0.75, 0.75, 0.8), 6.0, true)
+				draw_line(slot_centre + Vector2(-blank_half_width, 26), slot_centre + Vector2(blank_half_width, 26),
+					Color(0.75, 0.75, 0.8), 6.0, true)
 	elif task.type == "change":
 		# The old word with a gap where the new letter goes
 		var changed_index: int = task.changed_letter_index()
@@ -124,6 +135,11 @@ func draw_task_picture(centre: Vector2) -> void:
 		"make", "collect":
 			draw_colored_polygon(PackedVector2Array([centre + Vector2(-20, -8), centre + Vector2(0, -42), centre + Vector2(20, -8)]), picture_colour)
 			draw_circle(centre + Vector2(0, 4), 23, picture_colour)
+		"spell" when task.is_clue:
+			# The clue: the thing itself, bigger than the circle
+			draw_set_transform(centre + Vector2(0, -4), 0.0, Vector2(0.62, 0.62))
+			ThingDrawings.draw(self, task.thing)
+			draw_set_transform(Vector2.ZERO)
 		"spell", "change":
 			draw_string(font, centre + Vector2(-34, 15), "Abc", HORIZONTAL_ALIGNMENT_LEFT, -1, 36, PaintColours.INK)
 		"join", "split":

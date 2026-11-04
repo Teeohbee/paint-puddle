@@ -26,6 +26,9 @@ var choices: Array[int] = []
 var target: String = ""
 ## A spell task can bring a thing to life: spell DOG and a dog appears.
 var thing: String = ""
+## A picture clue: the banner shows the thing, not the word, so the
+## spelling has to be worked out.
+var is_clue: bool = false
 ## A change task starts from this word and changes one letter: DOG into LOG.
 var from_word: String = ""
 ## A join task: number stacks in the grass to put together into the target.
@@ -60,6 +63,7 @@ static func from_dictionary(details: Dictionary) -> MeadowTask:
 		task.choices.append(int(choice))
 	task.target = str(details.get("target", "")) if details.get("target", "") is String else ""
 	task.thing = str(details.get("thing", ""))
+	task.is_clue = details.get("clue", false) == true
 	task.from_word = str(details.get("from", "")).to_upper()
 	for stack in details.get("stacks", []):
 		task.stacks.append(int(stack))
@@ -94,6 +98,8 @@ func problem() -> String:
 				return "there's no picture of a %s" % thing
 			if thing != "" and thing.to_upper() != word:
 				return "the thing must be the word"
+			if is_clue and thing == "":
+				return "a picture clue needs a thing to show"
 		"sum":
 			if choices.size() > MOST_THINGS_IN_THE_GRASS:
 				return "no more than %d choices" % MOST_THINGS_IN_THE_GRASS
