@@ -20,6 +20,8 @@ var question: String = ""
 var answer: int = 0
 var choices: Array[int] = []
 var target: String = ""
+## A spell task can bring a thing to life: spell DOG and a dog appears.
+var thing: String = ""
 
 var letters_done: int = 0
 var collected: int = 0
@@ -41,6 +43,7 @@ static func from_dictionary(details: Dictionary) -> MeadowTask:
 	for choice in details.get("choices", []):
 		task.choices.append(int(choice))
 	task.target = str(details.get("target", ""))
+	task.thing = str(details.get("thing", ""))
 	var problem: String = task.problem()
 	if problem != "":
 		push_warning("Skipping task %s: %s" % [JSON.stringify(details), problem])
@@ -63,6 +66,10 @@ func problem() -> String:
 		"spell":
 			if word == "" or word.length() > MOST_THINGS_IN_THE_GRASS:
 				return "word must be 1 to %d letters" % MOST_THINGS_IN_THE_GRASS
+			if thing != "" and not ThingDrawings.can_draw(thing):
+				return "there's no picture of a %s" % thing
+			if thing != "" and thing.to_upper() != word:
+				return "the thing must be the word"
 		"sum":
 			if choices.size() > MOST_THINGS_IN_THE_GRASS:
 				return "no more than %d choices" % MOST_THINGS_IN_THE_GRASS
