@@ -82,5 +82,16 @@
 	{"type": "join", "target": 9, "stacks": [4, 5, 7], "text": "Make 9."},
 	{"type": "join", "target": 10, "stacks": [4, 6, 8], "text": "Make 10."},
 	{"type": "join", "target": 7, "stacks": [1, 2, 4, 8], "text": "Make 7 with three stacks!"},
-	{"type": "join", "target": 10, "stacks": [2, 3, 5, 9], "text": "Make 10 with three stacks!"}
+	{"type": "join", "target": 10, "stacks": [2, 3, 5, 9], "text": "Make 10 with three stacks!"},
+	{"type": "split", "start": 5, "take": 2, "text": "Take 2 away from 5. How many are left?"},
+	{"type": "join", "target": 4, "stacks": [1, 3, 5], "shape": "square", "text": "Make 4. It makes a square!"},
+	{"type": "join", "target": 13, "stacks": [10, 3, 5], "text": "Make 13. Ten and three more!"},
+	{"type": "split", "start": 8, "take": 3, "text": "Take 3 away from 8. How many are left?"},
+	{"type": "join", "target": 9, "stacks": [4, 5, 7], "shape": "square", "text": "Make 9. Is it a square too?"},
+	{"type": "join", "target": 15, "stacks": [10, 5, 7], "text": "Make 15."},
+	{"type": "split", "start": 10, "take": 6, "text": "Take 6 away from 10."},
+	{"type": "join", "target": 12, "stacks": [4, 4, 4, 7], "shape": "rows", "rows": 3, "text": "Make 3 rows of 4!"},
+	{"type": "split", "start": 9, "take": 5, "text": "Take 5 away from 9."},
+	{"type": "join", "target": 20, "stacks": [10, 10, 6], "text": "Make 20. Two tens!"},
+	{"type": "join", "target": 6, "stacks": [2, 2, 2, 5], "shape": "rows", "rows": 3, "text": "Make 3 rows of 2!"}
 ]
