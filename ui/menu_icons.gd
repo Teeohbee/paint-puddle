@@ -218,8 +218,13 @@ static func draw_book(canvas: CanvasItem, centre: Vector2, size: float, colour: 
 				colour.darkened(0.3), size * 0.04, true)
 
 
-## A full-colour picture for a tile, instead of a white icon: "thing:dog".
+## A full-colour picture for a tile, instead of a white icon: "thing:dog"
+## or "friend:plum".
 static func draw_picture(canvas: CanvasItem, picture: String, centre: Vector2, size: float) -> void:
+	if picture.begins_with("friend:"):
+		var time: float = Time.get_ticks_msec() / 1000.0
+		PuddleFriend.draw_friend(canvas, picture.trim_prefix("friend:"), centre + Vector2(0, size * 0.08), size / 95.0, time)
+		return
 	if picture.begins_with("thing:"):
 		var scale: float = size / 110.0
 		canvas.draw_set_transform(centre + Vector2(0, -ThingDrawings.GROUND_Y * 0.3 * scale), 0.0, Vector2(scale, scale))

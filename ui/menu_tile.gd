@@ -19,6 +19,8 @@ const CORNER_RADIUS: int = 48
 @export var shows_padlock: bool = true
 ## A full-colour picture in place of the icon, like "thing:dog" - see MenuIcons.draw_picture.
 @export var picture: String = ""
+## A smaller line under the word, like a friend's recipe in the book.
+@export var subtitle: String = ""
 
 var bounce_time: float = 0.0
 var scale_tween: Tween
@@ -44,6 +46,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if has_focus():
 		bounce_time += delta
+		queue_redraw()
+	elif picture.begins_with("friend:"):
+		# Friends ripple even when the D-pad isn't on them
 		queue_redraw()
 
 
@@ -118,12 +123,21 @@ func _draw() -> void:
 
 func draw_word(card: Rect2) -> void:
 	var font: Font = get_theme_default_font()
-	# Menu-sized tiles all share one size; only extra-big tiles (a close-up) grow it
+	# Menu-sized tiles all share one size; only extra-big tiles (a close-up) grow it,
+	# and a long word shrinks to fit
 	var font_size: int = 48 if size.y <= 400.0 else int(size.y * 0.16)
+	while font_size > 24 and font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x > size.x - 36:
+		font_size -= 2
 	var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
-	var baseline: Vector2 = card.position + Vector2((size.x - word_width) / 2.0, size.y * 0.86)
+	var word_height: float = 0.76 if subtitle != "" else 0.86
+	var baseline: Vector2 = card.position + Vector2((size.x - word_width) / 2.0, size.y * word_height)
 	draw_string_outline(font, baseline, word, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 14, paint_colour.darkened(0.45))
 	draw_string(font, baseline, word, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
+	if subtitle != "":
+		var subtitle_size: int = int(font_size * 0.5)
+		var subtitle_width: float = font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_CENTER, -1, subtitle_size).x
+		draw_string(font, card.position + Vector2((size.x - subtitle_width) / 2.0, size.y * 0.9), subtitle,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, subtitle_size, paint_colour.darkened(0.55))
 
 
 func rounded_box(colour: Color, corner_radius: int) -> StyleBoxFlat:
