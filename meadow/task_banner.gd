@@ -126,6 +126,8 @@ func draw_task_picture(centre: Vector2) -> void:
 			draw_circle(centre + Vector2(0, 4), 23, picture_colour)
 		"spell", "change":
 			draw_string(font, centre + Vector2(-34, 15), "Abc", HORIZONTAL_ALIGNMENT_LEFT, -1, 36, PaintColours.INK)
+		"join":
+			NumberStack.draw_stack(self, 3, centre + Vector2(0, 40), 24.0)
 		"sum":
 			draw_string(font, centre + Vector2(-30, 15), "1+2", HORIZONTAL_ALIGNMENT_LEFT, -1, 34, PaintColours.INK)
 		"visit":

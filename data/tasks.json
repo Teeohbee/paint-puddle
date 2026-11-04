@@ -72,5 +72,15 @@
 	{"type": "change", "from": "BUS", "word": "BUG", "thing": "bug", "text": "Make BUS into BUG."},
 	{"type": "change", "from": "CAR", "word": "JAR", "thing": "jar", "text": "Make CAR into JAR."},
 	{"type": "change", "from": "FISH", "word": "DISH", "thing": "dish", "text": "Make FISH into DISH."},
-	{"type": "change", "from": "BALL", "word": "BELL", "thing": "bell", "text": "Make BALL into BELL."}
+	{"type": "change", "from": "BALL", "word": "BELL", "thing": "bell", "text": "Make BALL into BELL."},
+	{"type": "join", "target": 3, "stacks": [1, 2, 4], "text": "Join two stacks to make 3!"},
+	{"type": "join", "target": 4, "stacks": [1, 3, 5], "text": "Make 4."},
+	{"type": "join", "target": 5, "stacks": [2, 3, 4], "text": "Make 5."},
+	{"type": "join", "target": 6, "stacks": [2, 4, 5], "text": "Make 6."},
+	{"type": "join", "target": 7, "stacks": [3, 4, 5], "text": "Make 7."},
+	{"type": "join", "target": 8, "stacks": [3, 5, 6], "text": "Make 8."},
+	{"type": "join", "target": 9, "stacks": [4, 5, 7], "text": "Make 9."},
+	{"type": "join", "target": 10, "stacks": [4, 6, 8], "text": "Make 10."},
+	{"type": "join", "target": 7, "stacks": [1, 2, 4, 8], "text": "Make 7 with three stacks!"},
+	{"type": "join", "target": 10, "stacks": [2, 3, 5, 9], "text": "Make 10 with three stacks!"}
 ]

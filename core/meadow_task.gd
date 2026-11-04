@@ -4,7 +4,9 @@ extends RefCounted
 ## meadow. handle() returns "progress", "wrong", "done" or "ignored". Tasks
 ## come from data/tasks.json, which can be edited without touching code.
 
-const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow", "change"]
+const TYPES: Array[String] = ["make", "spell", "collect", "sum", "visit", "rainbow", "change", "join"]
+## The biggest number a stack can be.
+const BIGGEST_STACK: int = 10
 ## Wrong letters to put out beside the right one in a change task.
 const CHANGE_DECOY_LETTERS: String = "ABDEGHMOPSTU"
 ## The meadow has 15 free spots and up to 2 can be too near the blob, so 13
@@ -26,6 +28,9 @@ var target: String = ""
 var thing: String = ""
 ## A change task starts from this word and changes one letter: DOG into LOG.
 var from_word: String = ""
+## A join task: number stacks in the grass to put together into the target.
+var stacks: Array[int] = []
+var target_number: int = 0
 
 var letters_done: int = 0
 var collected: int = 0
@@ -46,9 +51,12 @@ static func from_dictionary(details: Dictionary) -> MeadowTask:
 	task.answer = int(details.get("answer", 0))
 	for choice in details.get("choices", []):
 		task.choices.append(int(choice))
-	task.target = str(details.get("target", ""))
+	task.target = str(details.get("target", "")) if details.get("target", "") is String else ""
 	task.thing = str(details.get("thing", ""))
 	task.from_word = str(details.get("from", "")).to_upper()
+	for stack in details.get("stacks", []):
+		task.stacks.append(int(stack))
+	task.target_number = int(details.get("target", 0)) if details.get("target", 0) is float or details.get("target", 0) is int else 0
 	var problem: String = task.problem()
 	if problem != "":
 		push_warning("Skipping task %s: %s" % [JSON.stringify(details), problem])
@@ -87,6 +95,18 @@ func problem() -> String:
 				return "from and word must differ by exactly one letter"
 			if not ThingDrawings.can_draw(from_word.to_lower()) or not ThingDrawings.can_draw(thing) or thing.to_upper() != word:
 				return "both words need a picture, and the thing must be the word"
+		"join":
+			if target_number < 2 or target_number > BIGGEST_STACK:
+				return "target must be 2 to %d" % BIGGEST_STACK
+			if stacks.size() < 2 or stacks.size() > MOST_THINGS_IN_THE_GRASS:
+				return "2 to %d stacks" % MOST_THINGS_IN_THE_GRASS
+			for stack in stacks:
+				if stack < 1 or stack > BIGGEST_STACK:
+					return "stacks must be 1 to %d" % BIGGEST_STACK
+				if stack == target_number:
+					return "a stack can't already be the target"
+			if not some_stacks_make(target_number):
+				return "no stacks add up to the target"
 		"visit":
 			if target != "fountain" and not target.begins_with("puddle:"):
 				return "target must be fountain or puddle:<colour>"
@@ -135,6 +155,20 @@ func stone_values() -> Array[String]:
 	return values
 
 
+## True if two or more of the stacks add up to exactly this number.
+func some_stacks_make(number: int) -> bool:
+	for chosen_mask in range(1, 1 << stacks.size()):
+		var total: int = 0
+		var chosen_count: int = 0
+		for stack_index in stacks.size():
+			if chosen_mask & (1 << stack_index):
+				total += stacks[stack_index]
+				chosen_count += 1
+		if chosen_count >= 2 and total == number:
+			return true
+	return false
+
+
 ## Which letter a change task changes, or -1 if it isn't exactly one.
 func changed_letter_index() -> int:
 	var changed_index: int = -1
@@ -166,6 +200,11 @@ func handle(event: Dictionary) -> String:
 		"sum":
 			if event.kind == "stone":
 				return "done" if event.value == str(answer) else "wrong"
+		"join":
+			if event.kind == "stacks_joined":
+				if event.total > target_number:
+					return "wrong"
+				return "done" if event.total == target_number else "progress"
 		"change":
 			if event.kind == "stone":
 				if event.value != word[changed_letter_index()]:
