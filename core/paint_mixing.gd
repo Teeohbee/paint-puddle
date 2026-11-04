@@ -58,6 +58,16 @@ const COLOUR_SETS: Dictionary = {
 	},
 }
 
+## What a paint is called on screen, where that's not its name in the code.
+## The show's names where it has one for that shade (deep blue, pale yellow),
+## ordinary colour names otherwise. The code names stay, so nothing else moves.
+const DISPLAY_NAMES: Dictionary = {
+	"dark blue": "deep blue", "lemon": "pale yellow",
+	"dark orange": "rust", "dark green": "forest green", "dark purple": "plum",
+	"dark brown": "chocolate", "light brown": "biscuit",
+	"dark cyan": "teal", "dark magenta": "berry", "light cyan": "ice blue", "light magenta": "candy pink",
+}
+
 ## How far white lightens a paint and black darkens it.
 const LIGHTEN_BY: float = 0.55
 const DARKEN_BY: float = 0.45
@@ -150,5 +160,46 @@ static func colour_of(paint_name: String) -> Color:
 	return COLOURS[paint_name]
 
 
+## For sentences and labels: "Deep blue".
 static func word_for(paint_name: String) -> String:
-	return paint_name.left(1).to_upper() + paint_name.substr(1)
+	var shown_name: String = DISPLAY_NAMES.get(paint_name, paint_name)
+	return shown_name.left(1).to_upper() + shown_name.substr(1)
+
+
+## A puddle friend's name: "Deep Blue".
+static func friend_name_for(paint_name: String) -> String:
+	var words: PackedStringArray = DISPLAY_NAMES.get(paint_name, paint_name).split(" ")
+	for word_index in words.size():
+		words[word_index] = words[word_index].left(1).to_upper() + words[word_index].substr(1)
+	return " ".join(words)
+
+
+## Every paint that can be made, once each: the paint colours first, then
+## the printer colours' own. One puddle friend for each.
+static func all_friend_paints() -> Array[String]:
+	var friends: Array[String] = []
+	for colour_set in COLOUR_SETS:
+		for paint_name in paint_names(colour_set):
+			if paint_name != "clean" and not friends.has(paint_name):
+				friends.append(paint_name)
+	return friends
+
+
+## The puddles that make a paint, in the first colour set that has it:
+## plum is red + blue + black.
+static func recipe_for(paint_name: String) -> Array[String]:
+	var recipe: Array[String] = []
+	for colour_set in COLOUR_SETS:
+		if not paint_names(colour_set).has(paint_name):
+			continue
+		var bits: int = bits_of(paint_name, colour_set)
+		var puddles: Array = puddles_for(colour_set)
+		for primary_index in 3:
+			if bits & (1 << primary_index):
+				recipe.append(puddles[primary_index])
+		if bits & LIGHT:
+			recipe.append("white")
+		if bits & DARK:
+			recipe.append("black")
+		return recipe
+	return recipe
