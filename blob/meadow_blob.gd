@@ -1,9 +1,8 @@
 class_name MeadowBlob
 extends CharacterBody2D
 ## The paint blob seen from above. Drives with the D-pad or stick, slides
-## along hedges and bushes, and squashes when it starts, stops or bumps.
-
-signal bumped_into_something
+## along hedges and bushes, and squashes when it starts or stops. Bumping into
+## things makes no squash or sound - our young playtester didn't like it.
 
 const MAGNET_PULL_RATE: float = 1600.0
 const MAGNET_TOP_SPEED: float = 240.0
@@ -46,9 +45,7 @@ func _physics_process(delta: float) -> void:
 		pull_towards(magnet, delta)
 	else:
 		velocity = mover.next_velocity(velocity, input_direction, delta)
-	var speed_before_moving: float = velocity.length()
 	move_and_slide()
-	react_to_bumps(speed_before_moving)
 	react_to_starting_and_stopping(input_direction)
 	if input_direction != Vector2.ZERO:
 		look.look_direction = look.look_direction.lerp(input_direction.normalized(), 12.0 * delta).normalized()
@@ -60,18 +57,6 @@ func pull_towards(magnet: Node2D, delta: float) -> void:
 	var to_magnet: Vector2 = magnet.global_position - global_position
 	var wanted_velocity: Vector2 = (to_magnet * 5.0).limit_length(MAGNET_TOP_SPEED)
 	velocity = velocity.move_toward(wanted_velocity, MAGNET_PULL_RATE * delta)
-
-
-func react_to_bumps(speed_before_moving: float) -> void:
-	if speed_before_moving < mover.top_speed * 0.6:
-		return
-	for collision_index in get_slide_collision_count():
-		var collision: KinematicCollision2D = get_slide_collision(collision_index)
-		var hit_head_on: bool = collision.get_normal().dot(velocity.normalized()) < -0.5 or velocity.length() < 40.0
-		if hit_head_on:
-			look.squash_stretch.kick(Vector2(-9.0, 7.0))
-			bumped_into_something.emit()
-			return
 
 
 func react_to_starting_and_stopping(input_direction: Vector2) -> void:

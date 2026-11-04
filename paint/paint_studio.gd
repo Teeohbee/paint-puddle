@@ -63,7 +63,6 @@ func _ready() -> void:
 	blob = BLOB_SCENE.instantiate()
 	blob.position = Vector2(960, 480)
 	add_child(blob)
-	blob.bumped_into_something.connect(func(): Sound.play("bump"))
 	last_brush_position = blob.position + BRUSH_OFFSET
 	effects_layer = Node2D.new()
 	add_child(effects_layer)
