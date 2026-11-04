@@ -32,6 +32,8 @@ var effects_layer: Node2D
 var banner: TaskBanner
 ## The blob, so new stones and drops keep away from it. Can be left null.
 var blob_to_keep_clear_of: Node2D
+## The number stack trailing behind the blob in a join task, if any.
+var carried_stack: NumberStack
 
 
 func _init(layer_for_stones: Node2D, layer_for_effects: Node2D, task_banner: TaskBanner) -> void:
@@ -67,6 +69,14 @@ func put_things_in_the_grass() -> void:
 		stone.blob_entered.connect(on_stone_entered)
 		add_to_grass(stone, delay)
 		delay += 0.08
+	if current_task.type == "join":
+		for stack_value in current_task.stacks:
+			var stack: NumberStack = NumberStack.new()
+			stack.value = stack_value
+			stack.position = spots.pop_back()
+			stack.blob_entered.connect(on_stack_entered)
+			add_to_grass(stack, delay)
+			delay += 0.08
 	if current_task.type == "collect":
 		var distractor_paint: String = "red" if current_task.paint != "red" else "blue"
 		for drop_index in current_task.count + MeadowTask.DISTRACTOR_DROP_COUNT:
@@ -94,11 +104,48 @@ func add_to_grass(thing: Node2D, delay: float) -> void:
 	things_in_the_grass.append(thing)
 
 
+## The first stack driven into follows the blob. The next one joins it:
+## exactly right finishes the task, too big wobbles and they come apart,
+## and too small makes a bigger stack that keeps following.
+func on_stack_entered(stack: NumberStack) -> void:
+	if current_task == null or is_between_tasks:
+		return
+	if carried_stack == null or not is_instance_valid(carried_stack):
+		carried_stack = stack
+		stack.follow(blob_to_keep_clear_of)
+		Sound.play("pick", 0.0, 0.9 + stack.value * 0.04)
+		return
+	# Finishing the task clears the grass (and carried_stack), so hold on to it here
+	var held_stack: NumberStack = carried_stack
+	var total: int = held_stack.value + stack.value
+	var result: String = handle({"kind": "stacks_joined", "total": total})
+	if result == "wrong":
+		stack.wobble()
+		held_stack.put_down()
+		held_stack.wobble()
+		carried_stack = null
+		Sound.play("wobble", 0.0)
+		FloatingText.show_at(effects_layer, stack.position - Vector2(0, 90), "%d is too many!" % total, PaintColours.INK, 52)
+		return
+	Sound.play("pop", 0.0, 0.8 + total * 0.05)
+	PaintSplash.burst(effects_layer, stack.position, NumberStack.square_colour(total, 0), 14, 450)
+	FloatingText.show_at(effects_layer, stack.position - Vector2(0, total * 30 + 40), "%d and %d make %d" % [held_stack.value, stack.value, total],
+		PaintColours.INK, 52, 1.6)
+	held_stack.leave()
+	stack.value = total
+	carried_stack = null
+	if result == "progress":
+		stack.hop()
+		carried_stack = stack
+		stack.follow(blob_to_keep_clear_of)
+
+
 func clear_the_grass() -> void:
 	for thing in things_in_the_grass:
 		if is_instance_valid(thing) and not thing.is_leaving:
 			thing.leave()
 	things_in_the_grass.clear()
+	carried_stack = null
 
 
 ## Everything the meadow tells the task goes through here.
