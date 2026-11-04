@@ -25,6 +25,7 @@ var fountain: Fountain
 var sum_card: ColourSumCard
 var effects_layer: Node2D
 var task_runner: TaskRunner
+var spelled_things: ThingsInTheMeadow
 var controls_hint: ControlsHint
 var is_celebrating: bool = false
 
@@ -33,6 +34,15 @@ func _ready() -> void:
 	Music.play_track("meadow")
 	add_to_group("gameplay")
 	add_child(MeadowGround.new())
+	spelled_things = ThingsInTheMeadow.new()
+	spelled_things.name = "SpelledThings"
+	add_child(spelled_things)
+	spelled_things.keep_clear_of(RAINBOW_CENTRE + Vector2(0, -60), RainbowBoard.OUTER_RADIUS + 60)
+	spelled_things.keep_clear_of(FOUNTAIN_POSITION, 150)
+	for puddle_position in PUDDLE_LAYOUT.values():
+		spelled_things.keep_clear_of(puddle_position, 150)
+	for bush_details in BUSH_LAYOUT:
+		spelled_things.keep_clear_of(bush_details.position, bush_details.radius + 50)
 	rainbow = RainbowBoard.new()
 	rainbow.position = RAINBOW_CENTRE
 	rainbow.pot_entered.connect(on_pot_entered)
@@ -87,6 +97,7 @@ func _ready() -> void:
 	move_child(stones_layer, things_on_the_grass.get_index())
 	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
 	task_runner.blob_to_keep_clear_of = blob
+	task_runner.word_came_to_life.connect(bring_word_to_life)
 	add_child(task_runner)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
@@ -107,6 +118,14 @@ func on_puddle_entered(puddle: PaintPuddle) -> void:
 	if paint_before != "clean":
 		sum_card.show_sum(paint_before, puddle.paint_name, paint_after)
 		Sound.play("chime", 0.0, 1.2)
+
+
+func bring_word_to_life(thing_name: String, at: Vector2) -> void:
+	spelled_things.bring_to_life(thing_name, at)
+	GameSettings.record_found("words_spelled", thing_name)
+	PaintSplash.burst(effects_layer, at, PaintColours.YELLOW, 20, 650)
+	Sound.play("pop", 0.0, 0.8)
+	FloatingText.show_at(effects_layer, at - Vector2(0, 110), thing_name.to_upper(), PaintColours.INK, 64)
 
 
 func on_fountain_entered() -> void:

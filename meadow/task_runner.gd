@@ -5,6 +5,8 @@ extends Node
 ## the meadow, and cheers when it's done before moving on.
 
 signal task_finished
+## A spelled word turning into its thing, where the last letter was.
+signal word_came_to_life(thing_name: String, at: Vector2)
 
 const TASKS_PATH: String = "res://data/tasks.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
@@ -114,6 +116,8 @@ func on_stone_entered(stone: LetterStone) -> void:
 		Sound.play("pop", 0.0, 1.0 + current_task.letters_done * 0.07)
 		PaintSplash.burst(effects_layer, stone.position, stone.paint_colour, 12, 420)
 		stone.leave()
+	if result == "done" and current_task.thing != "":
+		word_came_to_life.emit(current_task.thing, stone.position)
 	banner.queue_redraw()
 
 
