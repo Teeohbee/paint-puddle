@@ -95,7 +95,11 @@ func on_puddle_entered(puddle: PaintPuddle) -> void:
 		blob.look.squash_stretch.kick(Vector2(-6, 6))
 		return
 	blob_paint_bits = bits_after
-	blob.change_paint(PaintMixing.paint_made_of(bits_after, colour_set))
+	var paint_before: String = blob.paint_name
+	var paint_after: String = PaintMixing.paint_made_of(bits_after, colour_set)
+	blob.change_paint(paint_after)
+	if GameSettings.record_found("colours_found", paint_after):
+		PuddleFriend.say_hello(effects_layer, blob.position, paint_after, paint_before, puddle.paint_name)
 
 
 func on_fountain_entered() -> void:

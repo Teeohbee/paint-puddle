@@ -117,6 +117,8 @@ func on_puddle_entered(puddle: PaintPuddle) -> void:
 		blob.look.squash_stretch.kick(Vector2(-6, 6))
 		return
 	blob.change_paint(paint_after)
+	if GameSettings.record_found("colours_found", paint_after):
+		PuddleFriend.say_hello(effects_layer, blob.position, paint_after, paint_before, puddle.paint_name)
 	if paint_before != "clean":
 		sum_card.show_sum(paint_before, puddle.paint_name, paint_after)
 		Sound.play("chime", 0.0, 1.2)

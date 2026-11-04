@@ -1,18 +1,26 @@
 extends MenuScreen
-## The book of everything found: each word spelled into life in the Meadow,
-## with its picture. Things not found yet are a grey "?", so it's easy to
-## see what's left. Ten to a page like the Hills menu: Back on the left,
-## More on the right. Pick a picture to see it big.
+## The book of everything found, in two parts. Words: each word spelled into
+## life in the Meadow, with its picture. Colours: a puddle friend for every
+## colour mixed, with what made it. Things not found yet are a grey "?", so
+## it's easy to see what's left. Ten to a page like the Hills menu: Back on
+## the left, More on the right. Pick a picture to see it big.
 
 const ENTRY_TILE_SIZE: Vector2 = Vector2(230, 230)
 const ENTRIES_PER_ROW: int = 5
 const ENTRIES_PER_PAGE: int = 10
 const TILE_GAP: int = 30
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
+const SECTIONS: Dictionary = {
+	"words": {"title": "Words", "collection": "words_spelled", "empty": "Spell a word in the Meadow to fill this page."},
+	"colours": {"title": "Colours", "collection": "colours_found", "empty": "Mix a colour to meet a puddle friend."},
+}
 
+## "" for the first page that picks Words or Colours.
+var section: String = ""
 var entries: Array[String] = []
 var page: int = 0
 var page_holder: Control
+var heading: Label
 var found_label: Label
 var close_up: Control
 
@@ -20,20 +28,11 @@ var close_up: Control
 func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
-	make_heading("My Book", 70)
+	heading = make_heading("My Book", 70)
 	found_label = make_heading("", 185)
 	found_label.add_theme_font_size_override("font_size", 44)
 	found_label.add_theme_constant_override("outline_size", 16)
-	entries = words_in_the_book()
-	var found_count: int = 0
-	for entry in entries:
-		if GameSettings.has_found("words_spelled", entry):
-			found_count += 1
-	if found_count == 0:
-		found_label.text = "Spell a word in the Meadow to fill this book."
-	else:
-		found_label.text = "You have found %d of %d!" % [found_count, entries.size()]
-	show_page(0, 0)
+	show_sections("words")
 
 
 ## Every thing a Meadow task can bring to life, in the order the tasks come.
@@ -45,6 +44,60 @@ static func words_in_the_book() -> Array[String]:
 	return words
 
 
+static func entries_for(book_section: String) -> Array[String]:
+	return words_in_the_book() if book_section == "words" else PaintMixing.all_friend_paints()
+
+
+static func found_count(book_section: String) -> int:
+	var count: int = 0
+	for entry in entries_for(book_section):
+		if GameSettings.has_found(SECTIONS[book_section].collection, entry):
+			count += 1
+	return count
+
+
+func clear_page() -> void:
+	if page_holder != null:
+		page_holder.queue_free()
+
+
+## The first page: Words or Colours, each saying how many are found.
+func show_sections(section_to_focus: String) -> void:
+	section = ""
+	clear_page()
+	heading.text = "My Book"
+	found_label.text = ""
+	var row: HBoxContainer = make_tile_row(330, 60)
+	page_holder = row.get_parent()
+	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(220, 220))
+	back.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
+	var words: MenuTile = make_tile("Words", "", PaintColours.ORANGE, Vector2(400, 400))
+	words.picture = "thing:cat"
+	var colours: MenuTile = make_tile("Colours", "colour_set:paint", PaintColours.BLUE, Vector2(400, 400))
+	for tile_and_section in [[words, "words"], [colours, "colours"]]:
+		var tile: MenuTile = tile_and_section[0]
+		var book_section: String = tile_and_section[1]
+		tile.subtitle = "%d of %d" % [found_count(book_section), entries_for(book_section).size()]
+		tile.chosen.connect(open_section.bind(book_section))
+	for tile in [back, words, colours]:
+		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(tile)
+	first_focus = colours if section_to_focus == "colours" else words
+	first_focus.grab_focus_quietly.call_deferred()
+
+
+func open_section(book_section: String) -> void:
+	section = book_section
+	entries = entries_for(book_section)
+	heading.text = SECTIONS[book_section].title
+	var count: int = found_count(book_section)
+	if count == 0:
+		found_label.text = SECTIONS[book_section].empty
+	else:
+		found_label.text = "You have found %d of %d!" % [count, entries.size()]
+	show_page(0, 0)
+
+
 func page_count() -> int:
 	return maxi(1, ceili(entries.size() / float(ENTRIES_PER_PAGE)))
 
@@ -53,8 +106,7 @@ func page_count() -> int:
 ## entry isn't on this page.
 func show_page(new_page: int, entry_to_focus: int) -> void:
 	page = new_page
-	if page_holder != null:
-		page_holder.queue_free()
+	clear_page()
 	var row: HBoxContainer = make_tile_row(290, 50)
 	page_holder = row.get_parent()
 	page_holder.offset_bottom = 290 + 620
@@ -90,17 +142,42 @@ func show_page(new_page: int, entry_to_focus: int) -> void:
 
 
 func make_entry_tile(entry_index: int) -> MenuTile:
-	var thing_name: String = entries[entry_index]
-	if not GameSettings.has_found("words_spelled", thing_name):
+	var entry: String = entries[entry_index]
+	if not GameSettings.has_found(SECTIONS[section].collection, entry):
 		var mystery: MenuTile = make_tile("", "text:?", NOT_FOUND_COLOUR, ENTRY_TILE_SIZE)
 		mystery.is_locked = true
 		mystery.shows_padlock = false
 		return mystery
-	var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()]
-	var tile: MenuTile = make_tile(thing_name.to_upper(), "", colour.lerp(Color.WHITE, 0.35), ENTRY_TILE_SIZE)
-	tile.picture = "thing:" + thing_name
+	var tile: MenuTile
+	if section == "words":
+		var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()]
+		tile = make_tile(entry.to_upper(), "", colour.lerp(Color.WHITE, 0.35), ENTRY_TILE_SIZE)
+		tile.picture = "thing:" + entry
+	else:
+		tile = make_tile(PaintMixing.friend_name_for(entry), "", friend_tile_colour(entry), ENTRY_TILE_SIZE)
+		tile.picture = "friend:" + entry
 	tile.chosen.connect(show_close_up.bind(tile))
 	return tile
+
+
+## Pale enough that the friend stands out, but never white on white.
+static func friend_tile_colour(paint_name: String) -> Color:
+	var colour: Color = PaintMixing.colour_of(paint_name)
+	if colour.get_luminance() > 0.85:
+		return Color(0.62, 0.72, 0.9)
+	return colour.lerp(Color.WHITE, 0.45)
+
+
+## "Red + blue + black", or what a first colour is for.
+static func recipe_text(paint_name: String) -> String:
+	var recipe: Array[String] = PaintMixing.recipe_for(paint_name)
+	if recipe.size() <= 1:
+		return "A first colour"
+	var words: Array[String] = []
+	for ingredient in recipe:
+		words.append(PaintMixing.word_for(ingredient).to_lower())
+	var text: String = " + ".join(words)
+	return text.left(1).to_upper() + text.substr(1)
 
 
 ## The picture big in the middle of the screen. Picking it again puts it away.
@@ -117,6 +194,8 @@ func show_close_up(from_tile: MenuTile) -> void:
 	close_up.add_child(holder)
 	var big: MenuTile = make_tile(from_tile.word, "", from_tile.paint_colour, Vector2(620, 620))
 	big.picture = from_tile.picture
+	if from_tile.picture.begins_with("friend:"):
+		big.subtitle = recipe_text(from_tile.picture.trim_prefix("friend:"))
 	holder.add_child(big)
 	big.chosen.connect(hide_close_up.bind(from_tile))
 	first_focus = big
@@ -132,6 +211,6 @@ func hide_close_up(back_to_tile: MenuTile) -> void:
 
 func go_back() -> void:
 	if page == 0:
-		SceneManager.go_to("res://ui/play_menu.tscn")
+		show_sections(section)
 	else:
 		show_page(page - 1, entries.size())
