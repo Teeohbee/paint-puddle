@@ -41,3 +41,30 @@ func is_good_spot(spot: Vector2) -> bool:
 		if spot.distance_to(place.centre) < place.radius:
 			return false
 	return true
+
+
+func find_staying(thing_name: String) -> SpelledThing:
+	for thing in things_staying():
+		if thing.thing_name == thing_name:
+			return thing
+	return null
+
+
+## Somewhere clear for a thing to stand, away from the given spot.
+func good_spot_away_from(away_from: Vector2) -> Vector2:
+	for attempt in 60:
+		var spot: Vector2 = Vector2(randf_range(SpelledThing.MEADOW_AREA.position.x, SpelledThing.MEADOW_AREA.end.x),
+			randf_range(SpelledThing.MEADOW_AREA.position.y, SpelledThing.MEADOW_AREA.end.y))
+		if is_good_spot(spot) and spot.distance_to(away_from) > 250.0:
+			return spot
+	return Vector2(300, 420)
+
+
+## The thing for one word becomes the thing for another, on the spot.
+func change_thing(from_name: String, to_name: String) -> SpelledThing:
+	var old_thing: SpelledThing = find_staying(from_name)
+	var at: Vector2 = old_thing.position if old_thing != null else Vector2(300, 420)
+	if old_thing != null:
+		old_thing.queue_free()
+		remove_child(old_thing)
+	return bring_to_life(to_name, at)

@@ -98,6 +98,8 @@ func _ready() -> void:
 	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
 	task_runner.blob_to_keep_clear_of = blob
 	task_runner.word_came_to_life.connect(bring_word_to_life)
+	task_runner.task_started.connect(on_task_started)
+	task_runner.thing_changed.connect(change_thing)
 	add_child(task_runner)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
@@ -126,6 +128,23 @@ func bring_word_to_life(thing_name: String, at: Vector2) -> void:
 	PaintSplash.burst(effects_layer, at, PaintColours.YELLOW, 20, 650)
 	Sound.play("pop", 0.0, 0.8)
 	FloatingText.show_at(effects_layer, at - Vector2(0, 110), thing_name.to_upper(), PaintColours.INK, 64)
+
+
+## A change task needs its old word's thing in the meadow to change.
+func on_task_started(task: MeadowTask) -> void:
+	if task.type != "change":
+		return
+	var from_name: String = task.from_word.to_lower()
+	if spelled_things.find_staying(from_name) == null:
+		spelled_things.bring_to_life(from_name, spelled_things.good_spot_away_from(blob.position))
+
+
+func change_thing(from_name: String, to_name: String) -> void:
+	var new_thing: SpelledThing = spelled_things.change_thing(from_name, to_name)
+	GameSettings.record_found("words_spelled", to_name)
+	PaintSplash.burst(effects_layer, new_thing.position, PaintColours.PURPLE, 24, 700)
+	Sound.play("pop", 0.0, 0.8)
+	FloatingText.show_at(effects_layer, new_thing.position - Vector2(0, 110), to_name.to_upper(), PaintColours.INK, 64)
 
 
 func on_fountain_entered() -> void:

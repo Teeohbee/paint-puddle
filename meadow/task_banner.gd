@@ -76,7 +76,7 @@ func draw_task_text(font: Font, available_width: float) -> void:
 
 func progress_area_width(font: Font) -> float:
 	match task.type:
-		"spell":
+		"spell", "change":
 			return task.word.length() * 50.0 + 30.0
 		"collect":
 			return 190.0
@@ -95,6 +95,19 @@ func draw_progress(font: Font, progress_width: float) -> void:
 					PaintColours.RAINBOW[letter_index % PaintColours.RAINBOW.size()])
 			else:
 				draw_line(slot_centre + Vector2(-16, 26), slot_centre + Vector2(16, 26), Color(0.75, 0.75, 0.8), 6.0, true)
+	elif task.type == "change":
+		# The old word with a gap where the new letter goes
+		var changed_index: int = task.changed_letter_index()
+		for letter_index in task.word.length():
+			var slot_centre: Vector2 = Vector2(left + letter_index * 50.0 + 20.0, CARD_SIZE.y / 2.0)
+			var is_the_gap: bool = letter_index == changed_index
+			if is_the_gap and task.letters_done == 0:
+				draw_line(slot_centre + Vector2(-16, 26), slot_centre + Vector2(16, 26), Color(0.75, 0.75, 0.8), 6.0, true)
+				continue
+			var letter: String = task.word[letter_index]
+			var colour: Color = PaintColours.RAINBOW[letter_index % PaintColours.RAINBOW.size()] if is_the_gap else PaintColours.INK
+			var width: float = font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 50).x
+			draw_string(font, slot_centre + Vector2(-width / 2.0, 18), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 50, colour)
 	elif task.type == "collect":
 		var counter: String = "%d / %d" % [task.collected, task.count]
 		draw_string(font, Vector2(left, CARD_SIZE.y / 2.0 + 18), counter, HORIZONTAL_ALIGNMENT_LEFT, -1, 50,
@@ -111,7 +124,7 @@ func draw_task_picture(centre: Vector2) -> void:
 		"make", "collect":
 			draw_colored_polygon(PackedVector2Array([centre + Vector2(-20, -8), centre + Vector2(0, -42), centre + Vector2(20, -8)]), picture_colour)
 			draw_circle(centre + Vector2(0, 4), 23, picture_colour)
-		"spell":
+		"spell", "change":
 			draw_string(font, centre + Vector2(-34, 15), "Abc", HORIZONTAL_ALIGNMENT_LEFT, -1, 36, PaintColours.INK)
 		"sum":
 			draw_string(font, centre + Vector2(-30, 15), "1+2", HORIZONTAL_ALIGNMENT_LEFT, -1, 34, PaintColours.INK)

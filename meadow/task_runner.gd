@@ -7,6 +7,9 @@ extends Node
 signal task_finished
 ## A spelled word turning into its thing, where the last letter was.
 signal word_came_to_life(thing_name: String, at: Vector2)
+signal task_started(task: MeadowTask)
+## A change task done: the thing for the old word turns into the new one.
+signal thing_changed(from_name: String, to_name: String)
 
 const TASKS_PATH: String = "res://data/tasks.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
@@ -48,6 +51,7 @@ func start_task(task_index: int) -> void:
 	current_task = tasks[task_index].fresh_copy()
 	banner.show_task(current_task)
 	is_between_tasks = false
+	task_started.emit(current_task)
 	put_things_in_the_grass()
 
 
@@ -116,8 +120,10 @@ func on_stone_entered(stone: LetterStone) -> void:
 		Sound.play("pop", 0.0, 1.0 + current_task.letters_done * 0.07)
 		PaintSplash.burst(effects_layer, stone.position, stone.paint_colour, 12, 420)
 		stone.leave()
-	if result == "done" and current_task.thing != "":
+	if result == "done" and current_task.type == "spell" and current_task.thing != "":
 		word_came_to_life.emit(current_task.thing, stone.position)
+	if result == "done" and current_task.type == "change":
+		thing_changed.emit(current_task.from_word.to_lower(), current_task.thing)
 	banner.queue_redraw()
 
 
