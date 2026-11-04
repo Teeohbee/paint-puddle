@@ -26,6 +26,8 @@ const NAMES: Array[String] = [
 	"cat", "dog", "hen", "pig", "cow", "fox", "owl", "bee", "ant", "fish",
 	"frog", "duck", "bus", "car", "sun", "hat", "box", "tree", "ball", "cake",
 	"log", "bat", "pen", "bun", "bug", "jar", "dish", "bell",
+	"rabbit", "rocket", "castle", "penguin", "octopus", "giraffe", "snowman",
+	"tractor", "dinosaur", "elephant", "umbrella", "crocodile", "helicopter", "caterpillar",
 ]
 
 
@@ -63,6 +65,20 @@ static func draw(canvas: CanvasItem, thing_name: String) -> void:
 		"jar": draw_jar(canvas)
 		"dish": draw_dish(canvas)
 		"bell": draw_bell(canvas)
+		"rabbit": draw_rabbit(canvas)
+		"rocket": draw_rocket(canvas)
+		"castle": draw_castle(canvas)
+		"penguin": draw_penguin(canvas)
+		"octopus": draw_octopus(canvas)
+		"giraffe": draw_giraffe(canvas)
+		"snowman": draw_snowman(canvas)
+		"tractor": draw_tractor(canvas)
+		"dinosaur": draw_dinosaur(canvas)
+		"elephant": draw_elephant(canvas)
+		"umbrella": draw_umbrella(canvas)
+		"crocodile": draw_crocodile(canvas)
+		"helicopter": draw_helicopter(canvas)
+		"caterpillar": draw_caterpillar(canvas)
 
 
 # --- Building blocks -------------------------------------------------------
@@ -536,3 +552,233 @@ static func draw_bell(canvas: CanvasItem) -> void:
 	canvas.draw_circle(Vector2(0, 34), 9, GOLD.darkened(0.2))
 	canvas.draw_line(Vector2(-40, 20), Vector2(40, 20), GOLD.darkened(0.2), 4)
 	shine(canvas, Vector2(-14, -24), 7)
+
+
+# --- Long words ------------------------------------------------------------
+
+const GREY_ELEPHANT: Color = Color(0.68, 0.7, 0.78)
+const GIRAFFE_YELLOW: Color = Color(1.0, 0.8, 0.35)
+const CROC_GREEN: Color = Color(0.38, 0.66, 0.36)
+const DINO_TEAL: Color = Color(0.36, 0.72, 0.68)
+
+
+static func draw_rabbit(canvas: CanvasItem) -> void:
+	var fur: Color = Color(0.92, 0.9, 0.88)
+	shape(canvas, Vector2(34, 14), Vector2(12, 11), Color.WHITE)
+	shape(canvas, Vector2(6, 16), Vector2(32, 24), fur)
+	shape(canvas, Vector2(-14, 34), Vector2(14, 7), fur)
+	for ear_x in [-30.0, -14.0]:
+		shape(canvas, Vector2(ear_x, -50), Vector2(8, 24), fur, (ear_x + 22) * 0.02)
+		patch(canvas, Vector2(ear_x, -48), Vector2(4, 17), PIG_PINK, (ear_x + 22) * 0.02)
+	shape(canvas, Vector2(-22, -16), Vector2(22, 20), fur)
+	eye(canvas, Vector2(-31, -20), 5)
+	eye(canvas, Vector2(-13, -20), 5)
+	canvas.draw_circle(Vector2(-22, -9), 3.5, PIG_PINK.darkened(0.2))
+	for whisker_side in [-1.0, 1.0]:
+		canvas.draw_line(Vector2(-22 + whisker_side * 6, -7), Vector2(-22 + whisker_side * 24, -10), PaintColours.INK, 1.5, true)
+
+
+static func draw_rocket(canvas: CanvasItem) -> void:
+	outlined_polygon(canvas, PackedVector2Array([Vector2(-20, 10), Vector2(-40, 36), Vector2(-20, 30)]), PaintColours.RED)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(20, 10), Vector2(40, 36), Vector2(20, 30)]), PaintColours.RED)
+	patch(canvas, Vector2(0, 40), Vector2(12, 14), BEAK_ORANGE)
+	patch(canvas, Vector2(0, 38), Vector2(6, 8), PaintColours.YELLOW)
+	var body: PackedVector2Array = PackedVector2Array()
+	for step in 13:
+		var t: float = step / 12.0
+		body.append(Vector2(-22 * sin(t * PI * 0.5 + 0.2), lerpf(-70, 32, t)))
+	for step in 13:
+		var t: float = 1.0 - step / 12.0
+		body.append(Vector2(22 * sin(t * PI * 0.5 + 0.2), lerpf(-70, 32, t)))
+	outlined_polygon(canvas, body, FUR_WHITE)
+	canvas.draw_circle(Vector2(0, -16), 12, PaintColours.BLUE.darkened(0.35))
+	canvas.draw_circle(Vector2(0, -16), 9, Color(0.75, 0.9, 1.0))
+	canvas.draw_line(Vector2(-18, 14), Vector2(18, 14), PaintColours.RED, 6)
+	shine(canvas, Vector2(-8, -40), 5)
+
+
+static func draw_castle(canvas: CanvasItem) -> void:
+	var stone: Color = Color(0.78, 0.76, 0.82)
+	for tower_x in [-44.0, 44.0]:
+		rounded_box(canvas, Rect2(tower_x - 14, -40, 28, 80), 2, stone)
+		outlined_polygon(canvas, PackedVector2Array([Vector2(tower_x - 18, -40), Vector2(tower_x, -68), Vector2(tower_x + 18, -40)]), PaintColours.RED)
+	rounded_box(canvas, Rect2(-30, -20, 60, 60), 2, stone)
+	for battlement_x in [-30.0, -12.0, 6.0, 24.0]:
+		canvas.draw_rect(Rect2(battlement_x, -30, 10, 10), stone.darkened(0.1))
+	rounded_box(canvas, Rect2(-12, 10, 24, 30), 10, WOOD_BROWN)
+	canvas.draw_line(Vector2(44, -68), Vector2(44, -86), PaintColours.INK, 2)
+	canvas.draw_colored_polygon(PackedVector2Array([Vector2(44, -86), Vector2(60, -81), Vector2(44, -76)]), PaintColours.YELLOW)
+	for window_x in [-44.0, 44.0]:
+		rounded_box(canvas, Rect2(window_x - 5, -24, 10, 14), 4, PaintColours.INK.lightened(0.2))
+
+
+static func draw_penguin(canvas: CanvasItem) -> void:
+	for foot_side in [-1.0, 1.0]:
+		shape(canvas, Vector2(foot_side * 12, 36), Vector2(11, 5), BEAK_ORANGE)
+	shape(canvas, Vector2(0, -2), Vector2(32, 40), NEAR_BLACK)
+	shape(canvas, Vector2(-30, 2), Vector2(8, 22), NEAR_BLACK, 0.3)
+	shape(canvas, Vector2(30, 2), Vector2(8, 22), NEAR_BLACK, -0.3)
+	patch(canvas, Vector2(0, 6), Vector2(22, 30), FUR_WHITE)
+	patch(canvas, Vector2(0, -22), Vector2(20, 14), FUR_WHITE)
+	eye(canvas, Vector2(-9, -24), 6)
+	eye(canvas, Vector2(9, -24), 6)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(-6, -16), Vector2(6, -16), Vector2(0, -6)]), BEAK_ORANGE)
+	canvas.draw_circle(Vector2(-16, -12), 4, Color(1.0, 0.5, 0.55, 0.5))
+	canvas.draw_circle(Vector2(16, -12), 4, Color(1.0, 0.5, 0.55, 0.5))
+
+
+static func draw_octopus(canvas: CanvasItem) -> void:
+	var octopus_pink: Color = Color(0.95, 0.45, 0.65)
+	for leg_index in 6:
+		var leg_x: float = -40.0 + leg_index * 16.0
+		var wiggle: PackedVector2Array = PackedVector2Array()
+		for step in 7:
+			var t: float = step / 6.0
+			wiggle.append(Vector2(leg_x + sin(t * PI * 2.0 + leg_index) * 7.0 + (leg_x * 0.25) * t, lerpf(6, 38, t)))
+		canvas.draw_polyline(wiggle, octopus_pink.darkened(0.35), 14, true)
+		canvas.draw_polyline(wiggle, octopus_pink, 10, true)
+	shape(canvas, Vector2(0, -16), Vector2(38, 34), octopus_pink)
+	for spot in [Vector2(-18, -34), Vector2(14, -38), Vector2(24, -18)]:
+		canvas.draw_circle(spot, 4, octopus_pink.lightened(0.3))
+	eye(canvas, Vector2(-12, -12), 8)
+	eye(canvas, Vector2(12, -12), 8)
+	smile(canvas, Vector2(0, -2), 8)
+	shine(canvas, Vector2(-20, -30), 7)
+
+
+static func draw_giraffe(canvas: CanvasItem) -> void:
+	var spots_colour: Color = Color(0.78, 0.5, 0.24)
+	for leg_x in [-4.0, 8.0, 26.0, 38.0]:
+		leg(canvas, Vector2(leg_x, 10), GIRAFFE_YELLOW, 7)
+	canvas.draw_line(Vector2(44, -2), Vector2(56, 18), GIRAFFE_YELLOW.darkened(0.35), 4, true)
+	shape(canvas, Vector2(18, 0), Vector2(30, 16), GIRAFFE_YELLOW)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(-6, -6), Vector2(-28, -62), Vector2(-16, -66), Vector2(10, -8)]), GIRAFFE_YELLOW)
+	for spot in [Vector2(10, -4), Vector2(28, 2), Vector2(-14, -34), Vector2(-20, -52), Vector2(-6, -18)]:
+		patch(canvas, spot, Vector2(5, 4), spots_colour)
+	for horn_x in [-30.0, -20.0]:
+		canvas.draw_line(Vector2(horn_x, -74), Vector2(horn_x, -86), spots_colour, 4, true)
+		canvas.draw_circle(Vector2(horn_x, -87), 3.5, spots_colour)
+	shape(canvas, Vector2(-30, -70), Vector2(18, 11), GIRAFFE_YELLOW, -0.2)
+	patch(canvas, Vector2(-42, -66), Vector2(8, 6), GIRAFFE_YELLOW.lightened(0.3))
+	eye(canvas, Vector2(-30, -74), 5)
+
+
+static func draw_snowman(canvas: CanvasItem) -> void:
+	var snow: Color = Color(0.97, 0.98, 1.0)
+	var snow_rim: Color = Color(0.72, 0.78, 0.88)
+	for ball in [[Vector2(0, 16), 28.0], [Vector2(0, -26), 20.0]]:
+		canvas.draw_circle(ball[0], ball[1] + OUTLINE_WIDTH, snow_rim)
+		canvas.draw_circle(ball[0], ball[1], snow)
+	for button_y in [6.0, 18.0, 30.0]:
+		canvas.draw_circle(Vector2(0, button_y), 3.5, NEAR_BLACK)
+	canvas.draw_rect(Rect2(-18, -48, 36, 6), NEAR_BLACK)
+	canvas.draw_rect(Rect2(-12, -70, 24, 24), NEAR_BLACK)
+	canvas.draw_rect(Rect2(-12, -52, 24, 4), PaintColours.RED)
+	eye(canvas, Vector2(-7, -30), 4)
+	eye(canvas, Vector2(7, -30), 4)
+	canvas.draw_colored_polygon(PackedVector2Array([Vector2(0, -26), Vector2(0, -20), Vector2(-18, -22)]), BEAK_ORANGE)
+	canvas.draw_line(Vector2(-14, -8), Vector2(18, -6), PaintColours.RED, 7, true)
+	canvas.draw_line(Vector2(12, -6), Vector2(16, 10), PaintColours.RED, 7, true)
+	canvas.draw_line(Vector2(-26, 8), Vector2(-48, -8), WOOD_BROWN, 3, true)
+	canvas.draw_line(Vector2(26, 8), Vector2(48, -8), WOOD_BROWN, 3, true)
+
+
+static func draw_tractor(canvas: CanvasItem) -> void:
+	var tractor_green: Color = Color(0.3, 0.68, 0.32)
+	rounded_box(canvas, Rect2(-50, -6, 70, 26), 6, tractor_green)
+	rounded_box(canvas, Rect2(-4, -46, 40, 50), 4, tractor_green)
+	rounded_box(canvas, Rect2(2, -40, 28, 20), 3, Color(0.75, 0.9, 1.0))
+	canvas.draw_rect(Rect2(-40, -24, 8, 18), NEAR_BLACK)
+	wheel(canvas, Vector2(-34, 26), 14)
+	canvas.draw_circle(Vector2(24, 18), 24, NEAR_BLACK)
+	canvas.draw_circle(Vector2(24, 18), 12, PaintColours.YELLOW)
+	shine(canvas, Vector2(-34, 2), 5)
+
+
+static func draw_dinosaur(canvas: CanvasItem) -> void:
+	for leg_x in [-10.0, 6.0, 24.0, 36.0]:
+		leg(canvas, Vector2(leg_x, 16), DINO_TEAL, 11)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(36, 0), Vector2(66, 26), Vector2(30, 18)]), DINO_TEAL)
+	for plate_index in 5:
+		var plate_x: float = -14.0 + plate_index * 12.0
+		outlined_polygon(canvas, PackedVector2Array([Vector2(plate_x - 6, -16), Vector2(plate_x, -30), Vector2(plate_x + 6, -16)]), PaintColours.ORANGE)
+	shape(canvas, Vector2(12, 4), Vector2(34, 22), DINO_TEAL)
+	canvas.draw_line(Vector2(-14, -2), Vector2(-34, -40), DINO_TEAL.darkened(0.35), 16, true)
+	canvas.draw_line(Vector2(-14, -2), Vector2(-34, -40), DINO_TEAL, 12, true)
+	shape(canvas, Vector2(-42, -46), Vector2(16, 11), DINO_TEAL)
+	eye(canvas, Vector2(-44, -50), 5)
+	smile(canvas, Vector2(-48, -44), 5)
+	patch(canvas, Vector2(14, 12), Vector2(20, 9), DINO_TEAL.lightened(0.25))
+
+
+static func draw_elephant(canvas: CanvasItem) -> void:
+	for leg_x in [-14.0, 2.0, 24.0, 38.0]:
+		leg(canvas, Vector2(leg_x, 16), GREY_ELEPHANT, 13)
+	canvas.draw_line(Vector2(50, 0), Vector2(58, 18), GREY_ELEPHANT.darkened(0.35), 4, true)
+	shape(canvas, Vector2(14, 2), Vector2(38, 26), GREY_ELEPHANT)
+	shape(canvas, Vector2(-14, -18), Vector2(20, 24), GREY_ELEPHANT.lightened(0.1))
+	patch(canvas, Vector2(-14, -18), Vector2(13, 17), PIG_PINK.darkened(0.05))
+	shape(canvas, Vector2(-34, -20), Vector2(20, 19), GREY_ELEPHANT)
+	var trunk: PackedVector2Array = PackedVector2Array([Vector2(-48, -14), Vector2(-56, 4), Vector2(-56, 20), Vector2(-48, 28)])
+	canvas.draw_polyline(trunk, GREY_ELEPHANT.darkened(0.35), 16, true)
+	canvas.draw_polyline(trunk, GREY_ELEPHANT, 12, true)
+	eye(canvas, Vector2(-40, -26), 5)
+	canvas.draw_circle(Vector2(-28, -12), 4, Color(1.0, 0.5, 0.55, 0.5))
+
+
+static func draw_umbrella(canvas: CanvasItem) -> void:
+	canvas.draw_line(Vector2(0, -40), Vector2(0, 30), WOOD_BROWN.darkened(0.2), 5, true)
+	canvas.draw_arc(Vector2(-10, 30), 10, 0.0, PI, 10, WOOD_BROWN.darkened(0.2), 5, true)
+	var canopy_colours: Array[Color] = [PaintColours.RED, PaintColours.YELLOW, PaintColours.BLUE, PaintColours.GREEN]
+	for panel_index in 4:
+		var start_angle: float = PI + panel_index * PI / 4.0
+		var points: PackedVector2Array = PackedVector2Array([Vector2(0, -6)])
+		for step in 7:
+			points.append(Vector2(0, -6) + Vector2.from_angle(start_angle + step * PI / 24.0) * Vector2(58, 52))
+		canvas.draw_colored_polygon(points, canopy_colours[panel_index])
+	canvas.draw_line(Vector2(-58, -6), Vector2(58, -6), PaintColours.INK.lightened(0.3), 3, true)
+	canvas.draw_circle(Vector2(0, -60), 4, NEAR_BLACK)
+	shine(canvas, Vector2(-26, -34), 7)
+
+
+static func draw_crocodile(canvas: CanvasItem) -> void:
+	for leg_x in [-20.0, 24.0]:
+		shape(canvas, Vector2(leg_x, 30), Vector2(9, 10), CROC_GREEN)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(30, 6), Vector2(66, 22), Vector2(30, 28)]), CROC_GREEN)
+	shape(canvas, Vector2(4, 16), Vector2(36, 14), CROC_GREEN)
+	rounded_box(canvas, Rect2(-64, 4, 40, 16), 7, CROC_GREEN)
+	for tooth_x in [-58.0, -48.0, -38.0]:
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(tooth_x, 20), Vector2(tooth_x + 6, 20), Vector2(tooth_x + 3, 26)]), Color.WHITE)
+	for bump_x in [-6.0, 8.0, 22.0]:
+		canvas.draw_circle(Vector2(bump_x, 4), 4, CROC_GREEN.darkened(0.2))
+	shape(canvas, Vector2(-28, 0), Vector2(9, 9), CROC_GREEN)
+	eye(canvas, Vector2(-28, -2), 6)
+	patch(canvas, Vector2(0, 22), Vector2(28, 5), Color(0.8, 0.9, 0.5))
+
+
+static func draw_helicopter(canvas: CanvasItem) -> void:
+	canvas.draw_line(Vector2(-60, -52), Vector2(40, -52), NEAR_BLACK, 5, true)
+	canvas.draw_line(Vector2(-8, -52), Vector2(-8, -36), NEAR_BLACK, 4)
+	rounded_box(canvas, Rect2(10, -18, 50, 10), 4, PaintColours.ORANGE)
+	canvas.draw_line(Vector2(60, -28), Vector2(60, 2), NEAR_BLACK, 4, true)
+	shape(canvas, Vector2(-14, -12), Vector2(36, 26), PaintColours.ORANGE)
+	patch(canvas, Vector2(-30, -16), Vector2(16, 14), Color(0.75, 0.9, 1.0))
+	canvas.draw_line(Vector2(-36, 28), Vector2(14, 28), NEAR_BLACK, 4, true)
+	canvas.draw_line(Vector2(-26, 14), Vector2(-28, 28), NEAR_BLACK, 4, true)
+	canvas.draw_line(Vector2(4, 14), Vector2(6, 28), NEAR_BLACK, 4, true)
+	shine(canvas, Vector2(-2, -26), 7)
+
+
+static func draw_caterpillar(canvas: CanvasItem) -> void:
+	var segment_colours: Array[Color] = [LEAF_GREEN, FROG_GREEN, LEAF_GREEN, FROG_GREEN, LEAF_GREEN]
+	for segment_index in range(4, -1, -1):
+		var segment_centre: Vector2 = Vector2(48 - segment_index * 22, 18 - absf(sin(segment_index * 1.1)) * 10)
+		canvas.draw_line(segment_centre + Vector2(-4, 12), segment_centre + Vector2(-6, 20), NEAR_BLACK, 3, true)
+		shape(canvas, segment_centre, Vector2(15, 15), segment_colours[segment_index])
+	shape(canvas, Vector2(-50, -2), Vector2(18, 18), PaintColours.RED)
+	for antenna_side in [-1.0, 1.0]:
+		canvas.draw_line(Vector2(-50 + antenna_side * 6, -18), Vector2(-50 + antenna_side * 12, -32), NEAR_BLACK, 3, true)
+		canvas.draw_circle(Vector2(-50 + antenna_side * 12, -32), 4, PaintColours.YELLOW)
+	eye(canvas, Vector2(-56, -4), 5)
+	eye(canvas, Vector2(-44, -4), 5)
+	smile(canvas, Vector2(-50, 4), 5)
