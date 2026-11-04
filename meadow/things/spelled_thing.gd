@@ -89,10 +89,15 @@ func face_towards(spot: Vector2) -> void:
 		facing = 1.0 if spot.x < position.x else -1.0
 
 
+## Somewhere near to hop to, or anywhere clear if it's boxed in.
 func pick_next_spot() -> Vector2:
 	for attempt in 30:
 		var spot: Vector2 = position + Vector2.from_angle(randf() * TAU) * randf_range(120, 380)
 		if MEADOW_AREA.has_point(spot) and is_good_spot.call(spot):
+			return spot
+	for attempt in 60:
+		var spot: Vector2 = MEADOW_AREA.position + Vector2(randf(), randf()) * MEADOW_AREA.size
+		if is_good_spot.call(spot):
 			return spot
 	return position
 
