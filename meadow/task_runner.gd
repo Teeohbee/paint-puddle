@@ -1,8 +1,8 @@
 class_name TaskRunner
 extends Node
-## Works through the task pack one card at a time. Puts letter stones and
-## paint drops in the grass for the current task, passes it what happens in
-## the meadow, and cheers when it's done before moving on.
+## Works through the task pack one card at a time, in a shuffled order. Puts
+## letter stones and paint drops in the grass for the current task, passes it
+## what happens in the meadow, and cheers when it's done before moving on.
 
 signal task_finished
 ## A spelled word turning into its thing, where the last letter was.
@@ -59,14 +59,28 @@ func start_task(task_index: int) -> void:
 	put_things_in_the_grass()
 
 
-## The next task. After the last one it goes round again from the start of
-## the second round, not back to the easy first tasks.
-func index_after(task_index: int) -> int:
-	if task_index + 1 < tasks.size():
-		return task_index + 1
-	if tasks.size() > GameSettings.TASKS_IN_THE_FIRST_ROUND:
-		return GameSettings.TASKS_IN_THE_FIRST_ROUND
-	return 0
+## The next task, in a mixed-up order: tasks are dealt from a shuffled deck,
+## so every task comes up once before any comes round again. The deck is
+## saved. A new deck never starts with the task just played.
+func deal_next_task_index(current_task_index: int) -> int:
+	if tasks.size() <= 1:
+		return 0
+	var deck: Array[int] = GameSettings.get_task_deck().filter(
+		func(task_index: int) -> bool: return task_index < tasks.size() and task_index != current_task_index)
+	if deck.is_empty():
+		deck = new_shuffled_deck(current_task_index)
+	var next_task_index: int = deck.pop_back()
+	GameSettings.set_task_deck(deck)
+	return next_task_index
+
+
+func new_shuffled_deck(task_index_to_leave_out: int) -> Array[int]:
+	var deck: Array[int] = []
+	for task_index in tasks.size():
+		if task_index != task_index_to_leave_out:
+			deck.append(task_index)
+	deck.shuffle()
+	return deck
 
 
 func put_things_in_the_grass() -> void:
@@ -262,7 +276,7 @@ func finish_task() -> void:
 	var confetti: Confetti = Confetti.new()
 	effects_layer.add_child(confetti)
 	GameSettings.record_progress("tasks_completed", GameSettings.get_progress("tasks_completed") + 1)
-	var next_index: int = index_after(GameSettings.get_progress("next_task_index"))
+	var next_index: int = deal_next_task_index(GameSettings.get_progress("next_task_index"))
 	GameSettings.record_progress("next_task_index", next_index)
 	task_finished.emit()
 	clear_the_grass()
