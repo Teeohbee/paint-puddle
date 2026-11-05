@@ -43,7 +43,7 @@ func _ready() -> void:
 	found_label = make_heading("", 185)
 	found_label.add_theme_font_size_override("font_size", 44)
 	found_label.add_theme_constant_override("outline_size", 16)
-	show_sections("words")
+	show_sections(last_choice("book", "words"))
 
 
 ## Every thing a Meadow task can bring to life, in the order the tasks come.
@@ -98,6 +98,7 @@ func show_sections(section_to_focus: String) -> void:
 
 
 func open_section(book_section: String) -> void:
+	remember_choice("book", book_section)
 	section = book_section
 	entries = entries_for(book_section)
 	heading.text = SECTIONS[book_section].title

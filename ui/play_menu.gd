@@ -1,5 +1,6 @@
 extends MenuScreen
 ## Where shall we play? The Meadow, the Hills or Paint - or look at the book.
+## Starts on whichever was picked last.
 
 
 func _ready() -> void:
@@ -16,9 +17,21 @@ func _ready() -> void:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
-	meadow.chosen.connect(func(): SceneManager.go_to("res://meadow/meadow.tscn"))
-	hills.chosen.connect(func(): SceneManager.go_to("res://ui/hills_menu.tscn"))
-	paint.chosen.connect(func(): SceneManager.go_to("res://ui/paint_menu.tscn"))
-	book.chosen.connect(func(): SceneManager.go_to("res://ui/book.tscn"))
-	first_focus = meadow
-	meadow.grab_focus_quietly.call_deferred()
+	var places: Dictionary = {
+		"meadow": [meadow, "res://meadow/meadow.tscn"],
+		"hills": [hills, "res://ui/hills_menu.tscn"],
+		"paint": [paint, "res://ui/paint_menu.tscn"],
+		"book": [book, "res://ui/book.tscn"],
+	}
+	for place_name in places:
+		var tile: MenuTile = places[place_name][0]
+		var scene_path: String = places[place_name][1]
+		tile.chosen.connect(go_to_place.bind(place_name, scene_path))
+	# Back on the place played last, so coming out of it is one press from going back in
+	first_focus = places[last_choice("play_menu", "meadow")][0]
+	first_focus.grab_focus_quietly.call_deferred()
+
+
+func go_to_place(place_name: String, scene_path: String) -> void:
+	remember_choice("play_menu", place_name)
+	SceneManager.go_to(scene_path)

@@ -18,11 +18,16 @@ func _ready() -> void:
 	for tile in [options, play, quit]:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)
-	play.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
-	options.chosen.connect(func(): SceneManager.go_to("res://ui/options_screen.tscn"))
+	play.chosen.connect(func():
+		remember_choice("title", "play")
+		SceneManager.go_to("res://ui/play_menu.tscn"))
+	options.chosen.connect(func():
+		remember_choice("title", "options")
+		SceneManager.go_to("res://ui/options_screen.tscn"))
 	quit.chosen.connect(quit_game)
-	first_focus = play
-	play.grab_focus_quietly.call_deferred()
+	# Back from Options lands on Options; otherwise Play
+	first_focus = options if last_choice("title", "play") == "options" else play
+	first_focus.grab_focus_quietly.call_deferred()
 
 
 func quit_game() -> void:
