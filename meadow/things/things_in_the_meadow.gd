@@ -11,8 +11,6 @@ extends Node2D
 const MOST_AT_ONCE: int = 6
 ## How near a thing may come to a stone or number stack.
 const CLEAR_DISTANCE_FROM_STONES: float = 110.0
-## How finely a path is checked for places to keep clear.
-const PATH_CHECK_STEP: float = 20.0
 ## Places things shouldn't stop on or walk through: the rainbow, puddles,
 ## fountain, bushes.
 var places_to_keep_clear: Array[Dictionary] = []
@@ -73,13 +71,12 @@ func all_places_to_keep_clear() -> Array[Dictionary]:
 ## clear. A place the walk starts inside doesn't count, so a thing that
 ## finds a stone has appeared under it can still walk away.
 func is_clear_path(from: Vector2, to: Vector2) -> bool:
-	var steps: int = maxi(1, ceili(from.distance_to(to) / PATH_CHECK_STEP))
 	for place in all_places_to_keep_clear():
 		if from.distance_to(place.centre) < place.radius:
 			continue
-		for step in range(1, steps + 1):
-			if from.lerp(to, step / float(steps)).distance_to(place.centre) < place.radius:
-				return false
+		var nearest_on_the_way: Vector2 = Geometry2D.get_closest_point_to_segment(place.centre, from, to)
+		if nearest_on_the_way.distance_to(place.centre) < place.radius:
+			return false
 	return true
 
 
