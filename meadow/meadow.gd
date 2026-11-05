@@ -36,7 +36,6 @@ func _ready() -> void:
 	add_child(MeadowGround.new())
 	spelled_things = ThingsInTheMeadow.new()
 	spelled_things.name = "SpelledThings"
-	add_child(spelled_things)
 	spelled_things.keep_clear_of(RAINBOW_CENTRE + Vector2(0, -60), RainbowBoard.OUTER_RADIUS + 60)
 	spelled_things.keep_clear_of(FOUNTAIN_POSITION, 150)
 	for puddle_position in PUDDLE_LAYOUT.values():
@@ -66,6 +65,7 @@ func _ready() -> void:
 	things_on_the_grass.name = "ThingsOnTheGrass"
 	things_on_the_grass.y_sort_enabled = true
 	add_child(things_on_the_grass)
+	things_on_the_grass.add_child(spelled_things)
 	for bush_details in BUSH_LAYOUT:
 		var bush: Bush = Bush.new()
 		bush.position = bush_details.position
@@ -95,6 +95,7 @@ func _ready() -> void:
 	stones_layer.name = "StonesAndDrops"
 	things_on_the_grass.add_sibling(stones_layer)
 	move_child(stones_layer, things_on_the_grass.get_index())
+	spelled_things.stones_to_keep_clear_of = stones_layer
 	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
 	task_runner.blob_to_keep_clear_of = blob
 	task_runner.word_came_to_life.connect(bring_word_to_life)
