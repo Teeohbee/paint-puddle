@@ -2,7 +2,7 @@ class_name SpelledThing
 extends Node2D
 ## Something a word turned into: spell DOG and a dog pops out of the last
 ## letter, then hops about the meadow. It never gets in the way - nothing
-## bumps into it. When the meadow gets too full the oldest waves goodbye
+## bumps into it, and it walks around things rather than through them. When the meadow gets too full the oldest waves goodbye
 ## and hops off the edge.
 
 const HOP_HEIGHT: float = 10.0
@@ -15,6 +15,8 @@ const MEADOW_AREA: Rect2 = Rect2(140, 200, 1640, 740)
 var thing_name: String = "dog"
 ## Where it may wander: a spot is fine if this returns true. Set by the meadow.
 var is_good_spot: Callable = func(_spot: Vector2) -> bool: return true
+## Whether it may walk straight from one spot to another. Set by the meadow.
+var is_clear_path: Callable = func(_from: Vector2, _to: Vector2) -> bool: return true
 var target: Vector2
 var seconds_resting: float = 0.0
 var is_leaving: bool = false
@@ -66,6 +68,8 @@ func move(delta: float) -> void:
 		seconds_resting -= delta
 		hop_lift = move_toward(hop_lift, 0.0, 60.0 * delta)
 		hop_squash = move_toward(hop_squash, 1.0, 2.0 * delta)
+		if not is_good_spot.call(position):
+			seconds_resting = 0.0
 		if seconds_resting <= 0.0:
 			target = pick_next_spot()
 		return
@@ -89,17 +93,22 @@ func face_towards(spot: Vector2) -> void:
 		facing = 1.0 if spot.x < position.x else -1.0
 
 
-## Somewhere near to hop to, or anywhere clear if it's boxed in.
+## Somewhere near to hop to, or anywhere it can reach if it's boxed in.
+## Staying put if nowhere can be reached without walking through something.
 func pick_next_spot() -> Vector2:
 	for attempt in 30:
 		var spot: Vector2 = position + Vector2.from_angle(randf() * TAU) * randf_range(120, 380)
-		if MEADOW_AREA.has_point(spot) and is_good_spot.call(spot):
+		if can_hop_to(spot):
 			return spot
 	for attempt in 60:
 		var spot: Vector2 = MEADOW_AREA.position + Vector2(randf(), randf()) * MEADOW_AREA.size
-		if is_good_spot.call(spot):
+		if can_hop_to(spot):
 			return spot
 	return position
+
+
+func can_hop_to(spot: Vector2) -> bool:
+	return MEADOW_AREA.has_point(spot) and is_good_spot.call(spot) and is_clear_path.call(position, spot)
 
 
 ## A happy jump and a spin, then off out of the nearest side of the meadow.
