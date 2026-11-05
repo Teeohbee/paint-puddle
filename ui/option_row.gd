@@ -2,10 +2,12 @@ class_name OptionRow
 extends Control
 ## One line of the options screen. A slider row shows its value as paint
 ## dots and changes with left and right. A button row does something when
-## picked.
+## picked. A button row with choices picks between them with left and right
+## first, like what to reset.
 
 signal value_changed(new_value: int)
 signal chosen
+signal choice_changed
 
 const ROW_SIZE: Vector2 = Vector2(1000, 90)
 
@@ -21,6 +23,9 @@ var step: int = 1
 var value_suffix: String = ""
 ## Shown in place of the word for a moment, e.g. "Press again to reset".
 var message: String = ""
+## For a button row: what left and right pick between. Empty for none.
+var choices: Array[String] = []
+var choice_index: int = 0
 var bounce_time: float = 0.0
 
 
@@ -51,10 +56,30 @@ func _gui_input(event: InputEvent) -> void:
 	elif is_slider and event.is_action_pressed("ui_right"):
 		change_value_by(step)
 		accept_event()
+	elif not choices.is_empty() and event.is_action_pressed("ui_left"):
+		change_choice_by(-1)
+		accept_event()
+	elif not choices.is_empty() and event.is_action_pressed("ui_right"):
+		change_choice_by(1)
+		accept_event()
 	elif not is_slider and event.is_action_pressed("ui_accept"):
 		Sound.play("pick", 0.0)
 		chosen.emit()
 		accept_event()
+
+
+func choice_word() -> String:
+	return "" if choices.is_empty() else choices[choice_index]
+
+
+func change_choice_by(amount: int) -> void:
+	var new_index: int = clampi(choice_index + amount, 0, choices.size() - 1)
+	if new_index == choice_index:
+		Sound.play("locked", 0.0)
+		return
+	choice_index = new_index
+	Sound.play("pop", 0.0)
+	choice_changed.emit()
 
 
 func change_value_by(amount: int) -> void:
@@ -87,6 +112,22 @@ func _draw() -> void:
 	draw_string(font, card.position + Vector2(130, size.y / 2.0 + 16), shown_word, HORIZONTAL_ALIGNMENT_LEFT, 380, 44, PaintColours.INK)
 	if is_slider:
 		draw_value_dots(card, font)
+	elif not choices.is_empty():
+		draw_choice(card, font)
+
+
+## The choice in the middle of where a slider's dots would be, with arrows
+## when there's somewhere to go.
+func draw_choice(card: Rect2, font: Font) -> void:
+	var middle_x: float = 690.0
+	var choice_width: float = font.get_string_size(choice_word(), HORIZONTAL_ALIGNMENT_LEFT, -1, 40).x
+	draw_string(font, card.position + Vector2(middle_x - choice_width / 2.0, size.y / 2.0 + 14), choice_word(),
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 40, paint_colour.darkened(0.2))
+	if has_focus():
+		if choice_index > 0:
+			draw_string(font, card.position + Vector2(490, size.y / 2.0 + 14), "<", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, paint_colour)
+		if choice_index < choices.size() - 1:
+			draw_string(font, card.position + Vector2(870, size.y / 2.0 + 14), ">", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, paint_colour)
 
 
 func draw_value_dots(card: Rect2, font: Font) -> void:
