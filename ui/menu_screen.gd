@@ -5,6 +5,19 @@ extends Control
 
 var first_focus: Control
 
+## The tile last picked on each screen, so coming back to a screen lands on
+## where you were rather than its usual first tile. Kept until the game
+## closes, never saved: every launch starts fresh.
+static var last_choices: Dictionary = {}
+
+
+static func remember_choice(screen: String, choice: String) -> void:
+	last_choices[screen] = choice
+
+
+static func last_choice(screen: String, usual_choice: String) -> String:
+	return last_choices.get(screen, usual_choice)
+
 
 func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
