@@ -206,6 +206,19 @@ static func draw_padlock(canvas: CanvasItem, centre: Vector2, size: float, colou
 	canvas.draw_circle(centre + Vector2(0, size * 0.2), size * 0.07, colour.darkened(0.5))
 
 
+## A five-pointed gold star with a darker rim, for something finished.
+static func draw_gold_star(canvas: CanvasItem, centre: Vector2, size: float) -> void:
+	var points: PackedVector2Array = PackedVector2Array()
+	for point_index in 10:
+		var radius: float = size * (0.5 if point_index % 2 == 0 else 0.22)
+		var angle: float = -PI / 2.0 + point_index * PI / 5.0
+		points.append(centre + Vector2(cos(angle), sin(angle)) * radius)
+	var rim: PackedVector2Array = points.duplicate()
+	rim.append(points[0])
+	canvas.draw_colored_polygon(points, Color(1.0, 0.8, 0.15))
+	canvas.draw_polyline(rim, Color(0.8, 0.5, 0.05), size * 0.06, true)
+
+
 static func draw_book(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
 	for side in [-1.0, 1.0]:
 		canvas.draw_colored_polygon(PackedVector2Array([

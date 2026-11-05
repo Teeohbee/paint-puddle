@@ -30,8 +30,10 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"next_task_index": 0,
 }
 
-## Lists of things found, by name, in the order they were found.
-const COLLECTION_NAMES: Array[String] = ["words_spelled", "colours_found"]
+## Lists of things found, by name, in the order they were found. The last
+## one is the Book parts already cheered for being finished ("words",
+## "colours"), so the confetti only happens once.
+const COLLECTION_NAMES: Array[String] = ["words_spelled", "colours_found", "book_parts_celebrated"]
 
 var save_file_path: String = "user://save.json"
 var settings: Dictionary = {}

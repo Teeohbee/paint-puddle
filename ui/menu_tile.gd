@@ -21,6 +21,8 @@ const CORNER_RADIUS: int = 48
 @export var picture: String = ""
 ## A smaller line under the word, like a friend's recipe in the book.
 @export var subtitle: String = ""
+## A gold star in the top corner, for a part of the Book that's all found.
+@export var has_gold_star: bool = false
 
 var bounce_time: float = 0.0
 var scale_tween: Tween
@@ -118,6 +120,8 @@ func _draw() -> void:
 		MenuIcons.draw_icon(self, icon_kind, icon_centre, icon_size, Color.WHITE)
 	if is_locked and shows_padlock:
 		MenuIcons.draw_padlock(self, card.position + Vector2(size.x * 0.78, size.y * 0.2), size.x * 0.28, PaintColours.INK)
+	if has_gold_star:
+		MenuIcons.draw_gold_star(self, card.position + Vector2(size.x * 0.93, size.y * 0.07), size.x * 0.32)
 	draw_word(card)
 
 
