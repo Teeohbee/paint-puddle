@@ -3,7 +3,8 @@ extends MenuScreen
 ## life in the Meadow, with its picture. Colours: a puddle friend for every
 ## colour mixed, with what made it. Things not found yet are a grey "?", so
 ## it's easy to see what's left. Ten to a page, Back on the left, and a page
-## bar underneath. Pick a picture to see it big.
+## bar underneath. Pick a picture to see it big. Finishing a part gets it a
+## gold star, and confetti the first time the Book opens after.
 
 const ENTRY_TILE_SIZE: Vector2 = Vector2(210, 210)
 const BACK_TILE_SIZE: Vector2 = Vector2(200, 200)
@@ -17,8 +18,10 @@ const ENTRIES_PER_PAGE: int = 10
 const TILE_GAP: int = 30
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
 const SECTIONS: Dictionary = {
-	"words": {"title": "Words", "collection": "words_spelled", "empty": "Spell a word in the Meadow to fill this page."},
-	"colours": {"title": "Colours", "collection": "colours_found", "empty": "Mix a colour to meet a puddle friend."},
+	"words": {"title": "Words", "collection": "words_spelled", "empty": "Spell a word in the Meadow to fill this page.",
+		"all_found": "You found every word!"},
+	"colours": {"title": "Colours", "collection": "colours_found", "empty": "Mix a colour to meet a puddle friend.",
+		"all_found": "You found every colour!"},
 }
 
 ## "" for the first page that picks Words or Colours.
@@ -44,6 +47,7 @@ func _ready() -> void:
 	found_label.add_theme_font_size_override("font_size", 44)
 	found_label.add_theme_constant_override("outline_size", 16)
 	show_sections(last_choice("book", "words"))
+	celebrate_newly_finished_parts()
 
 
 ## Every thing a Meadow task can bring to life, in the order the tasks come.
@@ -67,6 +71,21 @@ static func found_count(book_section: String) -> int:
 	return count
 
 
+static func is_finished(book_section: String) -> bool:
+	return found_count(book_section) == entries_for(book_section).size()
+
+
+## Confetti and a chime for a part finished since the Book last opened.
+## Remembered in the save, so it's a once-only moment.
+func celebrate_newly_finished_parts() -> void:
+	for book_section in SECTIONS:
+		if is_finished(book_section) and GameSettings.record_found("book_parts_celebrated", book_section):
+			found_label.text = SECTIONS[book_section].all_found
+			Sound.play("chime", 0.0)
+			add_child(Confetti.new())
+			return
+
+
 func clear_page() -> void:
 	if page_holder != null:
 		page_holder.queue_free()
@@ -88,7 +107,11 @@ func show_sections(section_to_focus: String) -> void:
 	for tile_and_section in [[words, "words"], [colours, "colours"]]:
 		var tile: MenuTile = tile_and_section[0]
 		var book_section: String = tile_and_section[1]
-		tile.subtitle = "%d of %d" % [found_count(book_section), entries_for(book_section).size()]
+		var total: int = entries_for(book_section).size()
+		tile.subtitle = "%d of %d" % [found_count(book_section), total]
+		if is_finished(book_section):
+			tile.subtitle = "All %d!" % total
+			tile.has_gold_star = true
 		tile.chosen.connect(open_section.bind(book_section))
 	for tile in [back, words, colours]:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -105,6 +128,8 @@ func open_section(book_section: String) -> void:
 	var count: int = found_count(book_section)
 	if count == 0:
 		found_label.text = SECTIONS[book_section].empty
+	elif count == entries.size():
+		found_label.text = SECTIONS[book_section].all_found
 	else:
 		found_label.text = "You have found %d of %d!" % [count, entries.size()]
 	show_page(0)
