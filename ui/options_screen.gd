@@ -1,7 +1,7 @@
 extends MenuScreen
 ## Music and sound volumes for everyone. Holding all four face buttons for
 ## three seconds opens the grown-up settings: game speed, gap size, jump
-## help and resetting progress.
+## help and resetting progress - everything, or one part of it.
 
 const SECONDS_TO_HOLD_FOR_GROWN_UPS: float = 3.0
 const FACE_BUTTONS: Array[JoyButton] = [JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_Y]
@@ -37,8 +37,10 @@ func _ready() -> void:
 	grown_up_rows.append(add_slider_row("Game speed", "speed", PaintColours.GREEN, "game_speed_percent", 10, "%"))
 	grown_up_rows.append(add_slider_row("Gap size", "gap", PaintColours.BLUE, "gap_size_percent", 10, "%"))
 	grown_up_rows.append(add_slider_row("Jump help", "jump", PaintColours.YELLOW, "coyote_time_milliseconds", 50, "ms"))
-	reset_row = add_button_row("Reset progress", "reset", PaintColours.RED)
+	reset_row = add_button_row("Reset", "reset", PaintColours.RED)
+	reset_row.choices.assign(GameSettings.RESET_PARTS.values())
 	reset_row.chosen.connect(on_reset_chosen)
+	reset_row.choice_changed.connect(cancel_reset)
 	grown_up_rows.append(reset_row)
 	for row in grown_up_rows:
 		row.visible = false
@@ -82,14 +84,22 @@ func add_button_row(word: String, icon_kind: String, colour: Color) -> OptionRow
 
 
 func on_reset_chosen() -> void:
+	# The part being reset stays on show to the right, so the message is short enough to fit
 	if reset_confirm_seconds_left > 0.0:
-		GameSettings.reset_progress()
-		reset_row.message = "Progress reset"
+		GameSettings.reset_part(GameSettings.RESET_PARTS.keys()[reset_row.choice_index])
+		reset_row.message = "Done!"
 		reset_confirm_seconds_left = 0.0
 		Sound.play("chime", 0.0)
 		return
-	reset_row.message = "Press again to reset"
+	reset_row.message = "Press again"
 	reset_confirm_seconds_left = 3.0
+
+
+## Picking a different part takes back a first press, so a reset is always
+## two presses on the same thing.
+func cancel_reset() -> void:
+	reset_confirm_seconds_left = 0.0
+	reset_row.message = ""
 
 
 func _process(delta: float) -> void:

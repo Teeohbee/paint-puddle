@@ -78,6 +78,37 @@ func reset_progress() -> void:
 	save_to_disk()
 
 
+## What the grown-ups can reset on its own, and the name shown for it.
+const RESET_PARTS: Dictionary = {
+	"everything": "Everything",
+	"hills": "Hills",
+	"meadow": "Meadow",
+	"words": "Book words",
+	"colours": "Book colours",
+}
+
+
+## Resets one part and leaves the rest. The Meadow is its tasks and
+## rainbows; the words spelled there belong to the Book. Emptying a Book
+## part lets its finished-it confetti happen again.
+func reset_part(part: String) -> void:
+	match part:
+		"everything":
+			reset_progress()
+			return
+		"hills":
+			progress["hills_levels_completed"] = 0
+		"meadow":
+			for progress_name in ["tasks_completed", "next_task_index", "rainbows_painted"]:
+				progress[progress_name] = 0
+			task_deck.clear()
+		"words", "colours":
+			var collection_name: String = "words_spelled" if part == "words" else "colours_found"
+			collections[collection_name].clear()
+			collections["book_parts_celebrated"].erase(part)
+	save_to_disk()
+
+
 ## A copy, so changing it doesn't change the save.
 func get_task_deck() -> Array[int]:
 	return task_deck.duplicate()
