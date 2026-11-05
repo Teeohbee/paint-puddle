@@ -198,8 +198,21 @@ func show_close_up(from_tile: MenuTile) -> void:
 		big.subtitle = recipe_text(from_tile.picture.trim_prefix("friend:"))
 	holder.add_child(big)
 	big.chosen.connect(hide_close_up.bind(from_tile))
+	keep_focus_on(big)
 	first_focus = big
 	big.grab_focus_quietly.call_deferred()
+
+
+## Every D-pad direction leads back to the tile itself, so the tiles hidden
+## behind a close-up can't be reached.
+static func keep_focus_on(tile: Control) -> void:
+	var itself: NodePath = NodePath(".")
+	tile.focus_neighbor_left = itself
+	tile.focus_neighbor_right = itself
+	tile.focus_neighbor_top = itself
+	tile.focus_neighbor_bottom = itself
+	tile.focus_next = itself
+	tile.focus_previous = itself
 
 
 func hide_close_up(back_to_tile: MenuTile) -> void:
