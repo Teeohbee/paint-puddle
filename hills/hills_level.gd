@@ -12,6 +12,11 @@ const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
 ## with room to get going before the first jump: every level starts with 700
 ## of flat ground.
 const BLOB_START_X: float = 300.0
+## How far apart two players can get. Past this the one behind is carried up
+## to the one in front, so both always stay on screen.
+const MAX_SEPARATION: float = 1100.0
+## Where the carried blob lands, behind its friend.
+const CATCH_UP_DISTANCE_BEHIND: float = 200.0
 
 ## Which level to play next; set by the hills menu before it opens this scene.
 static var level_to_play: int = 0
@@ -21,14 +26,25 @@ static var level_just_finished: int = -1
 
 var level: Dictionary
 var ground: HillsGround
+## Player one's blob. Everyone playing is in `players`.
 var blob: HillsBlob
+var players: Array[HillsPlayer] = []
+## Player one's paint, for checks that only look at one blob.
+var blob_paint: String:
+	get:
+		return players[0].paint
 var word_bar: WordBar
 var controls_hint: ControlsHint
 var effects_layer: Node2D
-var blob_paint: String
-var colour_tween: Tween
+var camera: Camera2D
+## Pots already taken, so two blobs touching one in the same moment only mix once.
+var taken_pots: Array[HillsPaintPot] = []
 var lowest_ground: float = 0.0
 var is_finished: bool = false
+## Which pad player one is on, or -1 for the keyboard. A second pad pressing A
+## joins in as player two.
+var player_one_device: int = -1
+var player_two_device: int = -1
 
 
 func _ready() -> void:
@@ -72,14 +88,73 @@ func _ready() -> void:
 	blob = HillsBlob.new()
 	blob.position = Vector2(BLOB_START_X, ground.height_at(BLOB_START_X) - HillsBlob.BODY_RADIUS - 2)
 	add_child(blob)
-	blob_paint = level.paint
-	blob.look.paint_colour = PaintMixing.colour_of(blob_paint)
+	players.append(HillsPlayer.new(blob, level.paint))
+	blob.look.paint_colour = PaintMixing.colour_of(level.paint)
 	place_paint_pot()
-	blob.landed.connect(func(): PaintSplash.burst(effects_layer, blob.position + Vector2(0, 40), Color(1, 1, 1, 0.8), 8, 220))
+	splash_when_landing(blob)
 	add_camera()
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
+	player_one_device = SceneManager.last_joypad_device
+	Input.joy_connection_changed.connect(on_joy_connection_changed)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		on_joypad_pressed(event)
+
+
+## A on any pad other than player one's brings in player two, if they aren't here yet.
+func on_joypad_pressed(event: InputEventJoypadButton) -> void:
+	var is_join_button: bool = event.pressed and event.button_index == JOY_BUTTON_A
+	if is_join_button and players.size() == 1 and not is_finished and event.device != player_one_device:
+		add_player_two(event.device)
+
+
+func add_player_two(device: int) -> void:
+	player_two_device = device
+	# Each blob now listens to its own pad; player one keeps the keyboard
+	blob.move_actions = PlayerControls.make_pad_actions("player_one", player_one_device, true)
+	blob.act_action = PlayerControls.make_pad_act_action("player_one", player_one_device, true)
+	var player_two_blob: HillsBlob = HillsBlob.new()
+	player_two_blob.move_actions = PlayerControls.make_pad_actions("player_two", device, false)
+	player_two_blob.act_action = PlayerControls.make_pad_act_action("player_two", device, false)
+	var start_x: float = blob.position.x + 100.0
+	var ground_height: float = ground.height_at(start_x)
+	if ground_height == INF:
+		player_two_blob.position = blob.position
+	else:
+		player_two_blob.position = Vector2(start_x, ground_height - HillsBlob.BODY_RADIUS - 2)
+	add_child(player_two_blob)
+	player_two_blob.look.wears_bow = true
+	player_two_blob.look.paint_colour = PaintMixing.colour_of(level.paint)
+	# No bumps - the blobs just drift through each other
+	blob.add_collision_exception_with(player_two_blob)
+	player_two_blob.add_collision_exception_with(blob)
+	players.append(HillsPlayer.new(player_two_blob, level.paint))
+	splash_when_landing(player_two_blob)
+	PaintSplash.burst(effects_layer, player_two_blob.position, Color.WHITE)
+	Sound.play("pop")
+	player_two_blob.look.squash_stretch.kick(Vector2(-14, 12))
+
+
+func on_joy_connection_changed(device: int, connected: bool) -> void:
+	if not connected and players.size() == 2 and device == player_two_device:
+		remove_player_two()
+
+
+func remove_player_two() -> void:
+	var leaving_player: HillsPlayer = players.pop_back()
+	player_two_device = -1
+	var leaving_blob: HillsBlob = leaving_player.blob
+	leaving_blob.can_move = false
+	# A cloud may be carrying them; let it finish before they pop away
+	while leaving_blob.is_being_carried:
+		await get_tree().create_timer(0.2).timeout
+	PaintSplash.burst(effects_layer, leaving_blob.position, Color.WHITE)
+	Sound.play("pop")
+	leaving_blob.queue_free()
 
 
 ## Walls at both ends so the blob can't walk out of the level.
@@ -118,18 +193,38 @@ func place_paint_pot() -> void:
 	var pot: HillsPaintPot = HillsPaintPot.new()
 	pot.paint_name = level.pickup
 	pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
-	pot.touched.connect(func(touched_pot): mix_into_blob(touched_pot.paint_name))
+	# The level listens for the blob itself, so it knows whose paint to mix
+	pot.body_entered.connect(func(body): on_pot_touched(pot, body))
 	effects_layer.add_child(pot)
 
 
-func mix_into_blob(added_paint: String) -> void:
-	blob_paint = PaintMixing.mix(blob_paint, added_paint)
-	if colour_tween != null:
-		colour_tween.kill()
-	colour_tween = create_tween()
-	colour_tween.tween_property(blob.look, "paint_colour", PaintMixing.colour_of(blob_paint), 0.3)
-	FloatingText.show_at(effects_layer, blob.position - Vector2(0, 160), PaintMixing.word_for(blob_paint) + "!",
-		PaintMixing.colour_of(blob_paint), 90, 1.8, 50.0)
+func splash_when_landing(landing_blob: HillsBlob) -> void:
+	landing_blob.landed.connect(func(): PaintSplash.burst(effects_layer, landing_blob.position + Vector2(0, 40), Color(1, 1, 1, 0.8), 8, 220))
+
+
+func player_of(touching_blob: Node2D) -> HillsPlayer:
+	for player in players:
+		if player.blob == touching_blob:
+			return player
+	return null
+
+
+func on_pot_touched(pot: HillsPaintPot, touching_blob: Node2D) -> void:
+	var player: HillsPlayer = player_of(touching_blob)
+	if player == null or taken_pots.has(pot):
+		return
+	taken_pots.append(pot)
+	mix_into_player(player, pot.paint_name)
+
+
+func mix_into_player(player: HillsPlayer, added_paint: String) -> void:
+	player.paint = PaintMixing.mix(player.paint, added_paint)
+	if player.colour_tween != null:
+		player.colour_tween.kill()
+	player.colour_tween = create_tween()
+	player.colour_tween.tween_property(player.blob.look, "paint_colour", PaintMixing.colour_of(player.paint), 0.3)
+	FloatingText.show_at(effects_layer, player.blob.position - Vector2(0, 160), PaintMixing.word_for(player.paint) + "!",
+		PaintMixing.colour_of(player.paint), 90, 1.8, 50.0)
 
 
 ## Moves x out of a gap, and away from a step, onto plain ground.
@@ -142,8 +237,9 @@ func nearest_ground_x(x: float) -> float:
 	return x
 
 
+## The camera belongs to the level, not a blob, so it can follow everyone.
 func add_camera() -> void:
-	var camera: Camera2D = Camera2D.new()
+	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 5.0
 	camera.drag_vertical_enabled = true
@@ -153,22 +249,54 @@ func add_camera() -> void:
 	camera.limit_left = -60
 	camera.limit_right = int(ground.level_length + 60)
 	camera.limit_bottom = int(lowest_ground + 360)
-	blob.add_child(camera)
+	camera.position = focus_position()
+	add_child(camera)
 	camera.make_current()
 
 
+## The middle of everyone playing.
+func focus_position() -> Vector2:
+	var total: Vector2 = Vector2.ZERO
+	for player in players:
+		total += player.blob.position
+	return total / players.size()
+
+
 func _physics_process(_delta: float) -> void:
-	if not blob.is_being_carried and blob.position.y > lowest_ground + FALL_LINE_BELOW_GROUND:
-		var ground_point: Vector2 = ground.safe_ground_point_near(blob.last_ground_position.x)
-		var safe_spot: Vector2 = ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0)
-		RescueCloud.rescue(blob, effects_layer, safe_spot)
+	camera.position = focus_position()
+	carry_the_one_left_behind()
+	for player in players:
+		var falling_blob: HillsBlob = player.blob
+		if not falling_blob.is_being_carried and falling_blob.position.y > lowest_ground + FALL_LINE_BELOW_GROUND:
+			var ground_point: Vector2 = ground.safe_ground_point_near(falling_blob.last_ground_position.x)
+			var safe_spot: Vector2 = ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0)
+			RescueCloud.rescue(falling_blob, effects_layer, safe_spot)
+
+
+## If two players have drifted too far apart, a cloud brings the one at the
+## back up to the one in front.
+func carry_the_one_left_behind() -> void:
+	if players.size() < 2:
+		return
+	var leader: HillsBlob = players[0].blob
+	var straggler: HillsBlob = players[1].blob
+	if straggler.position.x > leader.position.x:
+		leader = players[1].blob
+		straggler = players[0].blob
+	var is_too_far: bool = leader.position.x - straggler.position.x > MAX_SEPARATION
+	if not is_too_far or leader.is_being_carried or straggler.is_being_carried:
+		return
+	var catch_up_x: float = maxf(leader.last_ground_position.x - CATCH_UP_DISTANCE_BEHIND, 0.0)
+	var ground_point: Vector2 = ground.safe_ground_point_near(catch_up_x)
+	RescueCloud.rescue(straggler, effects_layer, ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0))
 
 
 func finish() -> void:
 	if is_finished:
 		return
 	is_finished = true
-	blob.can_move = false
+	for player in players:
+		player.blob.can_move = false
 	Sound.play("chime", 0.0)
 	FloatingText.show_at(effects_layer, blob.position - Vector2(0, 220), "Well done!", PaintColours.PURPLE, 130, 2.6, 60.0)
 	var confetti_layer: CanvasLayer = CanvasLayer.new()
@@ -179,8 +307,9 @@ func finish() -> void:
 	GameSettings.record_progress("hills_levels_completed", maxi(completed, level_to_play + 1))
 	level_just_finished = level_to_play
 	for hop in 3:
-		blob.velocity.y = -700
-		blob.look.squash_stretch.kick(Vector2(12, -10))
+		for player in players:
+			player.blob.velocity.y = -700
+			player.blob.look.squash_stretch.kick(Vector2(12, -10))
 		await get_tree().create_timer(0.7, false).timeout
 	await get_tree().create_timer(1.2, false).timeout
 	SceneManager.go_to(HILLS_MENU)
