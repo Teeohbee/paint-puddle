@@ -26,6 +26,10 @@ var fountain: Fountain
 var sponge: Sponge
 var effects_layer: Node2D
 var controls_hint: ControlsHint
+## Which pad player one is on, or -1 for the keyboard. A second pad pressing A
+## joins in as player two.
+var player_one_device: int = -1
+var player_two_device: int = -1
 
 
 func _ready() -> void:
@@ -73,6 +77,52 @@ func _ready() -> void:
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
+	player_one_device = SceneManager.last_joypad_device
+	Input.joy_connection_changed.connect(on_joy_connection_changed)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		on_joypad_pressed(event)
+
+
+## A on any pad other than player one's brings in player two, if they aren't here yet.
+func on_joypad_pressed(event: InputEventJoypadButton) -> void:
+	var is_act_button: bool = event.pressed and event.button_index == JOY_BUTTON_A
+	if is_act_button and players.size() == 1 and event.device != player_one_device:
+		add_player_two(event.device)
+
+
+func add_player_two(device: int) -> void:
+	player_two_device = device
+	# Each blob now listens to its own pad; player one keeps the keyboard
+	blob.move_actions = PlayerControls.make_pad_actions("player_one", player_one_device, true)
+	var player_two_blob: MeadowBlob = BLOB_SCENE.instantiate()
+	player_two_blob.move_actions = PlayerControls.make_pad_actions("player_two", device, false)
+	player_two_blob.position = (blob.position + Vector2(140, 0)).clamp(Vector2(60, 60), Vector2(1860, 1020))
+	add_child(player_two_blob)
+	move_child(player_two_blob, blob.get_index() + 1)
+	player_two_blob.look.wears_bow = true
+	# No bumps - the blobs just drift through each other
+	blob.add_collision_exception_with(player_two_blob)
+	player_two_blob.add_collision_exception_with(blob)
+	players.append(PaintPlayer.new(player_two_blob, 1, player_two_blob.position + BRUSH_OFFSET))
+	PaintSplash.burst(effects_layer, player_two_blob.position, Color.WHITE)
+	Sound.play("pop")
+	player_two_blob.look.squash_stretch.kick(Vector2(-14, 12))
+
+
+func on_joy_connection_changed(device: int, connected: bool) -> void:
+	if not connected and players.size() == 2 and device == player_two_device:
+		remove_player_two()
+
+
+func remove_player_two() -> void:
+	var leaving_player: PaintPlayer = players.pop_back()
+	PaintSplash.burst(effects_layer, leaving_player.blob.position, Color.WHITE)
+	Sound.play("pop")
+	leaving_player.blob.queue_free()
+	player_two_device = -1
 
 
 func _physics_process(_delta: float) -> void:
