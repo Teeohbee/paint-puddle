@@ -12,6 +12,11 @@ const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
 ## with room to get going before the first jump: every level starts with 700
 ## of flat ground.
 const BLOB_START_X: float = 300.0
+## How far apart two players can get. Past this the one behind is carried up
+## to the one in front, so both always stay on screen.
+const MAX_SEPARATION: float = 1100.0
+## Where the carried blob lands, behind its friend.
+const CATCH_UP_DISTANCE_BEHIND: float = 200.0
 
 ## Which level to play next; set by the hills menu before it opens this scene.
 static var level_to_play: int = 0
@@ -31,6 +36,7 @@ var blob_paint: String:
 var word_bar: WordBar
 var controls_hint: ControlsHint
 var effects_layer: Node2D
+var camera: Camera2D
 ## Pots already taken, so two blobs touching one in the same moment only mix once.
 var taken_pots: Array[HillsPaintPot] = []
 var lowest_ground: float = 0.0
@@ -168,8 +174,9 @@ func nearest_ground_x(x: float) -> float:
 	return x
 
 
+## The camera belongs to the level, not a blob, so it can follow everyone.
 func add_camera() -> void:
-	var camera: Camera2D = Camera2D.new()
+	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 5.0
 	camera.drag_vertical_enabled = true
@@ -179,17 +186,46 @@ func add_camera() -> void:
 	camera.limit_left = -60
 	camera.limit_right = int(ground.level_length + 60)
 	camera.limit_bottom = int(lowest_ground + 360)
-	blob.add_child(camera)
+	camera.position = focus_position()
+	add_child(camera)
 	camera.make_current()
 
 
+## The middle of everyone playing.
+func focus_position() -> Vector2:
+	var total: Vector2 = Vector2.ZERO
+	for player in players:
+		total += player.blob.position
+	return total / players.size()
+
+
 func _physics_process(_delta: float) -> void:
+	camera.position = focus_position()
+	carry_the_one_left_behind()
 	for player in players:
 		var falling_blob: HillsBlob = player.blob
 		if not falling_blob.is_being_carried and falling_blob.position.y > lowest_ground + FALL_LINE_BELOW_GROUND:
 			var ground_point: Vector2 = ground.safe_ground_point_near(falling_blob.last_ground_position.x)
 			var safe_spot: Vector2 = ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0)
 			RescueCloud.rescue(falling_blob, effects_layer, safe_spot)
+
+
+## If two players have drifted too far apart, a cloud brings the one at the
+## back up to the one in front.
+func carry_the_one_left_behind() -> void:
+	if players.size() < 2:
+		return
+	var leader: HillsBlob = players[0].blob
+	var straggler: HillsBlob = players[1].blob
+	if straggler.position.x > leader.position.x:
+		leader = players[1].blob
+		straggler = players[0].blob
+	var is_too_far: bool = leader.position.x - straggler.position.x > MAX_SEPARATION
+	if not is_too_far or leader.is_being_carried or straggler.is_being_carried:
+		return
+	var catch_up_x: float = maxf(leader.last_ground_position.x - CATCH_UP_DISTANCE_BEHIND, 0.0)
+	var ground_point: Vector2 = ground.safe_ground_point_near(catch_up_x)
+	RescueCloud.rescue(straggler, effects_layer, ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0))
 
 
 func finish() -> void:
