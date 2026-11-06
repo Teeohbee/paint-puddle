@@ -23,6 +23,12 @@ func configure_controls_hint() -> void:
 
 
 const THROW_DISTANCE: float = 420.0
+## Aim help for small thumbs: a target this close to straight ahead gets the splat.
+const AIM_CONE_RADIANS: float = 22.0 * PI / 180.0
+const AIM_RANGE: float = 600.0
+## A ball this close to someone, once it's well on its way, hits them.
+const HIT_RADIUS: float = 50.0
+const HIT_AFTER_PROGRESS: float = 0.3
 const THROW_COOLDOWN_SECONDS: float = 0.35
 ## Splats land on the paper above the puddle row, so they fall short of it.
 const LANDING_AREA: Rect2 = Rect2(40, 40, 1840, 790)
@@ -45,8 +51,11 @@ func _physics_process(delta: float) -> void:
 			throw_splat(player)
 	for ball in balls.duplicate():
 		ball.advance(delta)
-		if ball.has_landed():
-			land_ball(ball)
+		var struck: Node2D = null
+		if ball.progress() > HIT_AFTER_PROGRESS:
+			struck = target_near(ball)
+		if struck != null or ball.has_landed():
+			land_ball(ball, struck)
 
 
 ## Flings a ball of the player's paint where their blob is looking. A clean
@@ -67,7 +76,10 @@ func throw_splat(player: PaintPlayer) -> SplatBall:
 	ball.paint_bits = player.paint_bits
 	ball.paint_colour = PaintMixing.colour_of(thrower_blob.paint_name)
 	ball.start_position = thrower_blob.position
-	ball.landing_position = clamp_to_landing_area(thrower_blob.position + thrower_blob.look.look_direction.normalized() * THROW_DISTANCE)
+	var facing: Vector2 = thrower_blob.look.look_direction.normalized()
+	var aimed_at: Node2D = best_aim_target(player, facing)
+	var landing_spot: Vector2 = aimed_at.position if aimed_at != null else thrower_blob.position + facing * THROW_DISTANCE
+	ball.landing_position = clamp_to_landing_area(landing_spot)
 	ball.position = ball.start_position
 	effects_layer.add_child(ball)
 	balls.append(ball)
@@ -79,9 +91,74 @@ func clamp_to_landing_area(point: Vector2) -> Vector2:
 	return point.clamp(LANDING_AREA.position, LANDING_AREA.end)
 
 
-func land_ball(ball: SplatBall) -> void:
+## Everything this player's splat can hit: the other player and, later, the pals.
+func splat_targets(thrower: PaintPlayer) -> Array[Node2D]:
+	var targets: Array[Node2D] = []
+	for player in players:
+		if player != thrower:
+			targets.append(player.blob)
+	return targets
+
+
+## The nearest to straight ahead of whoever is within the cone and range.
+func best_aim_target(thrower: PaintPlayer, facing: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_angle: float = AIM_CONE_RADIANS
+	for target in splat_targets(thrower):
+		var to_target: Vector2 = target.position - thrower.blob.position
+		if to_target == Vector2.ZERO or to_target.length() > AIM_RANGE:
+			continue
+		var angle: float = absf(facing.angle_to(to_target))
+		if angle < best_angle:
+			best_angle = angle
+			best = target
+	return best
+
+
+func target_near(ball: SplatBall) -> Node2D:
+	for target in splat_targets(ball.thrower):
+		if target.position.distance_to(ball.position) < HIT_RADIUS:
+			return target
+	return null
+
+
+## A splat that hits someone lands at their feet and mixes into their paint.
+## No knockback and no thud: a hit is a gift.
+func land_ball(ball: SplatBall, struck: Node2D) -> void:
 	balls.erase(ball)
 	ball.queue_free()
-	canvas.splat(ball.position, ball.paint_bits, ball.thrower.brush_number)
-	PaintSplash.burst(effects_layer, ball.position, ball.paint_colour, 16, 560)
+	var landing_spot: Vector2 = ball.position if struck == null else struck.position + BRUSH_OFFSET
+	canvas.splat(landing_spot, ball.paint_bits, ball.thrower.brush_number)
+	PaintSplash.burst(effects_layer, landing_spot, ball.paint_colour, 16, 560)
 	Sound.play("splat")
+	if struck != null:
+		mix_into(struck, ball.paint_bits)
+
+
+func paint_bits_of(target: Node2D) -> int:
+	return player_of(target).paint_bits
+
+
+func mix_into(target: Node2D, splat_bits: int) -> void:
+	var bits_before: int = paint_bits_of(target)
+	var bits_after: int = PaintMixing.mix_bits(bits_before, splat_bits)
+	if bits_after == bits_before:
+		target_wobble(target, Vector2(-6, 6))
+		return
+	var paint_before: String = PaintMixing.paint_made_of(bits_before, colour_set)
+	var paint_after: String = PaintMixing.paint_made_of(bits_after, colour_set)
+	var splat_paint: String = PaintMixing.paint_made_of(splat_bits, colour_set)
+	give_paint(target, bits_after, paint_after)
+	PaintSplash.burst(effects_layer, target.position, PaintMixing.colour_of(splat_paint), 18, 560)
+	Sound.play("pick")
+	if GameSettings.record_found("colours_found", paint_after):
+		PuddleFriend.say_hello(effects_layer, target.position, paint_after, paint_before, splat_paint)
+
+
+func give_paint(target: Node2D, bits: int, paint: String) -> void:
+	player_of(target).paint_bits = bits
+	target.change_paint(paint)
+
+
+func target_wobble(target: Node2D, amount: Vector2) -> void:
+	target.look.squash_stretch.kick(amount)
