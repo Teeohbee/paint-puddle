@@ -21,12 +21,18 @@ static var level_just_finished: int = -1
 
 var level: Dictionary
 var ground: HillsGround
+## Player one's blob. Everyone playing is in `players`.
 var blob: HillsBlob
+var players: Array[HillsPlayer] = []
+## Player one's paint, for checks that only look at one blob.
+var blob_paint: String:
+	get:
+		return players[0].paint
 var word_bar: WordBar
 var controls_hint: ControlsHint
 var effects_layer: Node2D
-var blob_paint: String
-var colour_tween: Tween
+## Pots already taken, so two blobs touching one in the same moment only mix once.
+var taken_pots: Array[HillsPaintPot] = []
 var lowest_ground: float = 0.0
 var is_finished: bool = false
 
@@ -72,10 +78,10 @@ func _ready() -> void:
 	blob = HillsBlob.new()
 	blob.position = Vector2(BLOB_START_X, ground.height_at(BLOB_START_X) - HillsBlob.BODY_RADIUS - 2)
 	add_child(blob)
-	blob_paint = level.paint
-	blob.look.paint_colour = PaintMixing.colour_of(blob_paint)
+	players.append(HillsPlayer.new(blob, level.paint))
+	blob.look.paint_colour = PaintMixing.colour_of(level.paint)
 	place_paint_pot()
-	blob.landed.connect(func(): PaintSplash.burst(effects_layer, blob.position + Vector2(0, 40), Color(1, 1, 1, 0.8), 8, 220))
+	splash_when_landing(blob)
 	add_camera()
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
@@ -118,18 +124,38 @@ func place_paint_pot() -> void:
 	var pot: HillsPaintPot = HillsPaintPot.new()
 	pot.paint_name = level.pickup
 	pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
-	pot.touched.connect(func(touched_pot): mix_into_blob(touched_pot.paint_name))
+	# The level listens for the blob itself, so it knows whose paint to mix
+	pot.body_entered.connect(func(body): on_pot_touched(pot, body))
 	effects_layer.add_child(pot)
 
 
-func mix_into_blob(added_paint: String) -> void:
-	blob_paint = PaintMixing.mix(blob_paint, added_paint)
-	if colour_tween != null:
-		colour_tween.kill()
-	colour_tween = create_tween()
-	colour_tween.tween_property(blob.look, "paint_colour", PaintMixing.colour_of(blob_paint), 0.3)
-	FloatingText.show_at(effects_layer, blob.position - Vector2(0, 160), PaintMixing.word_for(blob_paint) + "!",
-		PaintMixing.colour_of(blob_paint), 90, 1.8, 50.0)
+func splash_when_landing(landing_blob: HillsBlob) -> void:
+	landing_blob.landed.connect(func(): PaintSplash.burst(effects_layer, landing_blob.position + Vector2(0, 40), Color(1, 1, 1, 0.8), 8, 220))
+
+
+func player_of(touching_blob: Node2D) -> HillsPlayer:
+	for player in players:
+		if player.blob == touching_blob:
+			return player
+	return null
+
+
+func on_pot_touched(pot: HillsPaintPot, touching_blob: Node2D) -> void:
+	var player: HillsPlayer = player_of(touching_blob)
+	if player == null or taken_pots.has(pot):
+		return
+	taken_pots.append(pot)
+	mix_into_player(player, pot.paint_name)
+
+
+func mix_into_player(player: HillsPlayer, added_paint: String) -> void:
+	player.paint = PaintMixing.mix(player.paint, added_paint)
+	if player.colour_tween != null:
+		player.colour_tween.kill()
+	player.colour_tween = create_tween()
+	player.colour_tween.tween_property(player.blob.look, "paint_colour", PaintMixing.colour_of(player.paint), 0.3)
+	FloatingText.show_at(effects_layer, player.blob.position - Vector2(0, 160), PaintMixing.word_for(player.paint) + "!",
+		PaintMixing.colour_of(player.paint), 90, 1.8, 50.0)
 
 
 ## Moves x out of a gap, and away from a step, onto plain ground.
@@ -158,17 +184,20 @@ func add_camera() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if not blob.is_being_carried and blob.position.y > lowest_ground + FALL_LINE_BELOW_GROUND:
-		var ground_point: Vector2 = ground.safe_ground_point_near(blob.last_ground_position.x)
-		var safe_spot: Vector2 = ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0)
-		RescueCloud.rescue(blob, effects_layer, safe_spot)
+	for player in players:
+		var falling_blob: HillsBlob = player.blob
+		if not falling_blob.is_being_carried and falling_blob.position.y > lowest_ground + FALL_LINE_BELOW_GROUND:
+			var ground_point: Vector2 = ground.safe_ground_point_near(falling_blob.last_ground_position.x)
+			var safe_spot: Vector2 = ground_point - Vector2(0, HillsBlob.BODY_RADIUS + 30.0)
+			RescueCloud.rescue(falling_blob, effects_layer, safe_spot)
 
 
 func finish() -> void:
 	if is_finished:
 		return
 	is_finished = true
-	blob.can_move = false
+	for player in players:
+		player.blob.can_move = false
 	Sound.play("chime", 0.0)
 	FloatingText.show_at(effects_layer, blob.position - Vector2(0, 220), "Well done!", PaintColours.PURPLE, 130, 2.6, 60.0)
 	var confetti_layer: CanvasLayer = CanvasLayer.new()
@@ -179,8 +208,9 @@ func finish() -> void:
 	GameSettings.record_progress("hills_levels_completed", maxi(completed, level_to_play + 1))
 	level_just_finished = level_to_play
 	for hop in 3:
-		blob.velocity.y = -700
-		blob.look.squash_stretch.kick(Vector2(12, -10))
+		for player in players:
+			player.blob.velocity.y = -700
+			player.blob.look.squash_stretch.kick(Vector2(12, -10))
 		await get_tree().create_timer(0.7, false).timeout
 	await get_tree().create_timer(1.2, false).timeout
 	SceneManager.go_to(HILLS_MENU)
