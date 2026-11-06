@@ -12,6 +12,9 @@ const SPLAT_ROWS: int = 3
 const SCREEN_SIZE: Vector2 = Vector2(1920, 1080)
 
 var is_changing_scene: bool = false
+## The pad that last sent a button press or a firm push, so Paint knows which
+## pad is player one's: the one that chose it. -1 until a pad is used.
+var last_joypad_device: int = -1
 ## 0 = screen clear, 1 = screen covered in paint
 var coverage: float = 0.0:
 	set(new_coverage):
@@ -32,6 +35,13 @@ func _ready() -> void:
 	curtain.draw.connect(draw_splats)
 	add_child(curtain)
 	lay_out_splats()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton and event.pressed:
+		last_joypad_device = event.device
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
+		last_joypad_device = event.device
 
 
 func lay_out_splats() -> void:

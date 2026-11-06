@@ -7,6 +7,9 @@ extends CharacterBody2D
 const MAGNET_PULL_RATE: float = 1600.0
 const MAGNET_TOP_SPEED: float = 240.0
 
+## The left, right, up and down actions this blob listens to. The usual ones
+## hear any pad; in two-player Paint each blob gets its own - see PlayerControls.
+var move_actions: Array[StringName] = PlayerControls.MOVE_ACTIONS.duplicate()
 var mover: TopDownMover = TopDownMover.new()
 var magnet_picker: MagnetPicker = MagnetPicker.new()
 var was_moving: bool = false
@@ -34,7 +37,7 @@ func change_paint(new_paint_name: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var input_direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var input_direction: Vector2 = Input.get_vector(move_actions[0], move_actions[1], move_actions[2], move_actions[3])
 	var magnets: Array = get_tree().get_nodes_in_group("magnets")
 	var magnet: Node2D = null
 	if input_direction == Vector2.ZERO:

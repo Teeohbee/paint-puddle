@@ -14,6 +14,12 @@ const PUPIL_RADIUS: float = 6.0
 		paint_colour = new_colour
 		queue_redraw()
 
+## Player two's little white bow, on top of the head. Inked round the edge so
+## it shows up on white paint and white paper too.
+var wears_bow: bool = false:
+	set(new_wears_bow):
+		wears_bow = new_wears_bow
+		queue_redraw()
 ## Which way the eyes look, and which way the squash-stretch points.
 var look_direction: Vector2 = Vector2.DOWN
 ## Off for things that hop, which squash up and down whichever way they look.
@@ -52,6 +58,8 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	draw_shine()
 	draw_face()
+	if wears_bow:
+		draw_bow()
 
 
 func draw_shadow() -> void:
@@ -95,3 +103,20 @@ func draw_face() -> void:
 		draw_circle(pupil_centre + Vector2(-2, -2), 2.0, Color.WHITE)
 	var mouth_centre: Vector2 = Vector2(0, 10) + face_offset
 	draw_arc(mouth_centre, 7.0, 0.35, PI - 0.35, 12, PaintColours.INK, 3.0, true)
+
+
+## Two white wings and a knot, with an ink outline, sitting on the top of the head.
+func draw_bow() -> void:
+	var knot_centre: Vector2 = Vector2(0, -BODY_RADIUS + 2.0)
+	for side in [-1.0, 1.0]:
+		var wing: PackedVector2Array = PackedVector2Array([
+			knot_centre,
+			knot_centre + Vector2(side * 26.0, -15.0),
+			knot_centre + Vector2(side * 28.0, 3.0),
+		])
+		draw_colored_polygon(wing, Color.WHITE)
+		var outline: PackedVector2Array = wing.duplicate()
+		outline.append(wing[0])
+		draw_polyline(outline, PaintColours.INK, 3.0, true)
+	draw_circle(knot_centre, 7.0, PaintColours.INK)
+	draw_circle(knot_centre, 4.0, Color.WHITE)

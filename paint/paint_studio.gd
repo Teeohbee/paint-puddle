@@ -17,18 +17,19 @@ const PAPER_COLOUR: Color = Color(1.0, 0.98, 0.94)
 ## Paint colours or printer colours, picked on the way in.
 static var colour_set: String = "paint"
 
+## Player one's blob. Everyone painting is in `players`.
 var blob: MeadowBlob
-## What the blob's paint is made of. The blob only knows the paint's name,
-## and printer black made from all three inks shares its name with black
-## ink, so the bits are kept here for mixing and painting.
-var blob_paint_bits: int = 0
+var players: Array[PaintPlayer] = []
 var canvas: PaintCanvas
 var puddles: Dictionary = {}
 var fountain: Fountain
 var sponge: Sponge
 var effects_layer: Node2D
-var last_brush_position: Vector2
 var controls_hint: ControlsHint
+## Which pad player one is on, or -1 for the keyboard. A second pad pressing A
+## joins in as player two.
+var player_one_device: int = -1
+var player_two_device: int = -1
 
 
 func _ready() -> void:
@@ -48,12 +49,12 @@ func _ready() -> void:
 		var puddle: PaintPuddle = PaintPuddle.new()
 		puddle.paint_name = paint_name
 		puddle.position = FIRST_PUDDLE_POSITION + Vector2(PUDDLE_SPACING * puddle_index, 0)
-		puddle.blob_entered.connect(on_puddle_entered)
+		puddle.body_entered.connect(on_body_entered_puddle.bind(puddle))
 		add_child(puddle)
 		puddles[paint_name] = puddle
 	fountain = Fountain.new()
 	fountain.position = FOUNTAIN_POSITION
-	fountain.blob_entered.connect(on_fountain_entered)
+	fountain.body_entered.connect(on_body_entered_fountain)
 	add_child(fountain)
 	sponge = Sponge.new()
 	sponge.position = SPONGE_POSITION
@@ -63,7 +64,7 @@ func _ready() -> void:
 	blob = BLOB_SCENE.instantiate()
 	blob.position = Vector2(960, 480)
 	add_child(blob)
-	last_brush_position = blob.position + BRUSH_OFFSET
+	players.append(PaintPlayer.new(blob, 0, blob.position + BRUSH_OFFSET))
 	effects_layer = Node2D.new()
 	add_child(effects_layer)
 	add_child(Hedge.new())
@@ -76,43 +77,111 @@ func _ready() -> void:
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
+	player_one_device = SceneManager.last_joypad_device
+	Input.joy_connection_changed.connect(on_joy_connection_changed)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		on_joypad_pressed(event)
+
+
+## A on any pad other than player one's brings in player two, if they aren't here yet.
+func on_joypad_pressed(event: InputEventJoypadButton) -> void:
+	var is_act_button: bool = event.pressed and event.button_index == JOY_BUTTON_A
+	if is_act_button and players.size() == 1 and event.device != player_one_device:
+		add_player_two(event.device)
+
+
+func add_player_two(device: int) -> void:
+	player_two_device = device
+	# Each blob now listens to its own pad; player one keeps the keyboard
+	blob.move_actions = PlayerControls.make_pad_actions("player_one", player_one_device, true)
+	var player_two_blob: MeadowBlob = BLOB_SCENE.instantiate()
+	player_two_blob.move_actions = PlayerControls.make_pad_actions("player_two", device, false)
+	player_two_blob.position = (blob.position + Vector2(140, 0)).clamp(Vector2(60, 60), Vector2(1860, 1020))
+	add_child(player_two_blob)
+	move_child(player_two_blob, blob.get_index() + 1)
+	player_two_blob.look.wears_bow = true
+	# No bumps - the blobs just drift through each other
+	blob.add_collision_exception_with(player_two_blob)
+	player_two_blob.add_collision_exception_with(blob)
+	players.append(PaintPlayer.new(player_two_blob, 1, player_two_blob.position + BRUSH_OFFSET))
+	PaintSplash.burst(effects_layer, player_two_blob.position, Color.WHITE)
+	Sound.play("pop")
+	player_two_blob.look.squash_stretch.kick(Vector2(-14, 12))
+
+
+func on_joy_connection_changed(device: int, connected: bool) -> void:
+	if not connected and players.size() == 2 and device == player_two_device:
+		remove_player_two()
+
+
+func remove_player_two() -> void:
+	var leaving_player: PaintPlayer = players.pop_back()
+	PaintSplash.burst(effects_layer, leaving_player.blob.position, Color.WHITE)
+	Sound.play("pop")
+	leaving_player.blob.queue_free()
+	player_two_device = -1
 
 
 func _physics_process(_delta: float) -> void:
-	var brush_position: Vector2 = blob.position + BRUSH_OFFSET
-	var has_moved: bool = brush_position != last_brush_position
-	if has_moved and blob_paint_bits != 0:
-		canvas.paint_line(last_brush_position, brush_position, blob_paint_bits)
-	last_brush_position = brush_position
+	for player in players:
+		var brush_position: Vector2 = player.blob.position + BRUSH_OFFSET
+		var has_moved: bool = brush_position != player.last_brush_position
+		if has_moved and player.paint_bits != 0:
+			canvas.paint_line(player.last_brush_position, brush_position, player.paint_bits, player.brush_number)
+		player.last_brush_position = brush_position
 
 
-func on_puddle_entered(puddle: PaintPuddle) -> void:
+func player_of(entered_blob: Node2D) -> PaintPlayer:
+	for player in players:
+		if player.blob == entered_blob:
+			return player
+	return null
+
+
+func on_body_entered_puddle(body: Node2D, puddle: PaintPuddle) -> void:
+	var player: PaintPlayer = player_of(body)
+	if player != null:
+		on_puddle_entered(puddle, player)
+
+
+func on_body_entered_fountain(body: Node2D) -> void:
+	var player: PaintPlayer = player_of(body)
+	if player != null:
+		on_fountain_entered(player)
+
+
+func on_puddle_entered(puddle: PaintPuddle, player: PaintPlayer) -> void:
+	var player_blob: MeadowBlob = player.blob
 	var puddle_bits: int = PaintMixing.bits_of(puddle.paint_name, colour_set)
-	var bits_after: int = PaintMixing.mix_bits(blob_paint_bits, puddle_bits)
-	PaintSplash.burst(effects_layer, blob.position, PaintMixing.colour_of(puddle.paint_name))
+	var bits_after: int = PaintMixing.mix_bits(player.paint_bits, puddle_bits)
+	PaintSplash.burst(effects_layer, player_blob.position, PaintMixing.colour_of(puddle.paint_name))
 	Sound.play("plop")
-	if bits_after == blob_paint_bits:
-		blob.look.squash_stretch.kick(Vector2(-6, 6))
+	if bits_after == player.paint_bits:
+		player_blob.look.squash_stretch.kick(Vector2(-6, 6))
 		return
-	blob_paint_bits = bits_after
-	var paint_before: String = blob.paint_name
+	player.paint_bits = bits_after
+	var paint_before: String = player_blob.paint_name
 	var paint_after: String = PaintMixing.paint_made_of(bits_after, colour_set)
-	blob.change_paint(paint_after)
+	player_blob.change_paint(paint_after)
 	if GameSettings.record_found("colours_found", paint_after):
-		PuddleFriend.say_hello(effects_layer, blob.position, paint_after, paint_before, puddle.paint_name)
+		PuddleFriend.say_hello(effects_layer, player_blob.position, paint_after, paint_before, puddle.paint_name)
 
 
-func on_fountain_entered() -> void:
-	if blob_paint_bits == 0:
+func on_fountain_entered(player: PaintPlayer) -> void:
+	if player.paint_bits == 0:
 		return
-	PaintSplash.burst(effects_layer, blob.position, Color(0.85, 0.97, 1.0), 18, 600)
+	PaintSplash.burst(effects_layer, player.blob.position, Color(0.85, 0.97, 1.0), 18, 600)
 	Sound.play("wash", 0.0)
-	blob_paint_bits = 0
-	blob.change_paint("clean")
+	player.paint_bits = 0
+	player.blob.change_paint("clean")
 
 
 func wipe_picture() -> void:
 	canvas.wipe()
 	PaintSplash.burst(effects_layer, sponge.position, Color(0.85, 0.97, 1.0), 24, 700)
 	Sound.play("wash", 0.0)
-	blob.look.squash_stretch.kick(Vector2(-14, 12))
+	for player in players:
+		player.blob.look.squash_stretch.kick(Vector2(-14, 12))

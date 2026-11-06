@@ -13,7 +13,8 @@ var magnet_radius: float = 130.0
 ## How full the ring is, from 0 to 1.
 var hold_progress: float = 0.0
 var needs_leaving: bool = false
-var is_blob_on: bool = false
+## Every blob sitting on the sponge, so one leaving doesn't cancel the other's wipe.
+var blobs_on: Array[Node2D] = []
 var squish_age: float = 99.0
 
 
@@ -24,17 +25,30 @@ func _ready() -> void:
 	var collision: CollisionShape2D = CollisionShape2D.new()
 	collision.shape = shape
 	add_child(collision)
-	body_entered.connect(func(body): if body is MeadowBlob: is_blob_on = true)
-	body_exited.connect(func(body): if body is MeadowBlob: is_blob_on = false)
+	body_entered.connect(func(body): if body is MeadowBlob: blob_arrived(body))
+	body_exited.connect(func(body): if body is MeadowBlob: blob_left(body))
 
 
 func _physics_process(delta: float) -> void:
-	advance(delta, is_blob_on)
+	advance(delta, is_any_blob_on())
 
 
 func _process(delta: float) -> void:
 	squish_age += delta
 	queue_redraw()
+
+
+func blob_arrived(blob: Node2D) -> void:
+	if not blobs_on.has(blob):
+		blobs_on.append(blob)
+
+
+func blob_left(blob: Node2D) -> void:
+	blobs_on.erase(blob)
+
+
+func is_any_blob_on() -> bool:
+	return not blobs_on.is_empty()
 
 
 func advance(delta: float, blob_is_on: bool) -> void:

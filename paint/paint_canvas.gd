@@ -23,13 +23,19 @@ var columns: int = ceili(float(PICTURE_SIZE.x) / CELL_SIZE)
 var rows: int = ceili(float(PICTURE_SIZE.y) / CELL_SIZE)
 ## Which paint is on each square, as bits - see PaintMixing.
 var cells: PackedByteArray = PackedByteArray()
-## The pass that last painted each square. A pass is a run of brush lines
-## in one paint, so a square stays in the same pass while the brush is over it.
-var last_pass_painted: PackedInt32Array = PackedInt32Array()
-## Counts up by one for each brush line; a square that wasn't painted by the
-## line before this one has had the brush leave it, so it mixes again.
-var line_number: int = 0
-var last_line_paint_bits: int = 0
+## How many brushes can paint at once, one for each player.
+const MAX_BRUSHES: int = 2
+
+## Each brush keeps its own pass state, so one brush resting on a square
+## isn't mistaken for a new pass just because the other brush painted in between.
+## The pass that last painted each square, for each brush. A pass is a run of
+## brush lines in one paint, so a square stays in the same pass while the
+## brush is over it.
+var last_pass_painted_by_brush: Array[PackedInt32Array] = []
+## Counts up by one for each line a brush paints; a square that wasn't painted
+## by the line before this one has had the brush leave it, so it mixes again.
+var line_number_by_brush: PackedInt32Array = PackedInt32Array()
+var last_line_paint_bits_by_brush: PackedInt32Array = PackedInt32Array()
 ## What each paint makes on top of each paint, worked out once:
 ## mixed_bits_table[square bits * BIT_PATTERNS + paint bits].
 var mixed_bits_table: PackedByteArray = PackedByteArray()
@@ -51,8 +57,13 @@ var wipe_tween: Tween
 func _init() -> void:
 	cells.resize(columns * rows)
 	coverage.resize(columns * rows)
-	last_pass_painted.resize(columns * rows)
-	last_pass_painted.fill(-1)
+	line_number_by_brush.resize(MAX_BRUSHES)
+	last_line_paint_bits_by_brush.resize(MAX_BRUSHES)
+	for brush in MAX_BRUSHES:
+		var last_pass_painted: PackedInt32Array = PackedInt32Array()
+		last_pass_painted.resize(columns * rows)
+		last_pass_painted.fill(-1)
+		last_pass_painted_by_brush.append(last_pass_painted)
 	name_paints_by_bits()
 	mixed_bits_table.resize(BIT_PATTERNS * BIT_PATTERNS)
 	for square_bits in BIT_PATTERNS:
@@ -87,18 +98,21 @@ func _process(_delta: float) -> void:
 
 
 ## Paints a smooth line of round dabs from one point to another, mixing
-## with whatever paint is already on the paper.
-func paint_line(from: Vector2, to: Vector2, paint_bits: int) -> void:
+## with whatever paint is already on the paper. Each player paints with their
+## own brush number; a lone brush is brush 0.
+func paint_line(from: Vector2, to: Vector2, paint_bits: int, brush: int = 0) -> void:
 	# A new paint starts a new pass, so it mixes even where the brush already is
-	line_number += 2 if paint_bits != last_line_paint_bits else 1
-	last_line_paint_bits = paint_bits
+	line_number_by_brush[brush] += 2 if paint_bits != last_line_paint_bits_by_brush[brush] else 1
+	last_line_paint_bits_by_brush[brush] = paint_bits
 	var points: PackedVector2Array = dab_points(from, to, DAB_SPACING)
 	for point in points:
-		dab(point, paint_bits)
+		dab(point, paint_bits, brush)
 	dabs_painted += points.size()
 
 
-func dab(centre: Vector2, paint_bits: int) -> void:
+func dab(centre: Vector2, paint_bits: int, brush: int = 0) -> void:
+	var line_number: int = line_number_by_brush[brush]
+	var last_pass_painted: PackedInt32Array = last_pass_painted_by_brush[brush]
 	var reach: int = ceili(DAB_RADIUS / CELL_SIZE) + 1
 	var centre_cell: Vector2i = Vector2i(centre / CELL_SIZE)
 	for row in range(centre_cell.y - reach, centre_cell.y + reach + 1):
@@ -165,8 +179,9 @@ func wipe() -> void:
 func clear_paper() -> void:
 	cells.fill(0)
 	coverage.fill(0.0)
-	# The fresh paper takes paint even where the brush is sitting
-	line_number += 2
+	# The fresh paper takes paint even where the brushes are sitting
+	for brush in MAX_BRUSHES:
+		line_number_by_brush[brush] += 2
 	if picture != null:
 		picture.fill(Color.TRANSPARENT)
 		picture_changed = true
