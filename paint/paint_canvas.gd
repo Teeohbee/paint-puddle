@@ -15,6 +15,9 @@ const PICTURE_SIZE: Vector2i = Vector2i(1920, 1080)
 const CELL_SIZE: int = 4
 const DAB_RADIUS: float = 30.0
 const DAB_SPACING: float = 6.0
+const SPLAT_RADIUS: float = 70.0
+const SPLAT_DROPLETS_MIN: int = 5
+const SPLAT_DROPLETS_MAX: int = 7
 ## How many different paints a square can hold, one for each bit pattern.
 const BIT_PATTERNS: int = PaintMixing.PRIMARY_BITS + PaintMixing.SHADE_BITS + 1
 
@@ -110,10 +113,10 @@ func paint_line(from: Vector2, to: Vector2, paint_bits: int, brush: int = 0) -> 
 	dabs_painted += points.size()
 
 
-func dab(centre: Vector2, paint_bits: int, brush: int = 0) -> void:
+func dab(centre: Vector2, paint_bits: int, brush: int = 0, radius: float = DAB_RADIUS) -> void:
 	var line_number: int = line_number_by_brush[brush]
 	var last_pass_painted: PackedInt32Array = last_pass_painted_by_brush[brush]
-	var reach: int = ceili(DAB_RADIUS / CELL_SIZE) + 1
+	var reach: int = ceili(radius / CELL_SIZE) + 1
 	var centre_cell: Vector2i = Vector2i(centre / CELL_SIZE)
 	for row in range(centre_cell.y - reach, centre_cell.y + reach + 1):
 		for column in range(centre_cell.x - reach, centre_cell.x + reach + 1):
@@ -122,7 +125,7 @@ func dab(centre: Vector2, paint_bits: int, brush: int = 0) -> void:
 			var cell_centre: Vector2 = (Vector2(column, row) + Vector2(0.5, 0.5)) * CELL_SIZE
 			# How much of the square the round dab covers, roughly, so the
 			# stretched picture can find a smooth edge between squares
-			var cover: float = clampf((DAB_RADIUS - cell_centre.distance_to(centre)) / CELL_SIZE + 0.5, 0.0, 1.0)
+			var cover: float = clampf((radius - cell_centre.distance_to(centre)) / CELL_SIZE + 0.5, 0.0, 1.0)
 			if cover <= 0.0:
 				continue
 			var index: int = row * columns + column
@@ -139,6 +142,23 @@ func dab(centre: Vector2, paint_bits: int, brush: int = 0) -> void:
 				var colour: Color = PaintMixing.colour_of(paint_names_by_bits[mixed_bits])
 				picture.set_pixel(column, row, Color(colour.r * mixed_cover, colour.g * mixed_cover, colour.b * mixed_cover, mixed_cover))
 				picture_changed = true
+
+
+## One splat: a big dab with droplets scattered round it, all in one pass so
+## they don't mix with each other. A new pass for the brush, so a splat on top
+## of older paint mixes with it - and the same splat twice mixes twice. The
+## scatter comes from the centre, so the same splat always looks the same.
+func splat(centre: Vector2, paint_bits: int, brush: int = 0) -> void:
+	line_number_by_brush[brush] += 2
+	var scatter: RandomNumberGenerator = RandomNumberGenerator.new()
+	scatter.seed = hash(centre)
+	dab(centre, paint_bits, brush, SPLAT_RADIUS)
+	for droplet_index in scatter.randi_range(SPLAT_DROPLETS_MIN, SPLAT_DROPLETS_MAX):
+		var angle: float = scatter.randf() * TAU
+		var distance: float = scatter.randf_range(SPLAT_RADIUS + 10.0, SPLAT_RADIUS + 80.0)
+		var droplet_radius: float = scatter.randf_range(12.0, 25.0)
+		dab(centre + Vector2.from_angle(angle) * distance, paint_bits, brush, droplet_radius)
+	picture_changed = true
 
 
 ## Which paint is on the paper at this point: "clean" if none.
