@@ -10,6 +10,10 @@ signal landed
 const BODY_RADIUS: float = 46.0
 const CORNER_NUDGE_LIMIT: int = 10
 
+## The actions this blob listens to. The usual ones hear any pad; in two-player
+## Hills each blob gets its own - see PlayerControls.
+var move_actions: Array[StringName] = PlayerControls.MOVE_ACTIONS.duplicate()
+var act_action: StringName = PlayerControls.ACT_ACTION
 var mover: SideOnMover = SideOnMover.new()
 var look: PaintBlobLook
 var facing: float = 1.0
@@ -44,9 +48,10 @@ func _physics_process(delta: float) -> void:
 	var jump_held: bool = false
 	var jump_pressed: bool = false
 	if can_move:
-		input_x = Input.get_axis("move_left", "move_right")
-		jump_held = Input.is_action_pressed("act") or Input.is_action_pressed("move_up")
-		jump_pressed = Input.is_action_just_pressed("act") or Input.is_action_just_pressed("move_up")
+		var up_action: StringName = move_actions[2]
+		input_x = Input.get_axis(move_actions[0], move_actions[1])
+		jump_held = Input.is_action_pressed(act_action) or Input.is_action_pressed(up_action)
+		jump_pressed = Input.is_action_just_pressed(act_action) or Input.is_action_just_pressed(up_action)
 	mover.velocity = velocity
 	mover.step(delta, input_x, jump_held, jump_pressed, is_on_floor())
 	velocity = mover.velocity
