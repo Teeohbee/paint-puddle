@@ -25,6 +25,15 @@ func _ready() -> void:
 		# Under the effects, hedge and HUD, like the blobs
 		move_child(pal, effects_layer.get_index())
 		pals.append(pal)
+	var thing_names: Array[String] = ThingDrawings.NAMES.duplicate()
+	thing_names.shuffle()
+	for thing_index in THING_COUNT:
+		var thing: SplatThing = SplatThing.new()
+		thing.thing_name = thing_names[thing_index]
+		thing.position = Vector2(randf_range(250, 1670), randf_range(250, 720))
+		add_child(thing)
+		move_child(thing, effects_layer.get_index())
+		things.append(thing)
 
 
 func configure_controls_hint() -> void:
@@ -33,6 +42,8 @@ func configure_controls_hint() -> void:
 
 
 const PAL_COUNT: int = 3
+## Word characters from the Meadow, picked at random each visit.
+const THING_COUNT: int = 3
 const THROW_DISTANCE: float = 420.0
 ## Aim help for small thumbs: a target this close to straight ahead gets the splat.
 const AIM_CONE_RADIANS: float = 22.0 * PI / 180.0
@@ -46,6 +57,7 @@ const LANDING_AREA: Rect2 = Rect2(40, 40, 1840, 790)
 
 var balls: Array[SplatBall] = []
 var pals: Array[SplatPal] = []
+var things: Array[SplatThing] = []
 
 
 func add_player_two(device: int) -> void:
@@ -108,6 +120,8 @@ func splat_targets(thrower: PaintPlayer) -> Array[Node2D]:
 	var targets: Array[Node2D] = []
 	for pal in pals:
 		targets.append(pal)
+	for thing in things:
+		targets.append(thing)
 	for player in players:
 		if player != thrower:
 			targets.append(player.blob)
@@ -150,7 +164,7 @@ func land_ball(ball: SplatBall, struck: Node2D) -> void:
 
 
 func paint_bits_of(target: Node2D) -> int:
-	if target is SplatPal:
+	if target is SplatPal or target is SplatThing:
 		return target.paint_bits
 	return player_of(target).paint_bits
 
@@ -172,7 +186,7 @@ func mix_into(target: Node2D, splat_bits: int) -> void:
 
 
 func give_paint(target: Node2D, bits: int, paint: String) -> void:
-	if target is SplatPal:
+	if target is SplatPal or target is SplatThing:
 		target.take_paint(bits, paint)
 		return
 	player_of(target).paint_bits = bits
@@ -180,11 +194,16 @@ func give_paint(target: Node2D, bits: int, paint: String) -> void:
 
 
 func target_wobble(target: Node2D, amount: Vector2) -> void:
+	if target is SplatThing:
+		target.wobble()
+		return
 	target.look.squash_stretch.kick(amount)
 
 
-## The sponge gives everyone a fresh start, pals included.
+## The sponge gives everyone a fresh start, pals and word characters included.
 func wipe_picture() -> void:
 	super()
 	for pal in pals:
 		pal.wash()
+	for thing in things:
+		thing.wash()
