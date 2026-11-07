@@ -30,6 +30,8 @@ var controls_hint: ControlsHint
 ## joins in as player two.
 var player_one_device: int = -1
 var player_two_device: int = -1
+## Off in Splat party, where only splats paint.
+var paints_trails: bool = true
 
 
 func _ready() -> void:
@@ -72,13 +74,18 @@ func _ready() -> void:
 	hud.layer = 10
 	add_child(hud)
 	controls_hint = ControlsHint.new()
-	controls_hint.shows_jump = false
+	configure_controls_hint()
 	hud.add_child(controls_hint)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
 	player_one_device = SceneManager.last_joypad_device
 	Input.joy_connection_changed.connect(on_joy_connection_changed)
+
+
+## Paint shows the four arrows; places with an A button show that too.
+func configure_controls_hint() -> void:
+	controls_hint.shows_jump = false
 
 
 func _input(event: InputEvent) -> void:
@@ -129,7 +136,7 @@ func _physics_process(_delta: float) -> void:
 	for player in players:
 		var brush_position: Vector2 = player.blob.position + BRUSH_OFFSET
 		var has_moved: bool = brush_position != player.last_brush_position
-		if has_moved and player.paint_bits != 0:
+		if paints_trails and has_moved and player.paint_bits != 0:
 			canvas.paint_line(player.last_brush_position, brush_position, player.paint_bits, player.brush_number)
 		player.last_brush_position = brush_position
 

@@ -17,6 +17,8 @@ const FADE_SPEED: float = 3.0
 
 ## Set before adding: false shows all four arrows and no jump button.
 var shows_jump: bool = true
+## With shows_jump off: all four arrows and the A button, for places where A does something else.
+var shows_act_button: bool = false
 ## How lit each part is, from 0 (resting) to 1 (pressed).
 var glow: Dictionary = {}
 var actions: Dictionary = {}
@@ -24,7 +26,7 @@ var actions: Dictionary = {}
 
 func _ready() -> void:
 	position = Vector2(24, 14)
-	size = CARD_SIZE if shows_jump else DPAD_ONLY_CARD_SIZE
+	size = CARD_SIZE if (shows_jump or shows_act_button) else DPAD_ONLY_CARD_SIZE
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	actions = {"left": "move_left", "right": "move_right"}
 	if shows_jump:
@@ -32,6 +34,8 @@ func _ready() -> void:
 	else:
 		actions["up"] = "move_up"
 		actions["down"] = "move_down"
+		if shows_act_button:
+			actions["jump"] = "act"
 	for part in actions:
 		glow[part] = 0.0
 
@@ -52,7 +56,7 @@ func _draw() -> void:
 	card.anti_aliasing = true
 	draw_style_box(card, Rect2(Vector2.ZERO, size))
 	draw_dpad()
-	if shows_jump:
+	if glow.has("jump"):
 		draw_jump_button()
 
 

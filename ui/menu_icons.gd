@@ -16,6 +16,7 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"quit": draw_door(canvas, centre, size, colour)
 		"meadow": draw_flower(canvas, centre, size, colour)
 		"paint": draw_brush(canvas, centre, size, colour)
+		"splat": draw_splat(canvas, centre, size, colour)
 		"hills": draw_hills(canvas, centre, size, colour)
 		"restart": draw_restart(canvas, centre, size, colour)
 		"home": draw_house(canvas, centre, size, colour)
@@ -92,6 +93,17 @@ static func draw_brush(canvas: CanvasItem, centre: Vector2, size: float, colour:
 		neck + across * size * 0.1, neck - across * size * 0.1, tip - across * size * 0.03 - along * size * 0.04,
 		tip + across * size * 0.03 - along * size * 0.04]), colour)
 	canvas.draw_circle(tip + Vector2(-size * 0.04, size * 0.12), size * 0.06, colour)
+
+
+## A splat: a big blob with droplets flung round it.
+static func draw_splat(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
+	canvas.draw_circle(centre, size * 0.26, colour)
+	for droplet_index in 6:
+		var direction: Vector2 = Vector2.from_angle(TAU * droplet_index / 6.0 + 0.4)
+		var reach: float = size * (0.34 if droplet_index % 2 == 0 else 0.26)
+		canvas.draw_circle(centre + direction * reach, size * (0.1 if droplet_index % 2 == 0 else 0.07), colour)
+		canvas.draw_line(centre + direction * size * 0.2, centre + direction * (reach - size * 0.04), colour, size * 0.09, true)
+	canvas.draw_circle(centre + Vector2(size * 0.02, -size * 0.04), size * 0.07, Color(1, 1, 1, 0.45))
 
 
 static func draw_hills(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
