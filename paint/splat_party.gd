@@ -8,9 +8,6 @@ var paint_colour_set_before: String = ""
 
 func _init() -> void:
 	paints_trails = false
-	# Paint colours only; put the Paint menu's choice back on the way out
-	paint_colour_set_before = PaintStudio.colour_set
-	PaintStudio.colour_set = "paint"
 
 
 func _exit_tree() -> void:
@@ -18,6 +15,11 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
+	# Paint colours only; put the Paint menu's choice back on the way out.
+	# This waits for _ready, not _init: a restart builds the new scene before
+	# the old one leaves the tree, and its _exit_tree would undo this.
+	paint_colour_set_before = PaintStudio.colour_set
+	PaintStudio.colour_set = "paint"
 	super()
 	for pal_index in PAL_COUNT:
 		var pal: SplatPal = SplatPal.new()
