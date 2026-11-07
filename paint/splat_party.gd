@@ -90,11 +90,11 @@ var things: Array[SplatThing] = []
 var seconds_until_thing_swap: float = THING_SWAP_SECONDS
 
 
-func add_player_two(device: int) -> void:
-	super(device)
+func bind_pads() -> void:
+	super()
 	# Each pad's A throws for its own blob, like the sticks move their own
 	players[0].act_action = PlayerControls.make_pad_act_action("player_one", player_one_device, true)
-	players[1].act_action = PlayerControls.make_pad_act_action("player_two", device, false)
+	players[1].act_action = PlayerControls.make_pad_act_action("player_two", player_two_device, false)
 
 
 func _physics_process(delta: float) -> void:

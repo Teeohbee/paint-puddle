@@ -12,6 +12,8 @@ var blur_material: ShaderMaterial
 var tiles_holder: Control
 var resume: MenuTile
 var unplugged_notice: Control
+## The pad that opened the menu. With two players only this pad can use it.
+var opener_device: int = -1
 
 
 func _ready() -> void:
@@ -27,6 +29,9 @@ func _ready() -> void:
 	build_tiles()
 	build_unplugged_notice()
 	Input.joy_connection_changed.connect(on_joy_connection_changed)
+	# Arriving with a pad already missing (it went while on a menu): ask for it straight away
+	if PlayerSession.has_missing_pad():
+		on_joy_connection_changed.call_deferred(-1, false)
 
 
 func build_tiles() -> void:
@@ -46,6 +51,8 @@ func build_tiles() -> void:
 	tiles_holder.first_focus = resume
 	# Only keeps hold of focus while the pause menu is showing
 	tiles_holder.set_process(false)
+	# Its pad lock must not eat the Start press that opens the menu
+	tiles_holder.set_process_input(false)
 
 
 func build_unplugged_notice() -> void:
@@ -64,6 +71,8 @@ func draw_unplugged_notice() -> void:
 	unplugged_notice.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var font: Font = unplugged_notice.get_theme_default_font()
 	var message: String = "Plug the controller back in"
+	if PlayerSession.has_missing_pad():
+		message = "Player %d - press A on your controller" % (PlayerSession.missing_slots[0] + 1)
 	var width: float = font.get_string_size(message, HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x
 	var baseline: Vector2 = Vector2(960 - width / 2.0, 780)
 	unplugged_notice.draw_string_outline(font, baseline, message, HORIZONTAL_ALIGNMENT_LEFT, -1, 64, 24, Color.WHITE)
@@ -75,6 +84,36 @@ func _process(_delta: float) -> void:
 		unplugged_notice.queue_redraw()
 
 
+## Runs before the menu buttons see anything: with two players, the pad that
+## didn't pause can't press things, and a pad that has gone missing is
+## replaced by the next A press on a pad nobody is using.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventJoypadButton or event is InputEventJoypadMotion):
+		return
+	if unplugged_notice.visible and PlayerSession.has_missing_pad():
+		get_viewport().set_input_as_handled()
+		if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A:
+			take_new_pad(event.device)
+		return
+	if is_open and PlayerSession.is_two_player() and event.device != opener_device:
+		if PlayerSession.is_pad_usable(opener_device):
+			get_viewport().set_input_as_handled()
+
+
+func take_new_pad(device: int) -> void:
+	if not PlayerSession.rebind(device):
+		return
+	if PlayerSession.has_missing_pad():
+		return
+	unplugged_notice.visible = false
+	tiles_holder.visible = true
+	tiles_holder.set_process_input(true)
+	tiles_holder.locked_device = device
+	opener_device = device
+	resume.grab_focus_quietly()
+	Sound.play("chime", 0.0)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("pause"):
 		return
@@ -82,13 +121,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_open:
 		close()
 	else:
-		open()
+		open(event.device if event is InputEventJoypadButton else -1)
 
 
-func open() -> void:
+func open(opening_device: int = -1) -> void:
 	if is_open or SceneManager.is_changing_scene:
 		return
 	is_open = true
+	opener_device = opening_device
+	tiles_holder.locked_device = opening_device
 	get_tree().paused = true
 	visible = true
 	Music.duck(true)
@@ -102,6 +143,7 @@ func open() -> void:
 	pop_in.tween_property(tiles_holder, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	pop_in.tween_property(tiles_holder, "modulate:a", 1.0, 0.2)
 	tiles_holder.set_process(true)
+	tiles_holder.set_process_input(true)
 	resume.grab_focus_quietly()
 
 
@@ -113,6 +155,7 @@ func close() -> void:
 	unplugged_notice.visible = false
 	tiles_holder.visible = true
 	tiles_holder.set_process(false)
+	tiles_holder.set_process_input(false)
 	get_tree().paused = false
 	Music.duck(false)
 	get_viewport().gui_release_focus()
@@ -126,19 +169,23 @@ func _exit_tree() -> void:
 
 
 func on_joy_connection_changed(device: int, connected: bool) -> void:
-	if not connected and Input.get_connected_joypads().is_empty():
+	var someone_is_missing: bool = PlayerSession.has_missing_pad()
+	if not connected and (someone_is_missing or Input.get_connected_joypads().is_empty()):
 		open()
 		# open() does nothing mid-wipe, so try again once the paint has gone.
 		# Hiding the tiles now would leave the next pause with only the notice.
 		if not is_open:
 			await get_tree().create_timer(SceneManager.SECONDS_TO_UNCOVER + 0.1).timeout
-			if Input.get_connected_joypads().is_empty():
+			if PlayerSession.has_missing_pad() or Input.get_connected_joypads().is_empty():
 				on_joy_connection_changed(device, false)
 			return
 		tiles_holder.visible = false
+		# Its pad lock would swallow the A press that brings a pad back
+		tiles_holder.set_process_input(false)
 		unplugged_notice.visible = true
-	elif connected and unplugged_notice.visible:
+	elif connected and unplugged_notice.visible and not someone_is_missing:
 		unplugged_notice.visible = false
 		tiles_holder.visible = true
+		tiles_holder.set_process_input(true)
 		resume.grab_focus_quietly()
 		Sound.play("chime", 0.0)
