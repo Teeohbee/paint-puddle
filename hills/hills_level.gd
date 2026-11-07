@@ -8,6 +8,9 @@ const FALL_LINE_BELOW_GROUND: float = 260.0
 const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
 ## High enough to need a jump, low enough that any jump reaches it.
 const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
+## How far along the level the first and last paint pots stand.
+const POT_FIRST_FRACTION: float = 0.3
+const POT_LAST_FRACTION: float = 0.66
 ## Far enough in that the blob isn't squeezed against the left of the screen,
 ## with room to get going before the first jump: every level starts with 700
 ## of flat ground.
@@ -90,7 +93,7 @@ func _ready() -> void:
 	add_child(blob)
 	players.append(HillsPlayer.new(blob, level.paint))
 	blob.look.paint_colour = PaintMixing.colour_of(level.paint)
-	place_paint_pot()
+	place_paint_pots()
 	splash_when_landing(blob)
 	add_camera()
 	var pause_menu: PauseMenu = PauseMenu.new()
@@ -187,15 +190,22 @@ func place_balloons() -> void:
 		effects_layer.add_child(balloon)
 
 
-## One pot of paint about two-thirds of the way along, up where it takes a jump.
-func place_paint_pot() -> void:
-	var x: float = nearest_ground_x(ground.level_length * 0.66)
-	var pot: HillsPaintPot = HillsPaintPot.new()
-	pot.paint_name = level.pickup
-	pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
-	# The level listens for the blob itself, so it knows whose paint to mix
-	pot.body_entered.connect(func(body): on_pot_touched(pot, body))
-	effects_layer.add_child(pot)
+## Pots of paint spread along the second third of the way, up where it takes
+## a jump. The last, two-thirds along, is the level's own; the ones before it
+## are other colours, so two players can have a pot each.
+func place_paint_pots() -> void:
+	var paints: Array[String] = HillsLevels.pot_paints(level_to_play)
+	for pot_index in paints.size():
+		var how_far: float = lerpf(POT_FIRST_FRACTION, POT_LAST_FRACTION, pot_index / float(maxi(paints.size() - 1, 1)))
+		if paints.size() == 1:
+			how_far = POT_LAST_FRACTION
+		var x: float = nearest_ground_x(ground.level_length * how_far)
+		var pot: HillsPaintPot = HillsPaintPot.new()
+		pot.paint_name = paints[pot_index]
+		pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
+		# The level listens for the blob itself, so it knows whose paint to mix
+		pot.body_entered.connect(func(body): on_pot_touched(pot, body))
+		effects_layer.add_child(pot)
 
 
 func splash_when_landing(landing_blob: HillsBlob) -> void:
