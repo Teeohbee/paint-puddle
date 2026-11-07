@@ -20,6 +20,19 @@ func _ready() -> void:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
+	var players_tile: MenuTile = make_players_tile()
+	# The players tile sits below the row; left and right must stay along the row
+	var row_tiles: Array = [back, meadow, hills, paint, splat, book]
+	for tile_index in row_tiles.size():
+		var tile: MenuTile = row_tiles[tile_index]
+		tile.focus_neighbor_left = row_tiles[maxi(tile_index - 1, 0)].get_path()
+		tile.focus_neighbor_right = row_tiles[mini(tile_index + 1, row_tiles.size() - 1)].get_path()
+		tile.focus_neighbor_bottom = players_tile.get_path()
+		tile.focus_neighbor_top = tile.get_path()
+	players_tile.focus_neighbor_left = players_tile.get_path()
+	players_tile.focus_neighbor_right = players_tile.get_path()
+	players_tile.focus_neighbor_bottom = players_tile.get_path()
+	players_tile.focus_neighbor_top = meadow.get_path()
 	var places: Dictionary = {
 		"meadow": [meadow, "res://meadow/meadow.tscn"],
 		"hills": [hills, "res://ui/hills_menu.tscn"],
@@ -39,3 +52,23 @@ func _ready() -> void:
 func go_to_place(place_name: String, scene_path: String) -> void:
 	remember_choice("play_menu", place_name)
 	SceneManager.go_to(scene_path)
+
+
+## One player or two, chosen once here and kept in every place. Picking two
+## asks each person to press A on their own pad; picking it again goes back to one.
+func make_players_tile() -> MenuTile:
+	var row: HBoxContainer = make_tile_row(680, 36)
+	var word: String = "2 Players" if PlayerSession.is_two_player() else "1 Player"
+	var tile: MenuTile = make_tile(word, "players", PaintColours.PURPLE, Vector2(220, 220))
+	tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(tile)
+	tile.chosen.connect(toggle_players)
+	return tile
+
+
+func toggle_players() -> void:
+	if PlayerSession.is_two_player():
+		PlayerSession.choose_one_player()
+		SceneManager.go_to("res://ui/play_menu.tscn")
+	else:
+		SceneManager.go_to("res://ui/join_screen.tscn")

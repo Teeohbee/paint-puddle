@@ -30,6 +30,9 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"jump": draw_jump_arc(canvas, centre, size, colour)
 		"reset": draw_bin(canvas, centre, size, colour)
 		"controller": draw_controller(canvas, centre, size, colour)
+		"players":
+			draw_controller(canvas, centre + Vector2(-size * 0.2, -size * 0.12), size * 0.7, colour)
+			draw_controller(canvas, centre + Vector2(size * 0.2, size * 0.14), size * 0.7, colour.lightened(0.25))
 
 
 ## Big chunky text in place of a picture, e.g. a level number.
