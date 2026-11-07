@@ -25,15 +25,41 @@ func _ready() -> void:
 		# Under the effects, hedge and HUD, like the blobs
 		move_child(pal, effects_layer.get_index())
 		pals.append(pal)
-	var thing_names: Array[String] = ThingDrawings.NAMES.duplicate()
-	thing_names.shuffle()
 	for thing_index in THING_COUNT:
-		var thing: SplatThing = SplatThing.new()
-		thing.thing_name = thing_names[thing_index]
-		thing.position = Vector2(randf_range(250, 1670), randf_range(250, 720))
-		add_child(thing)
-		move_child(thing, effects_layer.get_index())
-		things.append(thing)
+		add_thing(unused_thing_name(), Vector2(randf_range(250, 1670), randf_range(250, 720)))
+
+
+## A drawing not already out on the paper, so there are never two the same.
+func unused_thing_name() -> String:
+	var names_out: Array[String] = []
+	for thing in things:
+		names_out.append(thing.thing_name)
+	var choices: Array[String] = []
+	for thing_name in ThingDrawings.NAMES:
+		if not names_out.has(thing_name):
+			choices.append(thing_name)
+	return choices.pick_random()
+
+
+func add_thing(thing_name: String, spot: Vector2) -> SplatThing:
+	var thing: SplatThing = SplatThing.new()
+	thing.thing_name = thing_name
+	thing.position = spot
+	add_child(thing)
+	move_child(thing, effects_layer.get_index())
+	things.append(thing)
+	return thing
+
+
+## The one who's been here longest waves goodbye and a newcomer pops in.
+## The leaver stops being a target straight away.
+func swap_oldest_thing() -> void:
+	if things.is_empty():
+		return
+	var leaver: SplatThing = things.pop_front()
+	leaver.wave_goodbye()
+	var newcomer: SplatThing = add_thing(unused_thing_name(), Vector2(randf_range(250, 1670), randf_range(250, 720)))
+	newcomer.pop_in()
 
 
 func configure_controls_hint() -> void:
@@ -44,6 +70,7 @@ func configure_controls_hint() -> void:
 const PAL_COUNT: int = 3
 ## Word characters from the Meadow, picked at random each visit.
 const THING_COUNT: int = 3
+const THING_SWAP_SECONDS: float = 45.0
 const THROW_DISTANCE: float = 420.0
 ## Aim help for small thumbs: a target this close to straight ahead gets the splat.
 const AIM_CONE_RADIANS: float = 22.0 * PI / 180.0
@@ -58,6 +85,7 @@ const LANDING_AREA: Rect2 = Rect2(40, 40, 1840, 790)
 var balls: Array[SplatBall] = []
 var pals: Array[SplatPal] = []
 var things: Array[SplatThing] = []
+var seconds_until_thing_swap: float = THING_SWAP_SECONDS
 
 
 func add_player_two(device: int) -> void:
@@ -69,6 +97,10 @@ func add_player_two(device: int) -> void:
 
 func _physics_process(delta: float) -> void:
 	super(delta)
+	seconds_until_thing_swap -= delta
+	if seconds_until_thing_swap <= 0.0:
+		seconds_until_thing_swap = THING_SWAP_SECONDS
+		swap_oldest_thing()
 	for player in players:
 		player.seconds_until_next_throw = maxf(0.0, player.seconds_until_next_throw - delta)
 		if Input.is_action_just_pressed(player.act_action):
