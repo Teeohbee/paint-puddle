@@ -14,6 +14,7 @@ var grown_ups_unlocked: bool = false
 var hold_ring: Control
 var reset_row: OptionRow
 var reset_confirm_seconds_left: float = 0.0
+var done_message_seconds_left: float = 0.0
 
 
 func _ready() -> void:
@@ -88,6 +89,7 @@ func on_reset_chosen() -> void:
 	if reset_confirm_seconds_left > 0.0:
 		GameSettings.reset_part(GameSettings.RESET_PARTS.keys()[reset_row.choice_index])
 		reset_row.message = "Done!"
+		done_message_seconds_left = 2.0
 		reset_confirm_seconds_left = 0.0
 		Sound.play("chime", 0.0)
 		return
@@ -107,6 +109,10 @@ func _process(delta: float) -> void:
 	if reset_confirm_seconds_left > 0.0:
 		reset_confirm_seconds_left -= delta
 		if reset_confirm_seconds_left <= 0.0:
+			reset_row.message = ""
+	elif reset_row.message == "Done!":
+		done_message_seconds_left -= delta
+		if done_message_seconds_left <= 0.0:
 			reset_row.message = ""
 	if grown_ups_unlocked:
 		return

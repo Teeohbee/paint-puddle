@@ -24,7 +24,9 @@ func take_paint(new_bits: int, paint_name: String) -> void:
 
 
 func wash() -> void:
-	take_paint(0, "clean")
+	# Already clean: nothing to celebrate
+	if paint_bits != 0:
+		take_paint(0, "clean")
 
 
 func celebrate() -> void:
@@ -36,6 +38,9 @@ func celebrate() -> void:
 	jump.parallel().tween_property(self, "spin", TAU, 0.36)
 	jump.tween_property(self, "jump_lift", 0.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await jump.finished
+	# Waving goodbye has taken over the pose; leave it be
+	if is_leaving:
+		return
 	spin = 0.0
 	is_jumping = false
 
