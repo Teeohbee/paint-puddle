@@ -23,6 +23,7 @@ GameSettings="*res://core/game_settings.gd"
 Sound="*res://core/sound.gd"
 Music="*res://core/music.gd"
 SceneManager="*res://core/scene_manager.gd"
+PlayerSession="*res://core/player_session.gd"
 
 [display]
 
