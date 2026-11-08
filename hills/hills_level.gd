@@ -44,8 +44,8 @@ var camera: Camera2D
 var taken_pots: Array[HillsPaintPot] = []
 var lowest_ground: float = 0.0
 var is_finished: bool = false
-## Which pad player one is on, or -1 for the keyboard. A second pad pressing A
-## joins in as player two.
+## Which pads the two players are on, from PlayerSession. -1 for player one
+## means any pad or the keyboard (one player), and for player two nobody.
 var player_one_device: int = -1
 var player_two_device: int = -1
 
@@ -99,20 +99,10 @@ func _ready() -> void:
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
-	player_one_device = SceneManager.last_joypad_device
 	Input.joy_connection_changed.connect(on_joy_connection_changed)
-
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventJoypadButton:
-		on_joypad_pressed(event)
-
-
-## A on any pad other than player one's brings in player two, if they aren't here yet.
-func on_joypad_pressed(event: InputEventJoypadButton) -> void:
-	var is_join_button: bool = event.pressed and event.button_index == JOY_BUTTON_A
-	if is_join_button and players.size() == 1 and not is_finished and event.device != player_one_device:
-		add_player_two(event.device)
+	if PlayerSession.is_two_player():
+		player_one_device = PlayerSession.device_of(0)
+		add_player_two(PlayerSession.device_of(1))
 
 
 func add_player_two(device: int) -> void:
