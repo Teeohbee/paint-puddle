@@ -99,20 +99,32 @@ func _ready() -> void:
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
-	Input.joy_connection_changed.connect(on_joy_connection_changed)
+	PlayerSession.devices_changed.connect(on_devices_changed)
 	if PlayerSession.is_two_player():
-		player_one_device = PlayerSession.device_of(0)
-		add_player_two(PlayerSession.device_of(1))
+		add_player_two()
 
 
-func add_player_two(device: int) -> void:
-	player_two_device = device
-	# Each blob now listens to its own pad; player one keeps the keyboard
-	blob.move_actions = PlayerControls.make_pad_actions("player_one", player_one_device, true)
-	blob.act_action = PlayerControls.make_pad_act_action("player_one", player_one_device, true)
+## Each blob listens to its own pad; player one keeps the keyboard. Safe to
+## call again when a pad comes back under a new id: the blobs keep the same
+## action names, so they simply start hearing the new pad.
+func bind_pads() -> void:
+	player_one_device = PlayerSession.device_of(0)
+	player_two_device = PlayerSession.device_of(1)
+	var first_blob: HillsBlob = players[0].blob
+	var second_blob: HillsBlob = players[1].blob
+	first_blob.move_actions = PlayerControls.make_pad_actions("player_one", player_one_device, true)
+	first_blob.act_action = PlayerControls.make_pad_act_action("player_one", player_one_device, true)
+	second_blob.move_actions = PlayerControls.make_pad_actions("player_two", player_two_device, false)
+	second_blob.act_action = PlayerControls.make_pad_act_action("player_two", player_two_device, false)
+
+
+func on_devices_changed() -> void:
+	if players.size() == 2:
+		bind_pads()
+
+
+func add_player_two() -> void:
 	var player_two_blob: HillsBlob = HillsBlob.new()
-	player_two_blob.move_actions = PlayerControls.make_pad_actions("player_two", device, false)
-	player_two_blob.act_action = PlayerControls.make_pad_act_action("player_two", device, false)
 	var start_x: float = blob.position.x + 100.0
 	var ground_height: float = ground.height_at(start_x)
 	if ground_height == INF:
@@ -126,31 +138,13 @@ func add_player_two(device: int) -> void:
 	blob.add_collision_exception_with(player_two_blob)
 	player_two_blob.add_collision_exception_with(blob)
 	players.append(HillsPlayer.new(player_two_blob, level.paint))
+	bind_pads()
 	splash_when_landing(player_two_blob)
 	PaintSplash.burst(effects_layer, player_two_blob.position, Color.WHITE)
 	Sound.play("pop")
 	player_two_blob.look.squash_stretch.kick(Vector2(-14, 12))
 
 
-func on_joy_connection_changed(device: int, connected: bool) -> void:
-	if not connected and players.size() == 2 and device == player_two_device:
-		remove_player_two()
-
-
-func remove_player_two() -> void:
-	var leaving_player: HillsPlayer = players.pop_back()
-	player_two_device = -1
-	var leaving_blob: HillsBlob = leaving_player.blob
-	leaving_blob.can_move = false
-	# A cloud may be carrying them; let it finish before they pop away
-	while leaving_blob.is_being_carried:
-		await get_tree().create_timer(0.2).timeout
-	PaintSplash.burst(effects_layer, leaving_blob.position, Color.WHITE)
-	Sound.play("pop")
-	leaving_blob.queue_free()
-
-
-## Walls at both ends so the blob can't walk out of the level.
 func add_level_edges() -> void:
 	for wall_x in [-30.0, ground.level_length + 30.0]:
 		var wall: StaticBody2D = StaticBody2D.new()

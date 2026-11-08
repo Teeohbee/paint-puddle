@@ -19,8 +19,25 @@ static func last_choice(screen: String, usual_choice: String) -> String:
 	return last_choices.get(screen, usual_choice)
 
 
+## Set by the pause menu to the pad that opened it. Otherwise a menu belongs to player one's pad.
+var locked_device: int = -1
+
+
 func _init() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+
+
+## With two players, only one pad drives a menu, so the other can't pause,
+## pick or argue. Keyboard and mouse always work, and so does any pad if the
+## owner's has gone, so nobody is ever locked out.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventJoypadButton or event is InputEventJoypadMotion):
+		return
+	if not PlayerSession.is_two_player():
+		return
+	var owner_device: int = locked_device if locked_device >= 0 else PlayerSession.device_of(0)
+	if event.device != owner_device and PlayerSession.is_pad_usable(owner_device):
+		get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:
