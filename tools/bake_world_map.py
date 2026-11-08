@@ -116,6 +116,85 @@ def douglas_peucker(points, tolerance):
     return [point for point, kept in zip(points, keep) if kept]
 
 
+def snapped_points(points):
+    """Rounded to a tenth of a pixel, repeats dropped, and any pinch (the
+    outline visiting the same spot twice) cut out, since a pinched outline
+    can't be filled."""
+    result = []
+    for x, y in points:
+        point = (round(x, 1), round(y, 1))
+        if not result or point != result[-1]:
+            result.append(point)
+    while len(result) > 1 and result[0] == result[-1]:
+        result.pop()
+    return without_pinches(result)
+
+
+def without_pinches(points):
+    while True:
+        first_seen = {}
+        pinch = None
+        for index, point in enumerate(points):
+            if point in first_seen:
+                pinch = (first_seen[point], index)
+                break
+            first_seen[point] = index
+        if pinch is None:
+            return points
+        start, stop = pinch
+        inner_loop = points[start:stop]
+        outer_loop = points[:start] + points[stop:]
+        # Keep whichever loop encloses more; the other is a tiny spit or pond.
+        points = inner_loop if len(inner_loop) >= 3 and abs(signed_area(inner_loop)) > abs(signed_area(outer_loop)) else outer_loop
+
+
+def turn(a, b, c):
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def segments_cross(a, b, c, d):
+    """True if segment ab properly crosses segment cd, or lies along it."""
+    if max(a[0], b[0]) < min(c[0], d[0]) or max(c[0], d[0]) < min(a[0], b[0]):
+        return False
+    if max(a[1], b[1]) < min(c[1], d[1]) or max(c[1], d[1]) < min(a[1], b[1]):
+        return False
+    first, second = turn(a, b, c), turn(a, b, d)
+    third, fourth = turn(c, d, a), turn(c, d, b)
+    if first == 0 and second == 0:
+        # Collinear: overlapping along the line, not just meeting at an end.
+        along_x = min(max(a[0], b[0]), max(c[0], d[0])) - max(min(a[0], b[0]), min(c[0], d[0]))
+        along_y = min(max(a[1], b[1]), max(c[1], d[1])) - max(min(a[1], b[1]), min(c[1], d[1]))
+        return along_x > 0 or along_y > 0
+    return first * second < 0 and third * fourth < 0
+
+
+def is_simple(points):
+    """No edge crosses or overlaps any non-neighbouring edge."""
+    count = len(points)
+    for first in range(count):
+        a, b = points[first], points[(first + 1) % count]
+        for second in range(first + 2, count):
+            if first == 0 and second == count - 1:
+                continue
+            if segments_cross(a, b, points[second], points[(second + 1) % count]):
+                return False
+    return True
+
+
+def simple_simplification(points, tolerance):
+    """Simplifies and rounds, easing off the tolerance until the outline no
+    longer crosses itself (a self-crossing outline can't be filled)."""
+    attempt = tolerance
+    while True:
+        candidate = snapped_points(douglas_peucker(points, attempt))
+        if len(candidate) < 3 or is_simple(candidate):
+            return candidate
+        if attempt < 0.05:
+            print("warning: could not make a simple outline of %d points" % len(points), file=sys.stderr)
+            return candidate
+        attempt *= 0.6
+
+
 def signed_area(points):
     total = 0.0
     for index, point in enumerate(points):
@@ -141,7 +220,7 @@ def simplified_pieces(geometry, country_id, tolerance, minimum_area):
         points = [project(coordinate[0], coordinate[1]) for coordinate in ring]
         if points[0] == points[-1]:
             points = points[:-1]
-        points = douglas_peucker(points, tolerance)
+        points = simple_simplification(points, tolerance)
         if len(points) < 3:
             continue
         pieces.append((abs(signed_area(points)), points))
@@ -185,7 +264,7 @@ def label_point(points):
 
 
 def rounded(points):
-    return [[round(x), round(y)] for x, y in points]
+    return [[round(x, 1), round(y, 1)] for x, y in points]
 
 
 def bounding_box(pieces):
@@ -266,7 +345,7 @@ def main():
         for piece in simplified_pieces(feature["geometry"], "", PLAIN_LAND_TOLERANCE_PIXELS, MINIMUM_LAND_ISLAND_PIXELS_SQUARED):
             plain_land.append(rounded(piece))
 
-    world = {"width": round(MAP_WIDTH), "height": round(MAP_HEIGHT), "countries": countries, "plain_land": plain_land}
+    world = {"width": round(MAP_WIDTH), "height": math.ceil(MAP_HEIGHT), "countries": countries, "plain_land": plain_land}
     with open(output_path, "w", encoding="utf-8") as output:
         json.dump(world, output, separators=(",", ":"))
     print(f"{len(countries)} countries, {len(plain_land)} plain land pieces, {MAP_WIDTH:.0f}x{MAP_HEIGHT:.0f}")
