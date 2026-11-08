@@ -1,12 +1,12 @@
 extends MenuScreen
 ## Pick a Rainbow Hills level. Each one unlocks when the one before it is done.
-## Ten levels to a page: More on the right goes to the next page, and Back on
+## Twenty levels to a page: More on the right goes to the next page, and Back on
 ## the left goes to the page before (or the play menu from the first page).
 
-const LEVEL_TILE_SIZE: Vector2 = Vector2(230, 230)
+const LEVEL_TILE_SIZE: Vector2 = Vector2(170, 170)
 const LEVELS_PER_ROW: int = 5
-const LEVELS_PER_PAGE: int = 10
-const TILE_GAP: int = 30
+const LEVELS_PER_PAGE: int = 20
+const TILE_GAP: int = 24
 
 var page: int = 0
 var page_holder: Control
@@ -15,7 +15,7 @@ var page_holder: Control
 func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
-	make_heading("Rainbow Hills", 110)
+	make_heading("Rainbow Hills", 50)
 	var level_to_focus: int = level_to_start_on()
 	show_page(floori(level_to_focus / float(LEVELS_PER_PAGE)), level_to_focus)
 
@@ -27,15 +27,15 @@ func show_page(new_page: int, level_to_focus: int) -> void:
 	if page_holder != null:
 		page_holder.queue_free()
 	# Back on the left, then the levels in rows beside it, then More
-	var row: HBoxContainer = make_tile_row(300, 50)
+	var row: HBoxContainer = make_tile_row(200, 50)
 	page_holder = row.get_parent()
-	page_holder.offset_bottom = 300 + 620
+	page_holder.offset_bottom = 1040
 	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(back)
 	back.chosen.connect(go_back)
 	var level_rows: VBoxContainer = VBoxContainer.new()
-	level_rows.add_theme_constant_override("separation", TILE_GAP + 20)
+	level_rows.add_theme_constant_override("separation", TILE_GAP)
 	row.add_child(level_rows)
 	var level_row: HBoxContainer = null
 	var first_level: int = page * LEVELS_PER_PAGE
