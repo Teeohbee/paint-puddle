@@ -90,7 +90,7 @@ static func draw_flower(canvas: CanvasItem, centre: Vector2, size: float, colour
 static func draw_globe(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
 	var radius: float = size * 0.4
 	canvas.draw_circle(centre, radius, colour)
-	canvas.draw_circle(centre, radius - size * 0.07, colour.lightened(0.55))
+	canvas.draw_circle(centre, radius - size * 0.07, PaintColours.BLUE.lightened(0.2))
 	canvas.draw_colored_polygon(PackedVector2Array([
 		centre + Vector2(-0.26, -0.22) * size, centre + Vector2(-0.02, -0.3) * size, centre + Vector2(0.04, -0.12) * size,
 		centre + Vector2(-0.1, 0.02) * size, centre + Vector2(-0.24, -0.04) * size]), colour)

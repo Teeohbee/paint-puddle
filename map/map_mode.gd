@@ -81,6 +81,7 @@ func add_hud() -> void:
 	hud.add_child(name_pill)
 	name_label = Label.new()
 	name_label.add_theme_font_size_override("font_size", NAME_FONT_SIZE)
+	name_label.add_theme_color_override("font_color", PaintColours.INK)
 	name_pill.add_child(name_label)
 
 
