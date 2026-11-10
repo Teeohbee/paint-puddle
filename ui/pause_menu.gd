@@ -73,6 +73,12 @@ func draw_unplugged_notice() -> void:
 	var message: String = "Plug the controller back in"
 	if PlayerSession.has_missing_pad():
 		message = "Player %d - press A on your controller" % (PlayerSession.missing_slots[0] + 1)
+	if PlayerSession.has_missing_pad():
+		var way_out: String = "or press B to stop two players"
+		var way_out_width: float = font.get_string_size(way_out, HORIZONTAL_ALIGNMENT_LEFT, -1, 44).x
+		var way_out_baseline: Vector2 = Vector2(960 - way_out_width / 2.0, 860)
+		unplugged_notice.draw_string_outline(font, way_out_baseline, way_out, HORIZONTAL_ALIGNMENT_LEFT, -1, 44, 18, Color.WHITE)
+		unplugged_notice.draw_string(font, way_out_baseline, way_out, HORIZONTAL_ALIGNMENT_LEFT, -1, 44, PaintColours.INK)
 	var width: float = font.get_string_size(message, HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x
 	var baseline: Vector2 = Vector2(960 - width / 2.0, 780)
 	unplugged_notice.draw_string_outline(font, baseline, message, HORIZONTAL_ALIGNMENT_LEFT, -1, 64, 24, Color.WHITE)
@@ -94,10 +100,21 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A:
 			take_new_pad(event.device)
+		elif event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B:
+			give_up_on_two_players()
 		return
 	if is_open and PlayerSession.is_two_player() and event.device != opener_device:
 		if PlayerSession.is_pad_usable(opener_device):
 			get_viewport().set_input_as_handled()
+
+
+## Only one pad left (or the other player has gone home): B on any pad ends two players
+## and goes to the Play menu, so nobody is stuck waiting for a pad that isn't coming.
+func give_up_on_two_players() -> void:
+	PlayerSession.choose_one_player()
+	unplugged_notice.visible = false
+	tiles_holder.visible = true
+	SceneManager.go_to("res://ui/play_menu.tscn")
 
 
 func take_new_pad(device: int) -> void:
