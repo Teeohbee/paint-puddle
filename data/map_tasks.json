@@ -99,7 +99,7 @@
 	{"type": "find", "country": "czechia", "text": "Where is Czechia?"},
 	{"type": "find", "country": "cuba", "text": "Can you find Cuba?"},
 	{"type": "find", "country": "croatia", "text": "Drive to Croatia."},
-	{"type": "find", "country": "cote_d_ivoire", "text": "Find Côte d'Ivoire."},
+	{"type": "find", "country": "cote_d_ivoire", "text": "Find C\u00f4te d'Ivoire."},
 	{"type": "find", "country": "dr_congo", "text": "Where is DR Congo?"},
 	{"type": "find", "country": "congo", "text": "Can you find Congo?"},
 	{"type": "find", "country": "colombia", "text": "Drive to Colombia."},
@@ -128,5 +128,15 @@
 	{"type": "find", "country": "angola", "text": "Can you find Angola?"},
 	{"type": "find", "country": "algeria", "text": "Drive to Algeria."},
 	{"type": "find", "country": "afghanistan", "text": "Find Afghanistan."},
-	{"type": "find", "country": "antarctica", "text": "Where is Antarctica?"}
+	{"type": "find", "country": "antarctica", "text": "Where is Antarctica?"},
+	{"type": "find", "country": "australia", "text": "Which country has the kangaroos?", "thing": "kangaroo"},
+	{"type": "find", "country": "china", "text": "Which country has the pandas?", "thing": "panda"},
+	{"type": "find", "country": "antarctica", "text": "Find the icy home of the penguins.", "thing": "penguin"},
+	{"type": "find", "country": "egypt", "text": "Find the country with the pyramids.", "thing": "pyramid"},
+	{"type": "find", "country": "france", "text": "Find the country with this tall tower.", "thing": "tower"},
+	{"type": "find", "country": "japan", "text": "Find the land of the rising sun.", "thing": "sun"},
+	{"type": "find", "country": "russia", "text": "Find the biggest country in the world."},
+	{"type": "find", "country": "canada", "text": "Find the maple leaf country."},
+	{"type": "find", "country": "italy", "text": "Find the country shaped like a boot."},
+	{"type": "find", "country": "greenland", "text": "Find the biggest island in the world."}
 ]
