@@ -96,12 +96,15 @@ class ContinentProjection:
         lon0, lon1, lat0, lat1 = frame
         # A frame reaching past 180 degrees wraps round the antimeridian (Fiji, Tonga, Samoa)
         self.wraps = lon1 > 180
+        # Only the Pacific side wraps; anything further west keeps its own longitude, so a ring
+        # crossing the prime meridian isn't torn in two
+        self.wrap_below = lon1 - 360.0 + 45.0
         self.middle_longitude, self.middle_latitude = (lon0 + lon1) / 2.0, (lat0 + lat1) / 2.0
         self.squeeze = math.cos(math.radians(self.middle_latitude))
         self.pixels_per_degree = MARGIN * min(SCREEN_WIDTH / ((lon1 - lon0) * self.squeeze), SCREEN_HEIGHT / (lat1 - lat0))
 
     def point(self, longitude, latitude):
-        if self.wraps and longitude < 0:
+        if self.wraps and longitude < self.wrap_below:
             longitude += 360.0
         return (SCREEN_WIDTH / 2.0 + (longitude - self.middle_longitude) * self.squeeze * self.pixels_per_degree,
                 SCREEN_HEIGHT / 2.0 - (latitude - self.middle_latitude) * self.pixels_per_degree)
