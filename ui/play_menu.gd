@@ -1,28 +1,29 @@
 extends MenuScreen
-## Where shall we play? The Meadow, the Hills, Paint or Splat - or look at the book.
+## Where shall we play? The Meadow, the Hills, Paint, Splat or the Map - or look at the book.
 ## Starts on whichever was picked last.
 
-const PLACE_TILE_SIZE: Vector2 = Vector2(270, 270)
+const PLACE_TILE_SIZE: Vector2 = Vector2(235, 235)
 
 
 func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
 	make_heading("Where shall we play?", 150)
-	var row: HBoxContainer = make_tile_row(400, 36)
+	var row: HBoxContainer = make_tile_row(400, 30)
 	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
 	var meadow: MenuTile = make_tile("Meadow", "meadow", PaintColours.RED, PLACE_TILE_SIZE)
 	var hills: MenuTile = make_tile("Hills", "hills", PaintColours.BLUE, PLACE_TILE_SIZE)
 	var paint: MenuTile = make_tile("Paint", "paint", PaintColours.GREEN, PLACE_TILE_SIZE)
 	var splat: MenuTile = make_tile("Splat", "splat", PaintColours.YELLOW, PLACE_TILE_SIZE)
+	var map: MenuTile = make_tile("Map", "map", PaintColours.PURPLE, PLACE_TILE_SIZE)
 	var book: MenuTile = make_tile("Book", "book", PaintColours.ORANGE, PLACE_TILE_SIZE)
-	for tile in [back, meadow, hills, paint, splat, book]:
+	for tile in [back, meadow, hills, paint, splat, map, book]:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
 	var players_tile: MenuTile = make_players_tile()
 	# The players tile sits below the row; left and right must stay along the row
-	var row_tiles: Array = [back, meadow, hills, paint, splat, book]
+	var row_tiles: Array = [back, meadow, hills, paint, splat, map, book]
 	for tile_index in row_tiles.size():
 		var tile: MenuTile = row_tiles[tile_index]
 		tile.focus_neighbor_left = row_tiles[maxi(tile_index - 1, 0)].get_path()
@@ -38,6 +39,7 @@ func _ready() -> void:
 		"hills": [hills, "res://ui/hills_menu.tscn"],
 		"paint": [paint, "res://ui/paint_menu.tscn"],
 		"splat": [splat, "res://paint/splat_party.tscn"],
+		"map": [map, "res://map/map_mode.tscn"],
 		"book": [book, "res://ui/book.tscn"],
 	}
 	for place_name in places:

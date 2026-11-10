@@ -18,6 +18,7 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"paint": draw_brush(canvas, centre, size, colour)
 		"splat": draw_splat(canvas, centre, size, colour)
 		"hills": draw_hills(canvas, centre, size, colour)
+		"map": draw_globe(canvas, centre, size, colour)
 		"restart": draw_restart(canvas, centre, size, colour)
 		"home": draw_house(canvas, centre, size, colour)
 		"back": draw_back_arrow(canvas, centre, size, colour)
@@ -83,6 +84,19 @@ static func draw_flower(canvas: CanvasItem, centre: Vector2, size: float, colour
 			- Vector2(0, size * 0.08)
 		canvas.draw_circle(petal_centre, size * 0.16, colour)
 	canvas.draw_circle(centre - Vector2(0, size * 0.08), size * 0.12, PaintColours.YELLOW)
+
+
+## A globe: a ringed ball with a meridian, an equator and two land patches.
+static func draw_globe(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
+	var radius: float = size * 0.4
+	canvas.draw_circle(centre, radius, colour)
+	canvas.draw_circle(centre, radius - size * 0.07, PaintColours.BLUE.lightened(0.2))
+	canvas.draw_colored_polygon(PackedVector2Array([
+		centre + Vector2(-0.26, -0.22) * size, centre + Vector2(-0.02, -0.3) * size, centre + Vector2(0.04, -0.12) * size,
+		centre + Vector2(-0.1, 0.02) * size, centre + Vector2(-0.24, -0.04) * size]), colour)
+	canvas.draw_colored_polygon(PackedVector2Array([
+		centre + Vector2(0.1, 0.0) * size, centre + Vector2(0.28, -0.06) * size, centre + Vector2(0.26, 0.16) * size,
+		centre + Vector2(0.12, 0.28) * size, centre + Vector2(0.04, 0.14) * size]), colour)
 
 
 static func draw_brush(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
