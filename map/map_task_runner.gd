@@ -15,6 +15,11 @@ const HINT_AFTER_WRONG_TRIES: int = 2
 const HINT_AFTER_SECONDS: float = 25.0
 const SECONDS_TO_CELEBRATE: float = 2.6
 const MESSAGE_SECONDS: float = 2.6
+## A brand new game opens on one of these: big and hard to miss.
+const STARTER_COUNTRIES: Array[String] = ["australia", "usa", "brazil", "china", "india", "canada"]
+## The first round deals countries roughly biggest first, shuffled within bands this wide,
+## so it eases from the easy ones into the tiny ones without being the same every time.
+const EASING_BAND_SIZE: int = 12
 
 var mode: MapMode
 var tasks: Array[MapTask] = []
@@ -34,7 +39,7 @@ func _ready() -> void:
 	mode.country_picked.connect(on_country_picked)
 	mode.continent_entered.connect(on_continent_entered)
 	if not tasks.is_empty():
-		start_task(deal_next_task_index(-1))
+		start_task(first_task_index())
 
 
 func start_task(task_index: int) -> void:
@@ -45,6 +50,23 @@ func start_task(task_index: int) -> void:
 	is_between_tasks = false
 	mode.task_banner.show_task(current_task)
 	task_started.emit(current_task)
+
+
+## A brand new game (nothing found, no deck yet) opens on a starter country; otherwise
+## the next task from the saved deck, as ever.
+func first_task_index() -> int:
+	var is_brand_new: bool = GameSettings.found_in("countries_found").is_empty() and GameSettings.get_map_task_deck().is_empty()
+	if not is_brand_new:
+		return deal_next_task_index(-1)
+	var starters: Array[int] = []
+	for task_index in tasks.size():
+		if STARTER_COUNTRIES.has(tasks[task_index].country_id):
+			starters.append(task_index)
+	if starters.is_empty():
+		return deal_next_task_index(-1)
+	var starter: int = starters.pick_random()
+	GameSettings.set_map_task_deck(new_shuffled_deck(starter))
+	return starter
 
 
 ## The next task, in a mixed-up order: dealt from a shuffled deck, so every
@@ -67,8 +89,28 @@ func new_shuffled_deck(index_just_played: int) -> Array[int]:
 	for task_index in tasks.size():
 		if task_index != index_just_played:
 			deck.append(task_index)
+	if GameSettings.found_in("countries_found").is_empty():
+		return eased(deck)
 	deck.shuffle()
 	return deck
+
+
+## The first round: biggest countries first. Tasks are dealt from the end of the deck, so
+## the biggest band goes last. Shuffled within each band so no two games are the same.
+func eased(deck: Array[int]) -> Array[int]:
+	var biggest_first: Array[int] = deck.duplicate()
+	biggest_first.sort_custom(func(a: int, b: int) -> bool: return size_of(a) > size_of(b))
+	var eased_deck: Array[int] = []
+	for band_start in range(0, biggest_first.size(), EASING_BAND_SIZE):
+		var band: Array[int] = biggest_first.slice(band_start, band_start + EASING_BAND_SIZE)
+		band.shuffle()
+		eased_deck = band + eased_deck
+	return eased_deck
+
+
+## How many pixels across the country is on its widest screen: the bigger, the easier.
+func size_of(task_index: int) -> float:
+	return float(tasks[task_index].country()["widest_view_pixels"])
 
 
 func _process(delta: float) -> void:
