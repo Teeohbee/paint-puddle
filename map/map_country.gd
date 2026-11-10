@@ -1,24 +1,32 @@
 class_name MapCountry
 extends Node2D
-## One country on the world map: its coastline pieces, filled pale until it is
-## painted and then in its own rainbow colour. Built from one entry of
-## data/world_map.json.
+## One shape on a Map mode screen: a country (on a continent screen) or the
+## part of a continent the world screen draws. Its coastline pieces are
+## filled pale until it is painted, then in full colour.
 
 ## How far an unpainted country is washed toward white, so painted ones glow.
 const UNPAINTED_WASH: float = 0.62
 const OUTLINE_COLOUR: Color = Color(0.17, 0.13, 0.25, 0.55)
 const OUTLINE_WIDTH: float = 3.0
-const HIGHLIGHT_OUTLINE_COLOUR: Color = Color(1, 1, 1, 0.95)
-const HIGHLIGHT_OUTLINE_WIDTH: float = 10.0
+const RING_COLOUR: Color = Color(1, 1, 1, 0.95)
+const RING_WIDTH: float = 10.0
+## A highlighted shape without a ring (the world screen) is lightened instead.
+const HIGHLIGHT_LIGHTEN: float = 0.3
 
-var country_id: String = ""
+## What this shape answers to: a country id, or on the world screen a continent id.
+var target_id: String = ""
 var display_name: String = ""
-## A spot well inside the country: the label goes here, and so do hints.
+## A spot well inside the shape: hints and the magnet pull go here.
 var label_position: Vector2 = Vector2.ZERO
 var rainbow_colour: Color = PaintColours.RED
-var neighbour_ids: Array[String] = []
 var pieces: Array[PackedVector2Array] = []
 var bounds: Rect2 = Rect2()
+## Pale until painted. The world screen draws everything in full colour.
+var washes_when_unpainted: bool = true
+## Ring the outline when highlighted (a country), or lighten the fill (a continent).
+var rings_when_highlighted: bool = true
+var outline_colour: Color = OUTLINE_COLOUR
+var outline_width: float = OUTLINE_WIDTH
 var is_painted: bool = false:
 	set(new_value):
 		is_painted = new_value
@@ -31,20 +39,15 @@ var fills: Array[Polygon2D] = []
 var outlines: Array[Line2D] = []
 
 
-static func from_data(data: Dictionary) -> MapCountry:
+static func make(new_target_id: String, new_display_name: String, new_pieces: Array[PackedVector2Array], new_label_position: Vector2,
+		new_rainbow_colour: Color) -> MapCountry:
 	var country: MapCountry = MapCountry.new()
-	country.name = String(data["id"])
-	country.country_id = data["id"]
-	country.display_name = data["name"]
-	country.label_position = Vector2(data["label"][0], data["label"][1])
-	country.rainbow_colour = PaintColours.RAINBOW[int(data["colour"]) % PaintColours.RAINBOW.size()]
-	for neighbour_id in data["neighbours"]:
-		country.neighbour_ids.append(neighbour_id)
-	for raw_piece in data["polygons"]:
-		var piece: PackedVector2Array = PackedVector2Array()
-		for raw_point in raw_piece:
-			piece.append(Vector2(raw_point[0], raw_point[1]))
-		country.pieces.append(piece)
+	country.name = new_target_id
+	country.target_id = new_target_id
+	country.display_name = new_display_name
+	country.pieces = new_pieces
+	country.label_position = new_label_position
+	country.rainbow_colour = new_rainbow_colour
 	country.build_shapes()
 	return country
 
@@ -71,7 +74,7 @@ func build_shapes() -> void:
 
 
 func contains(point: Vector2) -> bool:
-	if not bounds.has_point(point):
+	if not bounds.grow(1.0).has_point(point):
 		return false
 	for piece in pieces:
 		if Geometry2D.is_point_in_polygon(point, piece):
@@ -80,14 +83,18 @@ func contains(point: Vector2) -> bool:
 
 
 func fill_colour() -> Color:
-	return rainbow_colour if is_painted else rainbow_colour.lerp(Color.WHITE, UNPAINTED_WASH)
+	var colour: Color = rainbow_colour
+	if washes_when_unpainted and not is_painted:
+		colour = rainbow_colour.lerp(Color.WHITE, UNPAINTED_WASH)
+	if is_highlighted and not rings_when_highlighted:
+		colour = colour.lightened(HIGHLIGHT_LIGHTEN)
+	return colour
 
 
 func refresh_look() -> void:
-	var outline_colour: Color = HIGHLIGHT_OUTLINE_COLOUR if is_highlighted else OUTLINE_COLOUR
-	var outline_width: float = HIGHLIGHT_OUTLINE_WIDTH if is_highlighted else OUTLINE_WIDTH
+	var is_ringed: bool = is_highlighted and rings_when_highlighted
 	for fill in fills:
 		fill.color = fill_colour()
 	for outline in outlines:
-		outline.default_color = outline_colour
-		outline.width = outline_width
+		outline.default_color = RING_COLOUR if is_ringed else outline_colour
+		outline.width = RING_WIDTH if is_ringed else outline_width
