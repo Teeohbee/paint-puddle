@@ -20,6 +20,16 @@ func _ready() -> void:
 	prompt.add_theme_color_override("font_outline_color", Color.WHITE)
 	prompt.add_theme_constant_override("outline_size", 26)
 	add_child(prompt)
+	var way_out: Label = Label.new()
+	way_out.text = "Only one controller? Press B to go back"
+	way_out.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	way_out.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	way_out.offset_top = 800
+	way_out.add_theme_font_size_override("font_size", 48)
+	way_out.add_theme_color_override("font_color", PaintColours.INK)
+	way_out.add_theme_color_override("font_outline_color", Color.WHITE)
+	way_out.add_theme_constant_override("outline_size", 18)
+	add_child(way_out)
 	show_prompt()
 
 
@@ -43,6 +53,10 @@ func _input(event: InputEvent) -> void:
 
 
 func on_pad_pressed(event: InputEventJoypadButton) -> void:
+	if event.pressed and event.button_index == JOY_BUTTON_B:
+		get_viewport().set_input_as_handled()
+		go_back()
+		return
 	if not event.pressed or event.button_index != JOY_BUTTON_A:
 		return
 	if first_device < 0:
