@@ -3,20 +3,21 @@ extends MenuScreen
 ## life in the Meadow, with its picture. Colours: a puddle friend for every
 ## colour mixed, with what made it. Countries: a flag for every country found
 ## in Map mode. Things not found yet are a grey "?", so
-## it's easy to see what's left. Ten to a page, Back on the left, and a page
+## it's easy to see what's left. Twenty to a page, Back on the left, and a page
 ## bar underneath. Pick a picture to see it big. Finishing a part gets it a
 ## gold star, and confetti the first time the Book opens after.
 
-const ENTRY_TILE_SIZE: Vector2 = Vector2(210, 210)
-const BACK_TILE_SIZE: Vector2 = Vector2(200, 200)
-const PAGE_BUTTON_SIZE: Vector2 = Vector2(340, 170)
-const PAGE_TOP: float = 255.0
+const ENTRY_TILE_SIZE: Vector2 = Vector2(150, 150)
+const BACK_TILE_SIZE: Vector2 = Vector2(170, 170)
+const PAGE_BUTTON_SIZE: Vector2 = Vector2(260, 100)
+const PAGE_TOP: float = 240.0
 const FOCUS_FIRST_ENTRY: String = "first entry"
 const FOCUS_PREVIOUS_PAGE: String = "previous page"
 const FOCUS_NEXT_PAGE: String = "next page"
 const ENTRIES_PER_ROW: int = 5
-const ENTRIES_PER_PAGE: int = 10
-const TILE_GAP: int = 30
+const ENTRIES_PER_PAGE: int = 20
+const TILE_GAP: int = 24
+const ROW_GAP: int = 8
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
 ## Names too long for a small tile; the close-up shows the whole name.
 const SHORT_NAMES: Dictionary = {"united_kingdom": "UK", "united_arab_emirates": "UAE", "papua_new_guinea": "PNG", "north_macedonia": "N. Macedonia",
@@ -49,8 +50,8 @@ func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
 	heading = make_heading("My Book", 70)
-	found_label = make_heading("", 185)
-	found_label.add_theme_font_size_override("font_size", 44)
+	found_label = make_heading("", 165)
+	found_label.add_theme_font_size_override("font_size", 40)
 	found_label.add_theme_constant_override("outline_size", 16)
 	show_sections(last_choice("book", "words"))
 	celebrate_newly_finished_parts()
@@ -175,7 +176,7 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	page_holder.offset_bottom = PAGE_TOP + 700
 	add_child(page_holder)
 	var page_column: VBoxContainer = VBoxContainer.new()
-	page_column.add_theme_constant_override("separation", TILE_GAP + 10)
+	page_column.add_theme_constant_override("separation", 14)
 	page_holder.add_child(page_column)
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 50)
@@ -186,7 +187,7 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	back_tile.chosen.connect(go_back)
 	row.add_child(back_tile)
 	var entry_rows: VBoxContainer = VBoxContainer.new()
-	entry_rows.add_theme_constant_override("separation", TILE_GAP + 20)
+	entry_rows.add_theme_constant_override("separation", ROW_GAP)
 	row.add_child(entry_rows)
 	entry_tiles = []
 	var entry_row: HBoxContainer = null

@@ -130,6 +130,8 @@ func draw_word(card: Rect2) -> void:
 	# Menu-sized tiles all share one size; only extra-big tiles (a close-up) grow it,
 	# and a long word shrinks to fit
 	var font_size: int = 48 if size.y <= 400.0 else int(size.y * 0.16)
+	if size.y < 160.0:
+		font_size = 30
 	while font_size > 24 and font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x > size.x - 36:
 		font_size -= 2
 	var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
