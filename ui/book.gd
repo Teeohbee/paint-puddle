@@ -1,7 +1,8 @@
 extends MenuScreen
-## The book of everything found, in two parts. Words: each word spelled into
+## The book of everything found, in three parts. Words: each word spelled into
 ## life in the Meadow, with its picture. Colours: a puddle friend for every
-## colour mixed, with what made it. Things not found yet are a grey "?", so
+## colour mixed, with what made it. Countries: a flag for every country found
+## in Map mode. Things not found yet are a grey "?", so
 ## it's easy to see what's left. Ten to a page, Back on the left, and a page
 ## bar underneath. Pick a picture to see it big. Finishing a part gets it a
 ## gold star, and confetti the first time the Book opens after.
@@ -17,11 +18,16 @@ const ENTRIES_PER_ROW: int = 5
 const ENTRIES_PER_PAGE: int = 10
 const TILE_GAP: int = 30
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
+## Names too long for a small tile; the close-up shows the whole name.
+const SHORT_NAMES: Dictionary = {"united_kingdom": "UK", "united_arab_emirates": "UAE", "papua_new_guinea": "PNG", "north_macedonia": "N. Macedonia",
+	"central_african_republic": "C. African Rep.", "bosnia_and_herzegovina": "Bosnia"}
 const SECTIONS: Dictionary = {
 	"words": {"title": "Words", "collection": "words_spelled", "empty": "Spell a word in the Meadow to fill this page.",
 		"all_found": "You found every word!"},
 	"colours": {"title": "Colours", "collection": "colours_found", "empty": "Mix a colour to meet a puddle friend.",
 		"all_found": "You found every colour!"},
+	"countries": {"title": "Countries", "collection": "countries_found", "empty": "Find a country in Map mode to fill this page.",
+		"all_found": "You found every country!"},
 }
 
 ## "" for the first page that picks Words or Colours.
@@ -59,8 +65,23 @@ static func words_in_the_book() -> Array[String]:
 	return words
 
 
+## Every country Map mode can ask for, A to Z.
+static func countries_in_the_book() -> Array[String]:
+	var countries: Array[String] = []
+	for task in MapTask.load_list():
+		if not countries.has(task.country_id):
+			countries.append(task.country_id)
+	countries.sort_custom(func(a: String, b: String) -> bool: return MapData.country(a)["name"] < MapData.country(b)["name"])
+	return countries
+
+
 static func entries_for(book_section: String) -> Array[String]:
-	return words_in_the_book() if book_section == "words" else PaintMixing.all_friend_paints()
+	match book_section:
+		"words":
+			return words_in_the_book()
+		"countries":
+			return countries_in_the_book()
+	return PaintMixing.all_friend_paints()
 
 
 static func found_count(book_section: String) -> int:
@@ -97,14 +118,16 @@ func show_sections(section_to_focus: String) -> void:
 	clear_page()
 	heading.text = "My Book"
 	found_label.text = ""
-	var row: HBoxContainer = make_tile_row(330, 60)
+	var row: HBoxContainer = make_tile_row(330, 50)
 	page_holder = row.get_parent()
 	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(220, 220))
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
 	var words: MenuTile = make_tile("Words", "", PaintColours.ORANGE, Vector2(400, 400))
 	words.picture = "thing:cat"
 	var colours: MenuTile = make_tile("Colours", "colour_set:paint", PaintColours.BLUE, Vector2(400, 400))
-	for tile_and_section in [[words, "words"], [colours, "colours"]]:
+	var countries: MenuTile = make_tile("Countries", "", PaintColours.GREEN, Vector2(400, 400))
+	countries.picture = "flag:japan"
+	for tile_and_section in [[words, "words"], [colours, "colours"], [countries, "countries"]]:
 		var tile: MenuTile = tile_and_section[0]
 		var book_section: String = tile_and_section[1]
 		var total: int = entries_for(book_section).size()
@@ -113,10 +136,10 @@ func show_sections(section_to_focus: String) -> void:
 			tile.subtitle = "All %d!" % total
 			tile.has_gold_star = true
 		tile.chosen.connect(open_section.bind(book_section))
-	for tile in [back, words, colours]:
+	for tile in [back, words, colours, countries]:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)
-	first_focus = colours if section_to_focus == "colours" else words
+	first_focus = {"colours": colours, "countries": countries}.get(section_to_focus, words)
 	first_focus.grab_focus_quietly.call_deferred()
 
 
@@ -276,7 +299,11 @@ func make_entry_tile(entry_index: int) -> MenuTile:
 		mystery.shows_padlock = false
 		return mystery
 	var tile: MenuTile
-	if section == "words":
+	if section == "countries":
+		var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()]
+		tile = make_tile(SHORT_NAMES.get(entry, MapData.country(entry)["name"]), "", colour.lerp(Color.WHITE, 0.35), ENTRY_TILE_SIZE)
+		tile.picture = "flag:" + entry
+	elif section == "words":
 		var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()]
 		tile = make_tile(entry.to_upper(), "", colour.lerp(Color.WHITE, 0.35), ENTRY_TILE_SIZE)
 		tile.picture = "thing:" + entry
@@ -319,10 +346,12 @@ func show_close_up(from_tile: MenuTile) -> void:
 	var holder: CenterContainer = CenterContainer.new()
 	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
 	close_up.add_child(holder)
-	var big: MenuTile = make_tile(from_tile.word, "", from_tile.paint_colour, Vector2(620, 620))
+	var big: MenuTile = make_tile(from_tile.word if not from_tile.picture.begins_with("flag:") else MapData.country(from_tile.picture.trim_prefix("flag:"))["name"], "", from_tile.paint_colour, Vector2(620, 620))
 	big.picture = from_tile.picture
 	if from_tile.picture.begins_with("friend:"):
 		big.subtitle = recipe_text(from_tile.picture.trim_prefix("friend:"))
+	elif from_tile.picture.begins_with("flag:"):
+		big.subtitle = MapData.continent(MapData.country(from_tile.picture.trim_prefix("flag:"))["home"])["name"]
 	holder.add_child(big)
 	big.chosen.connect(hide_close_up.bind(from_tile))
 	keep_focus_on(big)

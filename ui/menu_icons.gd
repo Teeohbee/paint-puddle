@@ -267,6 +267,9 @@ static func draw_picture(canvas: CanvasItem, picture: String, centre: Vector2, s
 		var time: float = Time.get_ticks_msec() / 1000.0
 		PuddleFriend.draw_friend(canvas, picture.trim_prefix("friend:"), centre + Vector2(0, size * 0.08), size / 95.0, time)
 		return
+	if picture.begins_with("flag:"):
+		FlagDrawings.draw(canvas, picture.trim_prefix("flag:"), centre, size * 1.05)
+		return
 	if picture.begins_with("thing:"):
 		var scale: float = size / 110.0
 		canvas.draw_set_transform(centre + Vector2(0, -ThingDrawings.GROUND_Y * 0.3 * scale), 0.0, Vector2(scale, scale))
