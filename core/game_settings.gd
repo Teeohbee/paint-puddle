@@ -110,6 +110,7 @@ func reset_part(part: String) -> void:
 			task_deck.clear()
 		"map":
 			collections["countries_found"].clear()
+			collections["book_parts_celebrated"].erase("countries")
 			map_task_deck.clear()
 		"words", "colours":
 			var collection_name: String = "words_spelled" if part == "words" else "colours_found"
