@@ -32,8 +32,9 @@ const DEFAULT_PROGRESS: Dictionary = {
 
 ## Lists of things found, by name, in the order they were found. The last
 ## one is the Book parts already cheered for being finished ("words",
-## "colours"), so the confetti only happens once.
-const COLLECTION_NAMES: Array[String] = ["words_spelled", "colours_found", "book_parts_celebrated"]
+## "colours"), so the confetti only happens once. Countries found in Map mode
+## are by id ("france").
+const COLLECTION_NAMES: Array[String] = ["words_spelled", "colours_found", "book_parts_celebrated", "countries_found"]
 
 var save_file_path: String = "user://save.json"
 var settings: Dictionary = {}
@@ -41,6 +42,8 @@ var progress: Dictionary = {}
 var collections: Dictionary = {}
 ## Meadow tasks still to come this round, dealt from the end. See TaskRunner.
 var task_deck: Array[int] = []
+## The same for Map mode's tasks. See MapTaskRunner.
+var map_task_deck: Array[int] = []
 
 
 func _ready() -> void:
@@ -75,6 +78,7 @@ func reset_progress() -> void:
 	progress = DEFAULT_PROGRESS.duplicate()
 	collections = empty_collections()
 	task_deck.clear()
+	map_task_deck.clear()
 	save_to_disk()
 
 
@@ -83,14 +87,16 @@ const RESET_PARTS: Dictionary = {
 	"everything": "Everything",
 	"hills": "Hills",
 	"meadow": "Meadow",
+	"map": "Map",
 	"words": "Book words",
 	"colours": "Book colours",
 }
 
 
 ## Resets one part and leaves the rest. The Meadow is its tasks and
-## rainbows; the words spelled there belong to the Book. Emptying a Book
-## part lets its finished-it confetti happen again.
+## rainbows; the words spelled there belong to the Book. The Map is the
+## countries found and its tasks. Emptying a Book part lets its
+## finished-it confetti happen again.
 func reset_part(part: String) -> void:
 	match part:
 		"everything":
@@ -102,6 +108,9 @@ func reset_part(part: String) -> void:
 			for progress_name in ["tasks_completed", "next_task_index", "rainbows_painted"]:
 				progress[progress_name] = 0
 			task_deck.clear()
+		"map":
+			collections["countries_found"].clear()
+			map_task_deck.clear()
 		"words", "colours":
 			var collection_name: String = "words_spelled" if part == "words" else "colours_found"
 			collections[collection_name].clear()
@@ -116,6 +125,16 @@ func get_task_deck() -> Array[int]:
 
 func set_task_deck(new_deck: Array[int]) -> void:
 	task_deck = new_deck.duplicate()
+	save_to_disk()
+
+
+## A copy, so changing it doesn't change the save.
+func get_map_task_deck() -> Array[int]:
+	return map_task_deck.duplicate()
+
+
+func set_map_task_deck(new_deck: Array[int]) -> void:
+	map_task_deck = new_deck.duplicate()
 	save_to_disk()
 
 
@@ -150,6 +169,7 @@ func load_from_disk() -> void:
 	progress = DEFAULT_PROGRESS.duplicate()
 	collections = empty_collections()
 	task_deck.clear()
+	map_task_deck.clear()
 	if not FileAccess.file_exists(save_file_path):
 		return
 	var saved_text: String = FileAccess.get_file_as_string(save_file_path)
@@ -168,7 +188,8 @@ func load_from_disk() -> void:
 	for progress_name in progress:
 		progress[progress_name] = maxi(progress[progress_name], 0)
 	copy_known_collections(saved.get("collections", {}))
-	copy_task_deck(saved.get("task_deck", []))
+	copy_task_deck(saved.get("task_deck", []), task_deck)
+	copy_task_deck(saved.get("map_task_deck", []), map_task_deck)
 	var saved_version: Variant = saved.get("version", 1)
 	var is_from_before_collections: bool = not (saved_version is float or saved_version is int) or saved_version < 2
 	if is_from_before_collections and progress.tasks_completed >= TASKS_IN_THE_FIRST_ROUND:
@@ -199,15 +220,15 @@ func copy_known_collections(saved_collections: Variant) -> void:
 
 ## Only whole, non-negative numbers, each once. Indexes past the end of the
 ## task list are left for TaskRunner to skip, since only it knows the list.
-func copy_task_deck(saved_deck: Variant) -> void:
+func copy_task_deck(saved_deck: Variant, into: Array[int]) -> void:
 	if not saved_deck is Array:
 		return
 	for entry in saved_deck:
 		if not (entry is float or entry is int):
 			continue
 		var task_index: int = int(entry)
-		if task_index >= 0 and not task_deck.has(task_index):
-			task_deck.append(task_index)
+		if task_index >= 0 and not into.has(task_index):
+			into.append(task_index)
 
 
 func save_to_disk() -> void:
@@ -221,6 +242,7 @@ func save_to_disk() -> void:
 		"progress": progress,
 		"collections": collections,
 		"task_deck": task_deck,
+		"map_task_deck": map_task_deck,
 	}, "\t"))
 
 

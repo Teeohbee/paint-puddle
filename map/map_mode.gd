@@ -7,6 +7,9 @@ extends Node2D
 
 signal country_picked(country_id: String)
 signal screen_changed(screen_name: String)
+## Fired once a zoom has finished, with the continent the pin is now in (not for the world).
+signal continent_entered(continent_id: String)
+signal zoom_finished
 
 const WORLD: String = "world"
 const WORLD_POINTER_SPEED: float = 520.0
@@ -26,6 +29,9 @@ var pointer: MapPointer
 var effects_layer: Node2D
 var controls_hint: ControlsHint
 var globe_button: GlobeButton
+var hint_arrow: HintArrow
+var task_banner: MapTaskBanner
+var task_runner: MapTaskRunner
 var name_pill: PanelContainer
 var name_label: Label
 var is_changing_screen: bool = false
@@ -45,6 +51,9 @@ func _ready() -> void:
 	var pointer_layer: CanvasLayer = CanvasLayer.new()
 	pointer_layer.layer = 11
 	add_child(pointer_layer)
+	hint_arrow = HintArrow.new()
+	hint_arrow.name = "HintArrow"
+	pointer_layer.add_child(hint_arrow)
 	pointer = MapPointer.new()
 	pointer.name = "Pointer"
 	pointer_layer.add_child(pointer)
@@ -52,6 +61,9 @@ func _ready() -> void:
 	add_child(effects_layer)
 	add_hud()
 	build_screen(WORLD)
+	task_runner = MapTaskRunner.new(self)
+	task_runner.name = "TaskRunner"
+	add_child(task_runner)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
@@ -65,6 +77,8 @@ func add_hud() -> void:
 	controls_hint.shows_jump = false
 	controls_hint.shows_act_button = true
 	hud.add_child(controls_hint)
+	task_banner = MapTaskBanner.new()
+	hud.add_child(task_banner)
 	globe_button = GlobeButton.new()
 	globe_button.visible = false
 	hud.add_child(globe_button)
@@ -159,6 +173,15 @@ func finish_changing_screen() -> void:
 	is_changing_screen = false
 	target_under_pointer = ""
 	update_target_under_pointer()
+	zoom_finished.emit()
+	if screen_name != WORLD:
+		continent_entered.emit(screen_name)
+
+
+## Fills a country in on the screen being shown (other screens fill it in when they are built).
+func paint_country(country_id: String) -> void:
+	if screen is ContinentScreen:
+		screen.paint_country(country_id)
 
 
 ## Swaps in the world or one continent. Coming out of a continent lands the
