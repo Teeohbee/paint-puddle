@@ -243,7 +243,7 @@ func draw_op(op: Array) -> void:
 		"maple":
 			var leaf: PackedVector2Array = PackedVector2Array()
 			for index in range(0, MAPLE_LEAF.size(), 2):
-				leaf.append(Vector2(op[2], op[3]) + Vector2(MAPLE_LEAF[index], MAPLE_LEAF[index + 1]) * op[4])
+				leaf.append(to_canvas(Vector2(op[2], op[3]) + Vector2(MAPLE_LEAF[index], MAPLE_LEAF[index + 1]) * op[4]))
 			fill(leaf, colour)
 
 
