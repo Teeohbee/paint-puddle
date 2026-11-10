@@ -28,6 +28,7 @@ const NAMES: Array[String] = [
 	"log", "bat", "pen", "bun", "bug", "jar", "dish", "bell",
 	"rabbit", "rocket", "castle", "penguin", "octopus", "giraffe", "snowman",
 	"tractor", "dinosaur", "elephant", "umbrella", "crocodile", "helicopter", "caterpillar",
+	"kangaroo", "panda", "pyramid", "tower",
 ]
 
 
@@ -79,6 +80,10 @@ static func draw(canvas: CanvasItem, thing_name: String) -> void:
 		"crocodile": draw_crocodile(canvas)
 		"helicopter": draw_helicopter(canvas)
 		"caterpillar": draw_caterpillar(canvas)
+		"kangaroo": draw_kangaroo(canvas)
+		"panda": draw_panda(canvas)
+		"pyramid": draw_pyramid(canvas)
+		"tower": draw_tower(canvas)
 
 
 # --- Building blocks -------------------------------------------------------
@@ -782,3 +787,54 @@ static func draw_caterpillar(canvas: CanvasItem) -> void:
 	eye(canvas, Vector2(-56, -4), 5)
 	eye(canvas, Vector2(-44, -4), 5)
 	smile(canvas, Vector2(-50, 4), 5)
+
+
+static func draw_kangaroo(canvas: CanvasItem) -> void:
+	var fur: Color = Color(0.85, 0.55, 0.32)
+	var belly: Color = Color(0.97, 0.85, 0.68)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(-14, 10), Vector2(-60, 38), Vector2(-20, 38)]), fur)
+	shape(canvas, Vector2(-8, 12), Vector2(28, 34), fur, -0.15)
+	patch(canvas, Vector2(-2, 14), Vector2(15, 22), belly)
+	shape(canvas, Vector2(6, 38), Vector2(26, 7), fur)
+	shape(canvas, Vector2(14, -22), Vector2(15, 17), fur)
+	shape(canvas, Vector2(26, -14), Vector2(13, 9), fur)
+	for ear_tilt in [-0.3, 0.3]:
+		shape(canvas, Vector2(8 + ear_tilt * 30, -48), Vector2(5, 15), fur, ear_tilt)
+	shape(canvas, Vector2(14, 6), Vector2(6, 14), fur, 0.5)
+	eye(canvas, Vector2(18, -26), 5)
+	canvas.draw_circle(Vector2(36, -16), 4, PaintColours.INK)
+
+
+static func draw_panda(canvas: CanvasItem) -> void:
+	for ear_side in [-1.0, 1.0]:
+		shape(canvas, Vector2(ear_side * 28, -36), Vector2(12, 12), NEAR_BLACK)
+	shape(canvas, Vector2(0, 22), Vector2(34, 28), FUR_WHITE)
+	for leg_side in [-1.0, 1.0]:
+		shape(canvas, Vector2(leg_side * 28, 34), Vector2(12, 14), NEAR_BLACK)
+		shape(canvas, Vector2(leg_side * 36, 8), Vector2(10, 18), NEAR_BLACK, leg_side * 0.4)
+	shape(canvas, Vector2(0, -12), Vector2(34, 30), FUR_WHITE)
+	for eye_side in [-1.0, 1.0]:
+		patch(canvas, Vector2(eye_side * 13, -14), Vector2(9, 12), NEAR_BLACK, eye_side * 0.4)
+		canvas.draw_circle(Vector2(eye_side * 13, -15), 3.5, Color.WHITE)
+	shape(canvas, Vector2(0, -2), Vector2(7, 5), NEAR_BLACK)
+	smile(canvas, Vector2(0, 6), 12)
+
+
+static func draw_pyramid(canvas: CanvasItem) -> void:
+	var sand: Color = Color(0.95, 0.8, 0.45)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(-70, 40), Vector2(70, 40), Vector2(0, -50)]), sand)
+	canvas.draw_colored_polygon(PackedVector2Array([Vector2(0, -50), Vector2(70, 40), Vector2(14, 40)]), sand.darkened(0.15))
+	for block_row in 3:
+		var row_y: float = -14.0 + block_row * 18.0
+		var half_width: float = (row_y + 50.0) / 90.0 * 70.0
+		canvas.draw_line(Vector2(-half_width, row_y), Vector2(half_width, row_y), sand.darkened(0.3), 2)
+	canvas.draw_circle(Vector2(-62, -40), 12, GOLD)
+
+
+static func draw_tower(canvas: CanvasItem) -> void:
+	var iron: Color = Color(0.5, 0.42, 0.4)
+	outlined_polygon(canvas, PackedVector2Array([Vector2(-36, 44), Vector2(-24, 44), Vector2(-4, -6), Vector2(4, -6), Vector2(24, 44), Vector2(36, 44), Vector2(8, -50), Vector2(-8, -50)]), iron)
+	rounded_box(canvas, Rect2(-24, 6, 48, 8), 2, iron)
+	rounded_box(canvas, Rect2(-14, -22, 28, 7), 2, iron)
+	canvas.draw_line(Vector2(0, -50), Vector2(0, -72), iron.darkened(0.35), 4)
+	canvas.draw_arc(Vector2(0, 44), 18, PI, TAU, 12, iron.darkened(0.35), 4)

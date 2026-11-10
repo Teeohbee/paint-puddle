@@ -11,6 +11,9 @@ var type: String = "find"
 var text: String = ""
 ## The id of the country that answers it ("france").
 var country_id: String = ""
+## A picture clue: a drawing from ThingDrawings shown on the card ("kangaroo").
+## Empty for plain tasks.
+var thing: String = ""
 
 
 ## The tasks in the file, skipping any that name a country the map doesn't have.
@@ -24,7 +27,11 @@ static func load_list(path: String = TASKS_PATH) -> Array[MapTask]:
 		if not entry is Dictionary or not TYPES.has(entry.get("type", "")) or MapData.country(entry.get("country", "")).is_empty():
 			push_warning("Skipping a bad map task: %s" % [entry])
 			continue
+		if entry.get("thing", "") != "" and not ThingDrawings.can_draw(entry["thing"]):
+			push_warning("Skipping a map task with a picture we can't draw: %s" % [entry])
+			continue
 		var task: MapTask = MapTask.new()
+		task.thing = entry.get("thing", "")
 		task.type = entry["type"]
 		task.text = entry.get("text", "")
 		task.country_id = entry["country"]

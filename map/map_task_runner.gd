@@ -60,7 +60,7 @@ func first_task_index() -> int:
 		return deal_next_task_index(-1)
 	var starters: Array[int] = []
 	for task_index in tasks.size():
-		if STARTER_COUNTRIES.has(tasks[task_index].country_id):
+		if STARTER_COUNTRIES.has(tasks[task_index].country_id) and tasks[task_index].thing == "":
 			starters.append(task_index)
 	if starters.is_empty():
 		return deal_next_task_index(-1)

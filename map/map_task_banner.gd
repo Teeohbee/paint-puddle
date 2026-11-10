@@ -15,6 +15,8 @@ const TEXT_LEFT: float = 140.0
 const TEXT_RIGHT_MARGIN: float = 50.0
 
 var text: String = ""
+## The picture clue on the card instead of the little globe, if the task has one.
+var text_thing: String = ""
 var card_width: float = MOST_WIDTH
 var slide_tween: Tween
 var flash: float = 0.0
@@ -28,6 +30,7 @@ func _ready() -> void:
 
 func show_task(new_task: MapTask) -> void:
 	text = new_task.text
+	text_thing = new_task.thing
 	var font: Font = get_theme_default_font()
 	card_width = clampf(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 50).x + TEXT_LEFT + TEXT_RIGHT_MARGIN, LEAST_WIDTH, MOST_WIDTH)
 	size = Vector2(card_width, CARD_HEIGHT)
@@ -69,7 +72,12 @@ func _draw() -> void:
 	draw_style_box(card, Rect2(Vector2.ZERO, size))
 	var centre: Vector2 = Vector2(70, CARD_HEIGHT / 2.0)
 	draw_circle(centre, 46, PaintColours.BLUE.lightened(0.6))
-	MenuIcons.draw_icon(self, "map", centre, 70, PaintColours.BLUE.darkened(0.1))
+	if text_thing != "":
+		draw_set_transform(centre + Vector2(0, -4), 0.0, Vector2(0.62, 0.62))
+		ThingDrawings.draw(self, text_thing)
+		draw_set_transform(Vector2.ZERO)
+	else:
+		MenuIcons.draw_icon(self, "map", centre, 70, PaintColours.BLUE.darkened(0.1))
 	var font: Font = get_theme_default_font()
 	for font_size in range(50, 33, -2):
 		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= card_width - TEXT_LEFT - TEXT_RIGHT_MARGIN:
