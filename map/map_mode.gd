@@ -201,6 +201,7 @@ func build_screen(new_screen_name: String, came_from_continent: String = "") -> 
 	screen_root.move_child(screen, 0)
 	pointer.magnets = screen.magnets
 	pointer.target_at = screen.target_at
+	pointer.wraps_sideways = new_screen_name == WORLD
 	pointer.velocity = Vector2.ZERO
 	if new_screen_name == WORLD:
 		var landing: String = came_from_continent if came_from_continent != "" else last_continent

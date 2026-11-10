@@ -30,6 +30,8 @@ var magnets: Array = []
 var target_at: Callable = func(_point: Vector2) -> String: return ""
 var velocity: Vector2 = Vector2.ZERO
 var play_area: Rect2 = Rect2(40, 40, 1840, 1000)
+## On the world screen the map goes round: off the right edge comes back on the left, and the other way.
+var wraps_sideways: bool = false
 var paint_colour: Color = PaintColours.BLUE
 var squash_stretch: SquashStretchSpring = SquashStretchSpring.new()
 var look_direction: Vector2 = Vector2.DOWN
@@ -51,7 +53,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = mover.next_velocity(velocity, input_direction, delta)
 	position = position + velocity * delta
-	var kept_inside: Vector2 = position.clamp(play_area.position, play_area.end)
+	if wraps_sideways:
+		position.x = wrapf(position.x, 0.0, MapData.SCREEN_SIZE.x)
+	var kept_inside: Vector2 = position.clamp(Vector2(-INF if wraps_sideways else play_area.position.x, play_area.position.y), Vector2(INF if wraps_sideways else play_area.end.x, play_area.end.y))
 	if kept_inside != position:
 		velocity = Vector2.ZERO if kept_inside.is_equal_approx(position) else velocity
 		position = kept_inside

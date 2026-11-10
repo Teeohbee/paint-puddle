@@ -151,10 +151,12 @@ func nearest_continent_label(continent_ids: Array) -> Vector2:
 	var nearest_distance: float = INF
 	for continent_id in continent_ids:
 		var label: Array = MapData.continent(continent_id)["label"]
-		var label_position: Vector2 = Vector2(label[0], label[1])
-		if mode.pointer.position.distance_to(label_position) < nearest_distance:
-			nearest = label_position
-			nearest_distance = mode.pointer.position.distance_to(label_position)
+		for lap in [-1.0, 0.0, 1.0]:
+			# The world goes round, so the nearest copy may be across the edge
+			var label_position: Vector2 = Vector2(label[0] + lap * MapData.SCREEN_SIZE.x, label[1])
+			if mode.pointer.position.distance_to(label_position) < nearest_distance:
+				nearest = label_position
+				nearest_distance = mode.pointer.position.distance_to(label_position)
 	return nearest
 
 
