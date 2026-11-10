@@ -41,9 +41,13 @@ func _ready() -> void:
 	screen_root = Node2D.new()
 	screen_root.name = "ScreenRoot"
 	add_child(screen_root)
+	# Above the HUD (layer 10), so the tip can be seen resting on the globe
+	var pointer_layer: CanvasLayer = CanvasLayer.new()
+	pointer_layer.layer = 11
+	add_child(pointer_layer)
 	pointer = MapPointer.new()
 	pointer.name = "Pointer"
-	add_child(pointer)
+	pointer_layer.add_child(pointer)
 	effects_layer = Node2D.new()
 	add_child(effects_layer)
 	add_hud()

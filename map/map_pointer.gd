@@ -14,6 +14,9 @@ const TIP_RING_COLOUR: Color = Color(1, 1, 1, 0.9)
 const PULL_TOP_SPEED: float = 120.0
 const PULL_RATE: float = 1600.0
 const TEARDROP_STEPS: int = 28
+## Near the top of the screen the pin turns upside down so its head stays on screen.
+const HEAD_FLIPS_BELOW_Y: float = 150.0
+const HEAD_FLIP_RANGE: float = 60.0
 
 ## The left, right, up and down actions this pointer listens to.
 var move_actions: Array[StringName] = PlayerControls.MOVE_ACTIONS.duplicate()
@@ -83,7 +86,8 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, squash_stretch.scale)
 	draw_tip_ring()
-	var head_centre: Vector2 = Vector2(0, -HEAD_CENTRE_ABOVE_TIP + sin(bob_time * 3.0) * 3.0)
+	var flip: float = clampf((HEAD_FLIPS_BELOW_Y - position.y) / HEAD_FLIP_RANGE, 0.0, 1.0)
+	var head_centre: Vector2 = Vector2(0, -HEAD_CENTRE_ABOVE_TIP).rotated(PI * flip) + Vector2(0, sin(bob_time * 3.0) * 3.0)
 	var outline: PackedVector2Array = teardrop_points(head_centre, HEAD_RADIUS, Vector2.ZERO)
 	draw_colored_polygon(outline, paint_colour)
 	draw_polyline(outline + PackedVector2Array([outline[0]]), OUTLINE_COLOUR, 4.0, true)
