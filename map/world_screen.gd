@@ -5,8 +5,10 @@ extends MapScreen
 ## becomes Asia, so Europe isn't a stripe right across the top.
 
 const NAME_FONT_SIZE: int = 44
-const BORDER_COLOUR: Color = Color(1, 1, 1, 0.8)
+## Country lines are hidden here: each continent reads as one solid shape.
 const BORDER_WIDTH: float = 1.5
+## Longitude west of which a split country (Russia's Chukotka sliver, over the date line) belongs to the east side.
+const FAR_WEST_LONGITUDE: float = -100.0
 
 var continent_labels: Array[Dictionary] = []
 
@@ -34,7 +36,7 @@ func add_world_shape(continent_id: String, pieces: Array[PackedVector2Array], la
 	var shape: MapCountry = MapCountry.make(continent_id, MapData.continent(continent_id)["name"], pieces, label, colour)
 	shape.washes_when_unpainted = false
 	shape.rings_when_highlighted = false
-	shape.outline_colour = BORDER_COLOUR
+	shape.outline_colour = colour
 	shape.outline_width = BORDER_WIDTH
 	shape.refresh_look()
 	add_shape(shape)
@@ -43,8 +45,10 @@ func add_world_shape(continent_id: String, pieces: Array[PackedVector2Array], la
 ## A country that straddles two continents: the part west of the split keeps
 ## its home colour, the rest takes the other continent's.
 func add_split_country(country: Dictionary, pieces: Array[PackedVector2Array], label: Vector2, split_x: float, colour_of_continent: Dictionary) -> void:
-	var west_of_split: PackedVector2Array = PackedVector2Array([Vector2(-2000, -2000), Vector2(split_x, -2000), Vector2(split_x, 3000), Vector2(-2000, 3000)])
+	var far_west_x: float = (FAR_WEST_LONGITUDE + 180.0) * MapData.WORLD_PIXELS_PER_DEGREE
+	var west_of_split: PackedVector2Array = PackedVector2Array([Vector2(far_west_x, -2000), Vector2(split_x, -2000), Vector2(split_x, 3000), Vector2(far_west_x, 3000)])
 	var east_of_split: PackedVector2Array = PackedVector2Array([Vector2(split_x, -2000), Vector2(4000, -2000), Vector2(4000, 3000), Vector2(split_x, 3000)])
+	var over_the_date_line: PackedVector2Array = PackedVector2Array([Vector2(-2000, -2000), Vector2(far_west_x, -2000), Vector2(far_west_x, 3000), Vector2(-2000, 3000)])
 	var home_id: String = country["home"]
 	var other_id: String = country["continents"][1]
 	var west: Array[PackedVector2Array] = []
@@ -52,6 +56,7 @@ func add_split_country(country: Dictionary, pieces: Array[PackedVector2Array], l
 	for piece in pieces:
 		west.append_array(Geometry2D.intersect_polygons(piece, west_of_split))
 		east.append_array(Geometry2D.intersect_polygons(piece, east_of_split))
+		east.append_array(Geometry2D.intersect_polygons(piece, over_the_date_line))
 	if not west.is_empty():
 		add_world_shape(home_id, west, label, colour_of_continent[home_id])
 	if not east.is_empty():

@@ -19,6 +19,7 @@ func _ready() -> void:
 		var label: Vector2 = Vector2(view["label"][0], view["label"][1])
 		var shape: MapCountry = MapCountry.make(country["id"], country["name"], MapData.polygons_from(view["polygons"]), label,
 			MapData.colour_of(int(country["colour"])))
+		shape.is_painted = GameSettings.has_found("countries_found", country["id"])
 		add_shape(shape)
 		magnets.append(MapMagnet.new(label, MAGNET_REACH, country["id"]))
 

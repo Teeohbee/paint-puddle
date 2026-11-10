@@ -73,5 +73,7 @@ func set_highlight(target: String) -> void:
 	highlighted_target = target
 	for shape in shapes:
 		shape.is_highlighted = shape.target_id == target and target != ""
-		if shape.is_highlighted:
+		# Only a ringed country needs raising, so its ring isn't hidden by a neighbour. A
+		# continent on the world screen mustn't climb over the names laid on top.
+		if shape.is_highlighted and shape.rings_when_highlighted:
 			move_child(shape, -1)
