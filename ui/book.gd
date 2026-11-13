@@ -3,12 +3,13 @@ extends MenuScreen
 ## life in the Meadow, with its picture. Colours: a puddle friend for every
 ## colour mixed, with what made it. Countries: a flag for every country found
 ## in Map mode. Things not found yet are a grey "?", so
-## it's easy to see what's left. Thirty-two to a page, Back on the left, and a page
-## bar underneath. Pick a picture to see it big. Finishing a part gets it a
+## it's easy to see what's left. Thirty-two to a page, Back in the top-left
+## corner, and a page bar underneath. Pick a picture to see it big. Finishing a part gets it a
 ## gold star, and confetti the first time the Book opens after.
 
 const ENTRY_TILE_SIZE: Vector2 = Vector2(150, 150)
-const BACK_TILE_SIZE: Vector2 = Vector2(170, 170)
+const BACK_TILE_SIZE: Vector2 = Vector2(150, 150)
+const BACK_TILE_CORNER: Vector2 = Vector2(95, 80)
 const PAGE_BUTTON_SIZE: Vector2 = Vector2(260, 100)
 const PAGE_TOP: float = 240.0
 const FOCUS_FIRST_ENTRY: String = "first entry"
@@ -163,32 +164,34 @@ func page_count() -> int:
 	return maxi(1, ceili(entries.size() / float(ENTRIES_PER_PAGE)))
 
 
-## Builds one page: Back on the left, the entries in rows, and under them the
-## page bar - Back a page, which page this is, Next page. Down from any entry
-## reaches the bar in two presses at most. "focus" is where the D-pad goes:
+## Builds one page: Back in the top-left corner, the entries in rows, and
+## under them the page bar - Back a page, which page this is, Next page. Up
+## from the top row reaches Back. "focus" is where the D-pad goes:
 ## FOCUS_FIRST_ENTRY, or the page button just pressed so mashing it flicks on.
 func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	page = new_page
 	clear_page()
-	page_holder = CenterContainer.new()
-	page_holder.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	page_holder.offset_top = PAGE_TOP
-	page_holder.offset_bottom = PAGE_TOP + 700
+	page_holder = Control.new()
+	page_holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	page_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(page_holder)
-	var page_column: VBoxContainer = VBoxContainer.new()
-	page_column.add_theme_constant_override("separation", 14)
-	page_holder.add_child(page_column)
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 50)
-	page_column.add_child(row)
 
 	back_tile = make_tile("Back", "back", PaintColours.PURPLE, BACK_TILE_SIZE)
-	back_tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	back_tile.position = BACK_TILE_CORNER
 	back_tile.chosen.connect(go_back)
-	row.add_child(back_tile)
+	page_holder.add_child(back_tile)
+
+	var centre: CenterContainer = CenterContainer.new()
+	centre.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	centre.offset_top = PAGE_TOP
+	centre.offset_bottom = PAGE_TOP + 700
+	page_holder.add_child(centre)
+	var page_column: VBoxContainer = VBoxContainer.new()
+	page_column.add_theme_constant_override("separation", 14)
+	centre.add_child(page_column)
 	var entry_rows: VBoxContainer = VBoxContainer.new()
 	entry_rows.add_theme_constant_override("separation", ROW_GAP)
-	row.add_child(entry_rows)
+	page_column.add_child(entry_rows)
 	entry_tiles = []
 	var entry_row: HBoxContainer = null
 	var first_entry: int = page * ENTRIES_PER_PAGE
@@ -204,6 +207,7 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 
 	page_column.add_child(make_page_bar())
 	link_entries_to_page_bar()
+	link_back_tile()
 
 	var tile_to_start_on: MenuTile = back_tile if entry_tiles.is_empty() else entry_tiles[0]
 	if focus == FOCUS_PREVIOUS_PAGE and not previous_page_tile.is_locked:
@@ -214,18 +218,12 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	tile_to_start_on.grab_focus_quietly.call_deferred()
 
 
-## Back a page, "Page 2 of 5" with a dot per page, Next page. Lined up under
-## the entries rather than the Back tile. A button with nowhere to go is
-## greyed out but stays put, so nothing jumps about.
+## Back a page, "Page 2 of 5" with a dot per page, Next page, as wide as the
+## entries. A button with nowhere to go is greyed out but stays put, so
+## nothing jumps about.
 func make_page_bar() -> HBoxContainer:
-	var bar_row: HBoxContainer = HBoxContainer.new()
-	bar_row.add_theme_constant_override("separation", 50)
-	var under_back: Control = Control.new()
-	under_back.custom_minimum_size = Vector2(BACK_TILE_SIZE.x, 0)
-	bar_row.add_child(under_back)
 	var bar: HBoxContainer = HBoxContainer.new()
 	bar.custom_minimum_size = Vector2(ENTRY_TILE_SIZE.x * ENTRIES_PER_ROW + TILE_GAP * (ENTRIES_PER_ROW - 1), 0)
-	bar_row.add_child(bar)
 
 	previous_page_tile = make_tile("Back a page", "back", PaintColours.ORANGE, PAGE_BUTTON_SIZE)
 	previous_page_tile.chosen.connect(func(): show_page(page - 1, FOCUS_PREVIOUS_PAGE))
@@ -257,7 +255,7 @@ func make_page_bar() -> HBoxContainer:
 	bar.add_child(previous_page_tile)
 	bar.add_child(page_label_column)
 	bar.add_child(next_page_tile)
-	return bar_row
+	return bar
 
 
 ## Down from the bottom entries goes to the page bar: the left two columns
@@ -284,12 +282,26 @@ func link_entries_to_page_bar() -> void:
 		return
 	var bottom_row_start: int = (entry_tiles.size() - 1) / ENTRIES_PER_ROW * ENTRIES_PER_ROW
 	previous_page_tile.focus_neighbor_top = previous_page_tile.get_path_to(entry_tiles[bottom_row_start])
-	previous_page_tile.focus_neighbor_left = previous_page_tile.get_path_to(back_tile)
+	previous_page_tile.focus_neighbor_left = NodePath(".")
 	next_page_tile.focus_neighbor_top = next_page_tile.get_path_to(entry_tiles[entry_tiles.size() - 1])
 	next_page_tile.focus_neighbor_right = NodePath(".")
 	if can_go_back and can_go_on:
 		previous_page_tile.focus_neighbor_right = previous_page_tile.get_path_to(next_page_tile)
 		next_page_tile.focus_neighbor_left = next_page_tile.get_path_to(previous_page_tile)
+
+
+## Up from any tile in the top row goes to Back, and down from Back to the
+## first tile. Back sits off on its own, so left and right go nowhere.
+func link_back_tile() -> void:
+	var itself: NodePath = NodePath(".")
+	back_tile.focus_neighbor_left = itself
+	back_tile.focus_neighbor_right = itself
+	back_tile.focus_neighbor_top = itself
+	if entry_tiles.is_empty():
+		return
+	back_tile.focus_neighbor_bottom = back_tile.get_path_to(entry_tiles[0])
+	for column in mini(ENTRIES_PER_ROW, entry_tiles.size()):
+		entry_tiles[column].focus_neighbor_top = entry_tiles[column].get_path_to(back_tile)
 
 
 func make_entry_tile(entry_index: int) -> MenuTile:
