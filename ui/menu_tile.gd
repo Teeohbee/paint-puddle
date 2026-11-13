@@ -23,6 +23,11 @@ const CORNER_RADIUS: int = 48
 @export var subtitle: String = ""
 ## A gold star in the top corner, for a part of the Book that's all found.
 @export var has_gold_star: bool = false
+## How big the icon is, as a share of the tile's shorter side. A thin tile,
+## like a Book page tab, wants a bigger share or its arrow comes out tiny.
+@export var icon_scale: float = 0.42
+## How far down the tile the icon sits. A tile with no word can centre it.
+@export var icon_height: float = 0.42
 
 var bounce_time: float = 0.0
 var scale_tween: Tween
@@ -111,8 +116,8 @@ func _draw() -> void:
 		outline.set_border_width_all(10)
 		outline.border_color = Color.WHITE
 		draw_style_box(outline, card)
-	var icon_centre: Vector2 = card.position + Vector2(size.x / 2.0, size.y * 0.42)
-	var icon_size: float = minf(size.x, size.y) * 0.42
+	var icon_centre: Vector2 = card.position + Vector2(size.x / 2.0, size.y * icon_height)
+	var icon_size: float = minf(size.x, size.y) * icon_scale
 	if picture != "":
 		MenuIcons.draw_picture(self, picture, icon_centre, icon_size * 1.4)
 	else:
