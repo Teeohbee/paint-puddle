@@ -24,3 +24,21 @@ progress.
 Medium uses the same 40 layouts. A level can set an optional `word_medium` in
 `hills/hills_levels.gd`, for example `"word": "SUN", "word_medium": "SUNSHINE"`.
 Without one, Medium spells the Easy word. Pots and paint are shared.
+
+## Tests
+
+Tests use [gdUnit4](https://github.com/godot-gdunit-labs/gdUnit4), installed by
+[gd-plug](https://github.com/imjp94/gd-plug) from `plug.gd`. Addons aren't
+committed, so after cloning:
+
+```sh
+godot --headless -s plug.gd install
+tests/run.sh          # fast suites, then the slow Hills playthroughs
+tests/run.sh fast     # or slow, or one suite: res://tests/fast/test_mixing.gd
+```
+
+It stops at the first failure; `CONTINUE=1 tests/run.sh` runs everything.
+`tests/fast/` is for anything quick; whole-level playthroughs go in
+`tests/slow/`. Suites that touch the autoloads or screens extend `GameSuite`
+(`tests/game_suite.gd`), which gives every test a fresh save and session.
+Reports go to `reports/`.
