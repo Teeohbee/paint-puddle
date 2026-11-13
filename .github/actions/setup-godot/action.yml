@@ -29,6 +29,10 @@ runs:
     - name: Import the project
       shell: bash
       run: godot --headless --path . --import
+    # gd-plug always exits 255 after installing (its request_quit() defaults to -1), so check the result
+    # instead of the exit code
     - name: Install addons
       shell: bash
-      run: godot --headless -s plug.gd install
+      run: |
+        godot --headless -s plug.gd install || true
+        test -f addons/gdUnit4/plugin.cfg || { echo "gd-plug didn't install gdUnit4" >&2; exit 1; }
