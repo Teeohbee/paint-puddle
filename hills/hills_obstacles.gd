@@ -14,7 +14,7 @@ const FLAT_RUN_UP_BEFORE: float = 200.0
 const FLAT_ROOM_AFTER: float = 250.0
 const FLAT_TOLERANCE: float = 2.0
 const SPACING: float = 700.0
-const KEEP_CLEAR_OF_THINGS: float = 170.0
+const KEEP_CLEAR_OF_THINGS: float = 110.0
 ## About one obstacle for every this much level.
 const LEVEL_LENGTH_PER_OBSTACLE: float = 1100.0
 const SAMPLE_STEP: float = 10.0
