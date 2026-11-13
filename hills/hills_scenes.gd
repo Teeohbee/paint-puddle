@@ -8,6 +8,8 @@ const DEFAULT_SCENE: String = "meadow"
 
 const SCENES: Dictionary = {
 	"meadow": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "rock",
 		# The sky: a gradient from top to bottom, with a smiling sun
 		"sky_top": Color(0.55, 0.78, 1.0),
 		"sky_bottom": Color(0.92, 0.96, 1.0),
@@ -31,6 +33,8 @@ const SCENES: Dictionary = {
 		"weather": "",
 	},
 	"snow": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "snowball",
 		"sky_top": Color(0.66, 0.79, 0.92),
 		"sky_bottom": Color(0.95, 0.97, 1.0),
 		"sky_body": "sun",
@@ -50,6 +54,8 @@ const SCENES: Dictionary = {
 		"weather": "snow",
 	},
 	"autumn": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "log",
 		"sky_top": Color(0.62, 0.76, 0.92),
 		"sky_bottom": Color(1.0, 0.9, 0.76),
 		"sky_body": "sun",
@@ -68,6 +74,8 @@ const SCENES: Dictionary = {
 		"weather": "leaves",
 	},
 	"night": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "rock",
 		"sky_top": Color(0.1, 0.12, 0.3),
 		"sky_bottom": Color(0.27, 0.28, 0.52),
 		# A sleepy moon, with stars
@@ -87,6 +95,8 @@ const SCENES: Dictionary = {
 		"weather": "fireflies",
 	},
 	"seaside": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "shell",
 		"sky_top": Color(0.42, 0.74, 1.0),
 		"sky_bottom": Color(0.86, 0.95, 1.0),
 		"sky_body": "sun",
@@ -106,6 +116,8 @@ const SCENES: Dictionary = {
 		"weather": "gulls",
 	},
 	"jungle": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "log",
 		"sky_top": Color(0.5, 0.78, 0.74),
 		"sky_bottom": Color(0.88, 0.97, 0.86),
 		"sky_body": "sun",
@@ -125,6 +137,8 @@ const SCENES: Dictionary = {
 		"weather": "vines",
 	},
 	"savanna": {
+		# What Medium puts in the way: "rock", "log", "snowball" or "shell"
+		"obstacle": "rock",
 		"sky_top": Color(0.96, 0.58, 0.45),
 		"sky_bottom": Color(1.0, 0.88, 0.62),
 		# A big low sun, at sunset
