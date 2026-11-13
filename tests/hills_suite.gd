@@ -47,6 +47,11 @@ func tap(action: String) -> void:
 	await get_tree().create_timer(0.25).timeout
 	Input.action_release(action)
 
+func hold(action: String, seconds: float) -> void:
+	Input.action_press(action)
+	await get_tree().create_timer(seconds).timeout
+	Input.action_release(action)
+
 # Holds right and jumps whenever the ground just ahead is higher or missing. Gives how many times the
 # rescue cloud had to carry the blob.
 func play_through(level: Node, seconds_allowed: float, jump_ahead := true) -> int:
@@ -70,8 +75,9 @@ func play_through(level: Node, seconds_allowed: float, jump_ahead := true) -> in
 	Input.action_release("move_right")
 	return rescues
 
-# Medium has swaying balloons and obstacles: this player also jumps obstacles and turns back (up to three
-# times) for a balloon it swept past without popping.
+# Medium has wider gaps, swaying balloons and obstacles. This player waits until near the edge of a gap
+# and holds jump for the full distance, jumps obstacles, and turns back (up to three times) for a balloon
+# it swept past without popping.
 func play_through_medium(level: Node, seconds_allowed: float) -> int:
 	var blob: Node = level.blob
 	var ground: Node = level.ground
@@ -107,8 +113,11 @@ func play_through_medium(level: Node, seconds_allowed: float) -> int:
 		if blob.is_on_floor():
 			var here: float = ground.height_at(blob.position.x)
 			var ahead: float = ground.height_at(blob.position.x + 110 * direction)
+			var gap_close: bool = ground.height_at(blob.position.x + 50 * direction) == INF
 			var obstacle_ahead := obstacles_x.any(func(x): return (x - blob.position.x) * direction > 60 and (x - blob.position.x) * direction < 130)
-			if ahead == INF or ahead < here - 20 or obstacle_ahead:
+			if gap_close:
+				await hold("act", 0.5)
+			elif (ahead != INF and ahead < here - 20) or obstacle_ahead:
 				await tap("act")
 		await get_tree().physics_frame
 		waited += 1.0 / 60.0
