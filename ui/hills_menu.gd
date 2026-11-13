@@ -1,7 +1,7 @@
 extends MenuScreen
 ## Pick a Rainbow Hills level. Each one unlocks when the one before it is done.
 ## Twenty levels to a page: More on the right goes to the next page, and Back on
-## the left goes to the page before (or the play menu from the first page).
+## the left goes to the page before (or the difficulty screen from the first page).
 
 const LEVEL_TILE_SIZE: Vector2 = Vector2(170, 170)
 const LEVELS_PER_ROW: int = 5
@@ -15,7 +15,7 @@ var page_holder: Control
 func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
-	make_heading("Rainbow Hills", 50)
+	make_heading("Rainbow Hills" if HillsLevel.difficulty == HillsLevels.EASY else "Rainbow Hills - Medium", 50)
 	var level_to_focus: int = level_to_start_on()
 	show_page(floori(level_to_focus / float(LEVELS_PER_PAGE)), level_to_focus)
 
@@ -49,7 +49,7 @@ func show_page(new_page: int, level_to_focus: int) -> void:
 			level_rows.add_child(level_row)
 		var level: Dictionary = HillsLevels.LEVELS[level_index]
 		var tile: MenuTile = make_tile(level.name, "text:%d" % (level_index + 1), PaintMixing.colour_of(level.paint), LEVEL_TILE_SIZE)
-		tile.is_locked = not HillsLevels.is_unlocked(level_index)
+		tile.is_locked = not HillsLevels.is_unlocked(level_index, HillsLevel.difficulty)
 		tile.chosen.connect(play_level.bind(level_index))
 		level_row.add_child(tile)
 		if level_index == level_to_focus:
@@ -57,7 +57,7 @@ func show_page(new_page: int, level_to_focus: int) -> void:
 	if last_level + 1 < HillsLevels.level_count():
 		var more: MenuTile = make_tile("More", "more", PaintColours.ORANGE, Vector2(200, 200))
 		more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		more.is_locked = not HillsLevels.is_unlocked(last_level + 1)
+		more.is_locked = not HillsLevels.is_unlocked(last_level + 1, HillsLevel.difficulty)
 		more.chosen.connect(func(): show_page(page + 1, last_level + 1))
 		row.add_child(more)
 		if tile_to_start_on == null:
@@ -68,7 +68,7 @@ func show_page(new_page: int, level_to_focus: int) -> void:
 
 func go_back() -> void:
 	if page == 0:
-		SceneManager.go_to("res://ui/play_menu.tscn")
+		SceneManager.go_to("res://ui/hills_difficulty_menu.tscn")
 	else:
 		# Land on More, the way back to where we were
 		show_page(page - 1, -1)
@@ -82,7 +82,7 @@ func play_level(level_index: int) -> void:
 ## The level after the one just finished, or the latest open level.
 func level_to_start_on() -> int:
 	var last_level: int = HillsLevels.level_count() - 1
-	var latest_unlocked: int = mini(GameSettings.get_progress("hills_levels_completed"), last_level)
+	var latest_unlocked: int = mini(GameSettings.get_progress(HillsLevels.progress_key(HillsLevel.difficulty)), last_level)
 	var just_finished: int = HillsLevel.level_just_finished
 	HillsLevel.level_just_finished = -1
 	if just_finished < 0:

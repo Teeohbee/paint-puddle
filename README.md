@@ -13,3 +13,14 @@ Everything you see and hear is drawn or generated in code. Built with Godot 4.7.
 | Move | D-pad or left stick | Arrow keys or WASD |
 | Jump / pick | Any face button | Space or Enter |
 | Pause | Menu (Start) | Escape |
+
+## Rainbow Hills difficulty
+
+Hills asks Easy or Medium first. Medium opens once all 40 Easy levels are
+finished (or early with "Open Medium" in the grown-up settings: hold all four
+face buttons, or G, on the Options screen). Each difficulty keeps its own
+progress.
+
+Medium uses the same 40 layouts. A level can set an optional `word_medium` in
+`hills/hills_levels.gd`, for example `"word": "SUN", "word_medium": "SUNSHINE"`.
+Without one, Medium spells the Easy word. Pots and paint are shared.

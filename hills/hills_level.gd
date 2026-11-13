@@ -23,6 +23,8 @@ const CATCH_UP_DISTANCE_BEHIND: float = 200.0
 
 ## Which level to play next; set by the hills menu before it opens this scene.
 static var level_to_play: int = 0
+## Easy or Medium (HillsLevels.EASY / MEDIUM), set by the difficulty screen
+static var difficulty: String = HillsLevels.EASY
 ## The level just finished, so the menu can wait on the one after it. -1 when
 ## the menu is opened some other way.
 static var level_just_finished: int = -1
@@ -78,7 +80,7 @@ func _ready() -> void:
 	add_child(hud)
 	word_bar = WordBar.new()
 	hud.add_child(word_bar)
-	word_bar.set_word(level.word)
+	word_bar.set_word(HillsLevels.word_for(level, difficulty))
 	controls_hint = ControlsHint.new()
 	hud.add_child(controls_hint)
 	place_balloons()
@@ -159,7 +161,7 @@ func add_level_edges() -> void:
 
 ## Letters spread evenly along the way, at a height the blob walks through.
 func place_balloons() -> void:
-	var word: String = level.word
+	var word: String = HillsLevels.word_for(level, difficulty)
 	var usable_start: float = 500.0
 	var usable_end: float = ground.level_length - 400.0
 	for letter_index in word.length():
@@ -297,8 +299,9 @@ func finish() -> void:
 	confetti_layer.layer = 11
 	add_child(confetti_layer)
 	confetti_layer.add_child(Confetti.new())
-	var completed: int = GameSettings.get_progress("hills_levels_completed")
-	GameSettings.record_progress("hills_levels_completed", maxi(completed, level_to_play + 1))
+	var progress_key: String = HillsLevels.progress_key(difficulty)
+	var completed: int = GameSettings.get_progress(progress_key)
+	GameSettings.record_progress(progress_key, maxi(completed, level_to_play + 1))
 	level_just_finished = level_to_play
 	for hop in 3:
 		for player in players:
