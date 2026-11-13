@@ -3,7 +3,7 @@ extends MenuScreen
 ## life in the Meadow, with its picture. Colours: a puddle friend for every
 ## colour mixed, with what made it. Countries: a flag for every country found
 ## in Map mode. Things not found yet are a grey "?", so
-## it's easy to see what's left. Twenty to a page, Back on the left, and a page
+## it's easy to see what's left. Thirty-two to a page, Back on the left, and a page
 ## bar underneath. Pick a picture to see it big. Finishing a part gets it a
 ## gold star, and confetti the first time the Book opens after.
 
@@ -14,8 +14,8 @@ const PAGE_TOP: float = 240.0
 const FOCUS_FIRST_ENTRY: String = "first entry"
 const FOCUS_PREVIOUS_PAGE: String = "previous page"
 const FOCUS_NEXT_PAGE: String = "next page"
-const ENTRIES_PER_ROW: int = 5
-const ENTRIES_PER_PAGE: int = 20
+const ENTRIES_PER_ROW: int = 8
+const ENTRIES_PER_PAGE: int = 32
 const TILE_GAP: int = 24
 const ROW_GAP: int = 8
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
