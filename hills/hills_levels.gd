@@ -13,7 +13,7 @@ extends RefCounted
 
 const LEVELS: Array[Dictionary] = [
 	{
-		"name": "Walk", "word": "SUN", "paint": "yellow", "pickup": "blue",
+		"name": "Walk", "word": "SUN", "word_medium": "WALKING", "paint": "yellow", "pickup": "blue",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 400, "rise": -90},
 			{"kind": "flat", "length": 500}, {"kind": "slope", "length": 400, "rise": 90},
@@ -22,7 +22,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Hop", "word": "HOP", "paint": "red", "pickup": "yellow",
+		"name": "Hop", "word": "HOP", "word_medium": "HOPPING", "paint": "red", "pickup": "yellow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 450}, {"kind": "step", "rise": -60},
@@ -33,7 +33,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Leap", "word": "JUMP", "paint": "blue", "pickup": "red",
+		"name": "Leap", "word": "JUMP", "word_medium": "LEAPFROG", "paint": "blue", "pickup": "red",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 120},
 			{"kind": "flat", "length": 500}, {"kind": "gap", "width": 140},
@@ -44,7 +44,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Climb", "word": "HILL", "paint": "green", "pickup": "white",
+		"name": "Climb", "word": "HILL", "word_medium": "CLIMBING", "paint": "green", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -45},
 			{"kind": "flat", "length": 260}, {"kind": "step", "rise": -45},
@@ -57,7 +57,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Skip", "word": "FROG", "paint": "orange", "pickup": "white",
+		"name": "Skip", "word": "FROG", "word_medium": "SKIPPING", "paint": "orange", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 120},
 			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 120},
@@ -71,7 +71,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Rainbow", "word": "RAINBOW", "paint": "purple", "pickup": "white",
+		"name": "Rainbow", "word": "RAINBOW", "word_medium": "RAINDROPS", "paint": "purple", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 400, "rise": -90},
 			{"kind": "flat", "length": 350}, {"kind": "gap", "width": 130},
@@ -89,7 +89,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Bumps", "word": "BUMPY", "paint": "red", "pickup": "white",
+		"name": "Bumps", "word": "BUMPY", "word_medium": "TUMBLING", "paint": "red", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 350, "rise": -80},
 			{"kind": "flat", "length": 200}, {"kind": "slope", "length": 350, "rise": 80},
@@ -106,7 +106,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Tower", "word": "CLOUD", "paint": "blue", "pickup": "white",
+		"name": "Tower", "word": "CLOUD", "word_medium": "SKYSCRAPER", "paint": "blue", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 220}, {"kind": "step", "rise": -50},
@@ -122,7 +122,7 @@ const LEVELS: Array[Dictionary] = [
 	},
 	{
 		# A step down just before a gap makes the far side lower, so it's an easy landing
-		"name": "Star", "word": "STAR", "paint": "yellow", "pickup": "red", "scene": "night",
+		"name": "Star", "word": "STAR", "word_medium": "STARLIGHT", "paint": "yellow", "pickup": "red", "scene": "night",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 300}, {"kind": "step", "rise": -50},
@@ -138,7 +138,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Splash", "word": "SPLASH", "paint": "sky blue", "pickup": "yellow", "scene": "seaside",
+		"name": "Splash", "word": "SPLASH", "word_medium": "SPLASHING", "paint": "sky blue", "pickup": "yellow", "scene": "seaside",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 130},
 			{"kind": "flat", "length": 360}, {"kind": "gap", "width": 140},
@@ -152,7 +152,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Ladder", "word": "LADDER", "paint": "orange", "pickup": "black",
+		"name": "Ladder", "word": "LADDER", "word_medium": "STAIRCASE", "paint": "orange", "pickup": "black",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -55},
 			{"kind": "flat", "length": 230}, {"kind": "step", "rise": -55},
@@ -168,7 +168,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "River", "word": "RIVER", "paint": "blue", "pickup": "yellow",
+		"name": "River", "word": "RIVER", "word_medium": "WATERFALL", "paint": "blue", "pickup": "yellow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 150},
 			{"kind": "flat", "length": 300}, {"kind": "gap", "width": 150},
@@ -182,7 +182,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Castle", "word": "CASTLE", "paint": "lilac", "pickup": "black", "scene": "autumn",
+		"name": "Castle", "word": "CASTLE", "word_medium": "DRAWBRIDGE", "paint": "lilac", "pickup": "black", "scene": "autumn",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60},
 			{"kind": "flat", "length": 250}, {"kind": "step", "rise": -60},
@@ -199,7 +199,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Bounce", "word": "BOUNCE", "paint": "green", "pickup": "white",
+		"name": "Bounce", "word": "BOUNCE", "word_medium": "TRAMPOLINE", "paint": "green", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 300}, {"kind": "step", "rise": 50}, {"kind": "gap", "width": 150},
@@ -213,7 +213,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Peak", "word": "MOUNTAIN", "paint": "dark green", "pickup": "white", "scene": "snow",
+		"name": "Peak", "word": "MOUNTAIN", "word_medium": "AVALANCHE", "paint": "dark green", "pickup": "white", "scene": "snow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 500, "rise": -120},
 			{"kind": "flat", "length": 250}, {"kind": "step", "rise": -55},
@@ -228,7 +228,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Jungle", "word": "MONKEY", "paint": "mint", "pickup": "black", "scene": "jungle",
+		"name": "Jungle", "word": "MONKEY", "word_medium": "CHIMPANZEE", "paint": "mint", "pickup": "black", "scene": "jungle",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 350, "rise": -80},
 			{"kind": "flat", "length": 200}, {"kind": "slope", "length": 350, "rise": 80},
@@ -247,7 +247,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Long", "word": "ELEPHANT", "paint": "peach", "pickup": "black", "scene": "savanna",
+		"name": "Long", "word": "ELEPHANT", "word_medium": "RHINOCEROS", "paint": "peach", "pickup": "black", "scene": "savanna",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 140},
 			{"kind": "flat", "length": 350}, {"kind": "slope", "length": 400, "rise": -90},
@@ -268,7 +268,7 @@ const LEVELS: Array[Dictionary] = [
 	},
 	{
 		# A bit of everything, and the longest word
-		"name": "Party", "word": "FANTASTIC", "paint": "purple", "pickup": "white",
+		"name": "Party", "word": "FANTASTIC", "word_medium": "CELEBRATE", "paint": "purple", "pickup": "white",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 250}, {"kind": "step", "rise": -55},
@@ -288,7 +288,7 @@ const LEVELS: Array[Dictionary] = [
 	},
 	{
 		# Sledging: long runs downhill, and a climb back up between them
-		"name": "Snow", "word": "SNOWMAN", "paint": "red", "pickup": "white", "scene": "snow",
+		"name": "Snow", "word": "SNOWMAN", "word_medium": "SNOWBOARD", "paint": "red", "pickup": "white", "scene": "snow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 500, "rise": -110},
 			{"kind": "flat", "length": 400}, {"kind": "gap", "width": 140},
@@ -305,7 +305,7 @@ const LEVELS: Array[Dictionary] = [
 	},
 	{
 		# Hopping over logs; the green blob goes brown, like a leaf in autumn
-		"name": "Forest", "word": "LEAVES", "paint": "green", "pickup": "red", "scene": "autumn",
+		"name": "Forest", "word": "LEAVES", "word_medium": "WOODLAND", "paint": "green", "pickup": "red", "scene": "autumn",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -50},
 			{"kind": "flat", "length": 250}, {"kind": "step", "rise": 50},
@@ -323,7 +323,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Pebbles", "word": "PEBBLES", "paint": "green", "pickup": "red",
+		"name": "Pebbles", "word": "PEBBLES", "word_medium": "BOULDERS", "paint": "green", "pickup": "red",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -55}, {"kind": "flat", "length": 240},
 			{"kind": "step", "rise": 55}, {"kind": "flat", "length": 300}, {"kind": "gap", "width": 140},
@@ -337,7 +337,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Shells", "word": "SEASHELL", "paint": "pink", "pickup": "blue", "scene": "seaside",
+		"name": "Shells", "word": "SEASHELL", "word_medium": "SANDCASTLE", "paint": "pink", "pickup": "blue", "scene": "seaside",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 140}, {"kind": "flat", "length": 300},
 			{"kind": "gap", "width": 145}, {"kind": "flat", "length": 300}, {"kind": "gap", "width": 150},
@@ -350,7 +350,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Moon", "word": "MOONLIGHT", "paint": "yellow", "pickup": "blue", "scene": "night",
+		"name": "Moon", "word": "MOONLIGHT", "word_medium": "ASTRONAUT", "paint": "yellow", "pickup": "blue", "scene": "night",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 240},
 			{"kind": "step", "rise": 60}, {"kind": "gap", "width": 145}, {"kind": "flat", "length": 300},
@@ -365,7 +365,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Acorns", "word": "SQUIRREL", "paint": "orange", "pickup": "black", "scene": "autumn",
+		"name": "Acorns", "word": "SQUIRREL", "word_medium": "CHESTNUTS", "paint": "orange", "pickup": "black", "scene": "autumn",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": 60}, {"kind": "flat", "length": 260}, {"kind": "step", "rise": -60},
@@ -381,7 +381,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Slide", "word": "PENGUIN", "paint": "sky blue", "pickup": "red", "scene": "snow",
+		"name": "Slide", "word": "PENGUIN", "word_medium": "TOBOGGAN", "paint": "sky blue", "pickup": "red", "scene": "snow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 500, "rise": 110}, {"kind": "flat", "length": 300},
 			{"kind": "gap", "width": 145}, {"kind": "flat", "length": 300}, {"kind": "slope", "length": 600, "rise": -150},
@@ -397,7 +397,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Vines", "word": "PARROT", "paint": "mint", "pickup": "red", "scene": "jungle",
+		"name": "Vines", "word": "PARROT", "word_medium": "CHAMELEON", "paint": "mint", "pickup": "red", "scene": "jungle",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 350, "rise": -80}, {"kind": "flat", "length": 200},
 			{"kind": "slope", "length": 350, "rise": 80}, {"kind": "gap", "width": 145}, {"kind": "flat", "length": 300},
@@ -412,7 +412,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Plains", "word": "GIRAFFE", "paint": "peach", "pickup": "blue", "scene": "savanna",
+		"name": "Plains", "word": "GIRAFFE", "word_medium": "WILDEBEEST", "paint": "peach", "pickup": "blue", "scene": "savanna",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 150}, {"kind": "flat", "length": 280},
 			{"kind": "gap", "width": 150}, {"kind": "flat", "length": 300}, {"kind": "step", "rise": -60},
@@ -428,7 +428,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Flutter", "word": "BUTTERFLY", "paint": "pink", "pickup": "yellow",
+		"name": "Flutter", "word": "BUTTERFLY", "word_medium": "DRAGONFLY", "paint": "pink", "pickup": "yellow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": 60}, {"kind": "flat", "length": 230}, {"kind": "step", "rise": -60},
@@ -444,7 +444,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Waves", "word": "DOLPHIN", "paint": "sky blue", "pickup": "red", "scene": "seaside",
+		"name": "Waves", "word": "DOLPHIN", "word_medium": "JELLYFISH", "paint": "sky blue", "pickup": "red", "scene": "seaside",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 400, "rise": -90}, {"kind": "flat", "length": 420},
 			{"kind": "gap", "width": 145}, {"kind": "flat", "length": 300}, {"kind": "slope", "length": 400, "rise": 90},
@@ -460,7 +460,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Rocket", "word": "ROCKET", "paint": "red", "pickup": "yellow", "scene": "night",
+		"name": "Rocket", "word": "ROCKET", "word_medium": "SPACESHIP", "paint": "red", "pickup": "yellow", "scene": "night",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": -60}, {"kind": "flat", "length": 230}, {"kind": "step", "rise": -60},
@@ -477,7 +477,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Pumpkin", "word": "PUMPKIN", "paint": "orange", "pickup": "blue", "scene": "autumn",
+		"name": "Pumpkin", "word": "PUMPKIN", "word_medium": "SCARECROW", "paint": "orange", "pickup": "blue", "scene": "autumn",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": -60}, {"kind": "flat", "length": 420}, {"kind": "gap", "width": 145},
@@ -495,7 +495,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Icicles", "word": "ICICLES", "paint": "lilac", "pickup": "black", "scene": "snow",
+		"name": "Icicles", "word": "ICICLES", "word_medium": "SNOWDRIFT", "paint": "lilac", "pickup": "black", "scene": "snow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 400, "rise": -100}, {"kind": "flat", "length": 420},
 			{"kind": "gap", "width": 145}, {"kind": "flat", "length": 300}, {"kind": "step", "rise": -60},
@@ -512,7 +512,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Swamp", "word": "CROCODILE", "paint": "dark green", "pickup": "white", "scene": "jungle",
+		"name": "Swamp", "word": "CROCODILE", "word_medium": "ALLIGATOR", "paint": "dark green", "pickup": "white", "scene": "jungle",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 145}, {"kind": "flat", "length": 280},
 			{"kind": "gap", "width": 150}, {"kind": "flat", "length": 280}, {"kind": "gap", "width": 145},
@@ -529,7 +529,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Stripes", "word": "ZEBRAS", "paint": "grey", "pickup": "red", "scene": "savanna",
+		"name": "Stripes", "word": "ZEBRAS", "word_medium": "BUMBLEBEES", "paint": "grey", "pickup": "red", "scene": "savanna",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -65}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": 65}, {"kind": "flat", "length": 230}, {"kind": "step", "rise": -65},
@@ -547,7 +547,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Garden", "word": "SUNFLOWER", "paint": "yellow", "pickup": "red",
+		"name": "Garden", "word": "SUNFLOWER", "word_medium": "DAFFODILS", "paint": "yellow", "pickup": "red",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 350, "rise": -80}, {"kind": "flat", "length": 200},
 			{"kind": "slope", "length": 350, "rise": 80}, {"kind": "flat", "length": 250}, {"kind": "step", "rise": -60},
@@ -566,7 +566,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Harbour", "word": "LIGHTHOUSE", "paint": "blue", "pickup": "white", "scene": "seaside",
+		"name": "Harbour", "word": "LIGHTHOUSE", "word_medium": "FISHERMAN", "paint": "blue", "pickup": "white", "scene": "seaside",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "gap", "width": 145}, {"kind": "flat", "length": 300},
 			{"kind": "step", "rise": -60}, {"kind": "flat", "length": 230}, {"kind": "step", "rise": -60},
@@ -584,7 +584,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Sparkle", "word": "FIREWORKS", "paint": "pink", "pickup": "yellow", "scene": "night",
+		"name": "Sparkle", "word": "FIREWORKS", "word_medium": "SPARKLERS", "paint": "pink", "pickup": "yellow", "scene": "night",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": 60}, {"kind": "gap", "width": 145}, {"kind": "flat", "length": 300},
@@ -603,7 +603,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Hedge", "word": "HEDGEHOG", "paint": "brown", "pickup": "white", "scene": "autumn",
+		"name": "Hedge", "word": "HEDGEHOG", "word_medium": "BLACKBERRY", "paint": "brown", "pickup": "white", "scene": "autumn",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": -60}, {"kind": "flat", "length": 230}, {"kind": "step", "rise": -60},
@@ -622,7 +622,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Flurry", "word": "SNOWFLAKE", "paint": "purple", "pickup": "white", "scene": "snow",
+		"name": "Flurry", "word": "SNOWFLAKE", "word_medium": "SNOWSTORM", "paint": "purple", "pickup": "white", "scene": "snow",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "slope", "length": 500, "rise": -110}, {"kind": "flat", "length": 420},
 			{"kind": "gap", "width": 145}, {"kind": "flat", "length": 300}, {"kind": "slope", "length": 600, "rise": 150},
@@ -641,7 +641,7 @@ const LEVELS: Array[Dictionary] = [
 		],
 	},
 	{
-		"name": "Grand", "word": "WONDERFUL", "paint": "red", "pickup": "blue",
+		"name": "Grand", "word": "WONDERFUL", "word_medium": "MAGNIFICENT", "paint": "red", "pickup": "blue",
 		"pieces": [
 			{"kind": "flat", "length": 700}, {"kind": "step", "rise": -60}, {"kind": "flat", "length": 230},
 			{"kind": "step", "rise": -60}, {"kind": "flat", "length": 230}, {"kind": "step", "rise": -60},
