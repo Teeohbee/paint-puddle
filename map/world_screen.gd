@@ -23,6 +23,8 @@ func _ready() -> void:
 	for country in world["countries"]:
 		var pieces: Array[PackedVector2Array] = MapData.polygons_from(country["world"]["polygons"])
 		var label: Vector2 = Vector2(country["world"]["label"][0], country["world"]["label"][1])
+		if country["id"] == "antarctica":
+			pieces = continue_to_the_bottom_of_the_screen(pieces)
 		if world["world_split"].has(country["id"]):
 			add_split_country(country, pieces, label, float(world["world_split"][country["id"]]), colour_of_continent)
 		else:
@@ -30,6 +32,21 @@ func _ready() -> void:
 	var names: ContinentNames = ContinentNames.new()
 	names.labels = continent_labels
 	add_child(names)
+
+
+## The map ends at the South Pole, a little above the bottom of the screen,
+## which left a strip of sea under Antarctica. Its points on that last line
+## are pulled down to the screen edge so the ice carries on to the bottom.
+func continue_to_the_bottom_of_the_screen(pieces: Array[PackedVector2Array]) -> Array[PackedVector2Array]:
+	var south_pole_y: float = MapData.WORLD_OFFSET_Y + 175.0 * MapData.WORLD_PIXELS_PER_DEGREE
+	var extended: Array[PackedVector2Array] = []
+	for piece in pieces:
+		var moved: PackedVector2Array = piece.duplicate()
+		for point_index in moved.size():
+			if moved[point_index].y >= south_pole_y - 1.0:
+				moved[point_index].y = MapData.SCREEN_SIZE.y
+		extended.append(moved)
+	return extended
 
 
 func add_world_shape(continent_id: String, pieces: Array[PackedVector2Array], label: Vector2, colour: Color) -> void:
