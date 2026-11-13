@@ -48,6 +48,8 @@ var previous_page_tile: MenuTile
 var next_page_tile: MenuTile
 var page_label: Label
 var page_footer: VBoxContainer
+## The row the D-pad was last on, so a tab leads back to the same row.
+var tab_row: int = 0
 
 
 func _ready() -> void:
@@ -152,6 +154,7 @@ func open_section(book_section: String) -> void:
 	remember_choice("book", book_section)
 	section = book_section
 	entries = entries_for(book_section)
+	tab_row = 0
 	heading.text = SECTIONS[book_section].title
 	var count: int = found_count(book_section)
 	if count == 0:
@@ -217,6 +220,7 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 			entry_row.add_theme_constant_override("separation", TILE_GAP)
 			entry_rows.add_child(entry_row)
 		var tile: MenuTile = make_entry_tile(entry_index)
+		tile.focus_entered.connect(aim_tabs_at_row.bind((entry_index - first_entry) / ENTRIES_PER_ROW))
 		entry_row.add_child(tile)
 		entry_tiles.append(tile)
 
@@ -281,7 +285,8 @@ func make_page_footer() -> VBoxContainer:
 ## Left off the first column reaches Back a page, right off the end of a row
 ## Next page, unless that tab is greyed, when the D-pad stays put. Down from a
 ## tile with nothing under it stays put too, rather than jumping diagonally.
-## Each tab leads back in to the top row; up and down on a tab go nowhere.
+## Each tab leads back in to the row you came from; up and down on a tab go
+## nowhere.
 func link_entries_to_tabs() -> void:
 	var itself: NodePath = NodePath(".")
 	for entry_number in entry_tiles.size():
@@ -301,9 +306,20 @@ func link_entries_to_tabs() -> void:
 	next_page_tile.focus_neighbor_right = itself
 	if entry_tiles.is_empty():
 		return
-	previous_page_tile.focus_neighbor_right = previous_page_tile.get_path_to(entry_tiles[0])
-	var first_row_end: int = mini(ENTRIES_PER_ROW, entry_tiles.size()) - 1
-	next_page_tile.focus_neighbor_left = next_page_tile.get_path_to(entry_tiles[first_row_end])
+	# The row carries over from the last page, but a short last page may not have it
+	var row_count: int = ceili(entry_tiles.size() / float(ENTRIES_PER_ROW))
+	aim_tabs_at_row(mini(tab_row, row_count - 1))
+
+
+## Right from Back a page goes to the start of this row, left from Next page
+## to its end. Otherwise Godot picks whichever tile is nearest the middle of
+## the tall tab, so left then right wouldn't bring you back.
+func aim_tabs_at_row(row: int) -> void:
+	tab_row = row
+	var row_start: int = row * ENTRIES_PER_ROW
+	var row_end: int = mini(row_start + ENTRIES_PER_ROW, entry_tiles.size()) - 1
+	previous_page_tile.focus_neighbor_right = previous_page_tile.get_path_to(entry_tiles[row_start])
+	next_page_tile.focus_neighbor_left = next_page_tile.get_path_to(entry_tiles[row_end])
 
 
 ## Up from any tile in the top row goes to Back, and down from Back to the
