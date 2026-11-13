@@ -191,9 +191,9 @@ func place_balloons() -> void:
 		effects_layer.add_child(balloon)
 
 
-## Pots of paint spread along the second third of the way, up where it takes
-## a jump. The last, two-thirds along, is the level's own; the ones before it
-## are other colours, so two players can have a pot each.
+## Two pots of paint along the second third of the way, up where it takes
+## a jump. The last, two-thirds along, is the level's own; the one before it
+## is another colour, so two players can have a pot each.
 func place_paint_pots() -> void:
 	var paints: Array[String] = HillsLevels.pot_paints(level_to_play)
 	for pot_index in paints.size():

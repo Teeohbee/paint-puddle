@@ -31,13 +31,14 @@ func test_every_level_has_a_known_paint_and_scene() -> void:
 	assert_array(Levels.LEVELS.filter(func(l): return not PaintMixing.COLOURS.has(l.paint)).map(func(l): return l.name)).is_empty()
 	assert_array(Levels.LEVELS.filter(func(l): return not Scenes.SCENES.has(l.get("scene", "meadow"))).map(func(l): return l.name)).is_empty()
 
-func test_every_pot_changes_the_blobs_paint_and_its_own_comes_last() -> void:
+# Two pots: three always mixed to brown
+func test_every_level_has_two_pots_that_change_the_paint_and_its_own_comes_last() -> void:
 	var bad := []
 	for level_index in Levels.level_count():
 		var level_data: Dictionary = Levels.LEVELS[level_index]
 		var pot_paints: Array = Levels.pot_paints(level_index)
-		if pot_paints.size() < 2 or pot_paints.back() != level_data.pickup:
-			bad.append("%s: pots %s should end with its own %s, with extras" % [level_data.name, pot_paints, level_data.pickup])
+		if pot_paints.size() != 2 or pot_paints.back() != level_data.pickup:
+			bad.append("%s: pots %s should be one extra then its own %s" % [level_data.name, pot_paints, level_data.pickup])
 		for paint in pot_paints:
 			if PaintMixing.mix(level_data.paint, paint) == level_data.paint:
 				bad.append("%s: the %s pot doesn't change %s" % [level_data.name, paint, level_data.paint])

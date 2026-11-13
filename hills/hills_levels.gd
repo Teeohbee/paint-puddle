@@ -668,14 +668,15 @@ const LEVELS: Array[Dictionary] = [
 
 ## Paints the extra pots can hold.
 const POT_PALETTE: Array[String] = ["red", "yellow", "blue", "white", "black"]
-const MOST_EXTRA_POTS: int = 2
+## One extra, not two: three pots always mixed to brown.
+const MOST_EXTRA_POTS: int = 1
 
 
 ## The paint of each pot in a level, in the order they stand along the way.
-## The last is the level's own "pickup"; before it come up to two more in other
-## colours, so there's a pot each to go round when two are playing. Each extra
+## The last is the level's own "pickup"; before it comes one more in another
+## colour, so there's a pot each to go round when two are playing. The extra
 ## changes the blob's paint (a pot of a colour it already wears would do
-## nothing) and which ones a level gets varies from level to level.
+## nothing) and which one a level gets varies from level to level.
 static func pot_paints(level_index: int) -> Array[String]:
 	var level: Dictionary = LEVELS[level_index]
 	var useful: Array[String] = []
