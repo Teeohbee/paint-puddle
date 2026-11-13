@@ -436,17 +436,28 @@ func go_back() -> void:
 	show_sections(section)
 
 
-## A dot for every page, the one you're on filled in.
+## A dot for every page, the one you're on filled in, on a cream pill like
+## the name plate's, so a white meadow flower beside them can't pass for a page.
 class PageDots extends Control:
 	const DOT_RADIUS: float = 11.0
 	const DOT_GAP: float = 36.0
+	const PILL_PADDING: float = 14.0
 	var page: int = 0
 	var page_count: int = 1
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(0, DOT_RADIUS * 2 + 12)
+		custom_minimum_size = Vector2(0, DOT_RADIUS * 2 + 18)
 
 	func _draw() -> void:
+		var pill_width: float = DOT_GAP * (page_count - 1) + (DOT_RADIUS + 3 + PILL_PADDING) * 2
+		var pill: Rect2 = Rect2(Vector2((size.x - pill_width) / 2.0, 0), Vector2(pill_width, size.y))
+		var box: StyleBoxFlat = StyleBoxFlat.new()
+		box.bg_color = Color(1, 0.98, 0.94)
+		box.set_corner_radius_all(int(size.y / 2.0))
+		box.border_color = Color(0.91, 0.85, 0.73)
+		box.set_border_width_all(4)
+		box.anti_aliasing = true
+		draw_style_box(box, pill)
 		var first_x: float = size.x / 2.0 - DOT_GAP * (page_count - 1) / 2.0
 		for dot in page_count:
 			var centre: Vector2 = Vector2(first_x + DOT_GAP * dot, size.y / 2.0)
