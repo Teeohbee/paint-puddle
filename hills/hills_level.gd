@@ -96,6 +96,8 @@ func _ready() -> void:
 	players.append(HillsPlayer.new(blob, level.paint))
 	blob.look.paint_colour = PaintMixing.colour_of(level.paint)
 	place_paint_pots()
+	if difficulty == HillsLevels.MEDIUM:
+		place_obstacles(scene)
 	splash_when_landing(blob)
 	add_camera()
 	var pause_menu: PauseMenu = PauseMenu.new()
@@ -192,6 +194,21 @@ func place_paint_pots() -> void:
 		# The level listens for the blob itself, so it knows whose paint to mix
 		pot.body_entered.connect(func(body): on_pot_touched(pot, body))
 		effects_layer.add_child(pot)
+
+
+## Medium only: obstacles on flat ground, clear of the balloons and pots.
+## The same level always gets them in the same places.
+func place_obstacles(scene: Dictionary) -> void:
+	var things_x: Array[float] = []
+	for child in effects_layer.get_children():
+		if child is LetterBalloon or child is HillsPaintPot:
+			things_x.append(child.position.x)
+	for obstacle_x in HillsObstacles.place(ground, level_to_play, things_x):
+		var obstacle: HillsObstacle = HillsObstacle.new()
+		obstacle.look = scene.obstacle
+		obstacle.position = Vector2(obstacle_x, ground.height_at(obstacle_x))
+		obstacle.z_index = 1
+		add_child(obstacle)
 
 
 func splash_when_landing(landing_blob: HillsBlob) -> void:
