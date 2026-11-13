@@ -6,6 +6,11 @@ extends Node2D
 const HILLS_MENU: String = "res://ui/hills_menu.tscn"
 const FALL_LINE_BELOW_GROUND: float = 260.0
 const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
+## Medium: every third letter drifts this far either way. Under the 70 of flat
+## ground nearest_ground_x keeps either side, so a drifting balloon never
+## ends up over a gap or step.
+const SWAYING_BALLOON_EVERY: int = 3
+const BALLOON_SWAY_DISTANCE: float = 60.0
 ## High enough to need a jump, low enough that any jump reaches it.
 const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
 ## How far along the level the first and last paint pots stand.
@@ -174,6 +179,9 @@ func place_balloons() -> void:
 		balloon.letter_index = letter_index
 		balloon.paint_colour = PaintColours.RAINBOW[letter_index % PaintColours.RAINBOW.size()]
 		balloon.position = Vector2(x, ground.height_at(x) - BALLOON_HEIGHT_ABOVE_GROUND)
+		if difficulty == HillsLevels.MEDIUM and letter_index % SWAYING_BALLOON_EVERY == 1:
+			balloon.sway_distance = BALLOON_SWAY_DISTANCE
+			balloon.sway_time = letter_index * 1.7
 		balloon.popped.connect(func(popped_balloon): word_bar.pop_letter(popped_balloon.letter_index))
 		effects_layer.add_child(balloon)
 
