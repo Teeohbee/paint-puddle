@@ -11,6 +11,11 @@ const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
 ## ends up over a gap or step.
 const SWAYING_BALLOON_EVERY: int = 3
 const BALLOON_SWAY_DISTANCE: float = 60.0
+## Medium: a balloon this close to an obstacle (balloon radius plus the widest
+## obstacle's half-width) floats higher, clear of the tallest one (a snowball,
+## 76 up) even at the bottom of its bob, and still under the paint pots.
+const BALLOON_OVER_OBSTACLE_REACH: float = 115.0
+const BALLOON_HEIGHT_OVER_OBSTACLE: float = 145.0
 ## High enough to need a jump, low enough that any jump reaches it.
 const PAINT_POT_HEIGHT_ABOVE_GROUND: float = 190.0
 ## How far along the level the first and last paint pots stand.
@@ -204,23 +209,30 @@ func place_paint_pots() -> void:
 		effects_layer.add_child(pot)
 
 
-## Medium only: obstacles on flat ground, clear of the balloons and pots.
-## The same level always gets them in the same places.
+## Medium only: obstacles on flat ground. The same level always gets them in
+## the same places. A balloon over one is lifted clear, so jumping the
+## obstacle pops it.
 func place_obstacles(scene: Dictionary) -> void:
-	var things_x: Array[float] = []
-	for child in effects_layer.get_children():
-		if child is LetterBalloon or child is HillsPaintPot:
-			things_x.append(child.position.x)
-			if child is LetterBalloon and child.sway_distance > 0.0:
-				# A drifting balloon covers its whole travel, not just where it starts
-				things_x.append(child.position.x - child.sway_distance)
-				things_x.append(child.position.x + child.sway_distance)
-	for obstacle_x in HillsObstacles.place(ground, level_to_play, things_x):
+	var obstacles_x: Array[float] = HillsObstacles.place(ground, level_to_play)
+	for obstacle_x in obstacles_x:
 		var obstacle: HillsObstacle = HillsObstacle.new()
 		obstacle.look = scene.obstacle
 		obstacle.position = Vector2(obstacle_x, ground.height_at(obstacle_x))
 		obstacle.z_index = 1
 		add_child(obstacle)
+	lift_balloons_over(obstacles_x)
+
+
+func lift_balloons_over(obstacles_x: Array[float]) -> void:
+	for child in effects_layer.get_children():
+		if not child is LetterBalloon:
+			continue
+		var balloon: LetterBalloon = child
+		for obstacle_x in obstacles_x:
+			# A drifting balloon counts anywhere along its travel
+			if absf(balloon.anchor.x - obstacle_x) < balloon.sway_distance + BALLOON_OVER_OBSTACLE_REACH:
+				balloon.anchor.y = ground.height_at(balloon.anchor.x) - BALLOON_HEIGHT_OVER_OBSTACLE
+				break
 
 
 func splash_when_landing(landing_blob: HillsBlob) -> void:
