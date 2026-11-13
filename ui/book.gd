@@ -4,7 +4,10 @@ extends MenuScreen
 ## colour mixed, with what made it. Countries: a flag for every country found
 ## in Map mode. Things not found yet are a grey "?", so
 ## it's easy to see what's left. Thirty-two to a page, Back in the top-left
-## corner, and a tall page tab either side. Pick a picture to see it big. Finishing a part gets it a
+## corner, and a tall page tab either side. A tile is just its picture: the
+## name of the tile you're on goes on a plate under the grid, where even the
+## longest country name fits.
+## Pick a picture to see it big. Finishing a part gets it a
 ## gold star, and confetti the first time the Book opens after.
 
 const ENTRY_TILE_SIZE: Vector2 = Vector2(150, 150)
@@ -22,9 +25,6 @@ const ENTRIES_PER_PAGE: int = ENTRIES_PER_ROW * ROWS_PER_PAGE
 const TILE_GAP: int = 24
 const ROW_GAP: int = 8
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
-## Names too long for a small tile; the close-up shows the whole name.
-const SHORT_NAMES: Dictionary = {"united_kingdom": "UK", "united_arab_emirates": "UAE", "papua_new_guinea": "PNG", "north_macedonia": "N. Macedonia",
-	"central_african_republic": "C. African Rep.", "bosnia_and_herzegovina": "Bosnia"}
 const SECTIONS: Dictionary = {
 	"words": {"title": "Words", "collection": "words_spelled", "empty": "Spell a word in the Meadow to fill this page.",
 		"all_found": "You found every word!"},
@@ -46,8 +46,8 @@ var back_tile: MenuTile
 var entry_tiles: Array[MenuTile] = []
 var previous_page_tile: MenuTile
 var next_page_tile: MenuTile
-var page_label: Label
 var page_footer: VBoxContainer
+var name_plate: NamePlate
 ## The row the D-pad was last on, so a tab leads back to the same row.
 var tab_row: int = 0
 
@@ -225,6 +225,10 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 		entry_tiles.append(tile)
 
 	page_column.add_child(make_page_footer())
+	name_plate = NamePlate.new()
+	page_column.add_child(name_plate)
+	for tile in [back_tile, previous_page_tile, next_page_tile]:
+		tile.focus_entered.connect(name_plate.clear)
 	link_entries_to_tabs()
 	link_back_tile()
 
@@ -260,8 +264,8 @@ func make_page_tabs() -> void:
 			tab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-## A dot for every page and "Page 2 of 5", under the grid. Hidden but still
-## taking up room in a one-page part, like the tabs.
+## A dot for every page, under the grid. Hidden but still taking up room in a
+## one-page part, like the tabs.
 func make_page_footer() -> VBoxContainer:
 	page_footer = VBoxContainer.new()
 	page_footer.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -269,14 +273,6 @@ func make_page_footer() -> VBoxContainer:
 	dots.page = page
 	dots.page_count = page_count()
 	page_footer.add_child(dots)
-	page_label = Label.new()
-	page_label.text = "Page %d of %d" % [page + 1, page_count()]
-	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	page_label.add_theme_font_size_override("font_size", 40)
-	page_label.add_theme_color_override("font_color", PaintColours.INK)
-	page_label.add_theme_color_override("font_outline_color", Color.WHITE)
-	page_label.add_theme_constant_override("outline_size", 14)
-	page_footer.add_child(page_label)
 	if page_count() == 1:
 		page_footer.modulate = Color.TRANSPARENT
 	return page_footer
@@ -342,21 +338,33 @@ func make_entry_tile(entry_index: int) -> MenuTile:
 		var mystery: MenuTile = make_tile("", "text:?", NOT_FOUND_COLOUR, ENTRY_TILE_SIZE)
 		mystery.is_locked = true
 		mystery.shows_padlock = false
+		mystery.focus_entered.connect(func(): name_plate.show_name("Not found yet", ""))
 		return mystery
-	var tile: MenuTile
-	if section == "countries":
-		var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()]
-		tile = make_tile(SHORT_NAMES.get(entry, MapData.country(entry)["name"]), "", colour.lerp(Color.WHITE, 0.35), ENTRY_TILE_SIZE)
-		tile.picture = "flag:" + entry
-	elif section == "words":
-		var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()]
-		tile = make_tile(entry.to_upper(), "", colour.lerp(Color.WHITE, 0.35), ENTRY_TILE_SIZE)
-		tile.picture = "thing:" + entry
-	else:
-		tile = make_tile(PaintMixing.friend_name_for(entry), "", friend_tile_colour(entry), ENTRY_TILE_SIZE)
-		tile.picture = "friend:" + entry
+	var colour: Color = PaintColours.RAINBOW[entry_index % PaintColours.RAINBOW.size()].lerp(Color.WHITE, 0.35)
+	if section == "colours":
+		colour = friend_tile_colour(entry)
+	# No name on the tile, just the picture, bigger and centred; the name is on the plate
+	var tile: MenuTile = make_tile("", "", colour, ENTRY_TILE_SIZE)
+	tile.picture = {"words": "thing:", "colours": "friend:", "countries": "flag:"}[section] + entry
+	# Meadow things are drawn bigger for their size than flags and friends, so they stay inside the tile
+	tile.icon_scale = 0.46 if section == "words" else 0.55
+	tile.icon_height = 0.52 if section == "words" else 0.5
+	tile.focus_entered.connect(func(): name_plate.show_name(name_of_picture(tile.picture), tile.picture))
 	tile.chosen.connect(show_close_up.bind(tile))
 	return tile
+
+
+## "DOG" for "thing:dog", a puddle friend's name, or a country's whole name.
+static func name_of_picture(picture: String) -> String:
+	var entry: String = picture.get_slice(":", 1)
+	match picture.get_slice(":", 0):
+		"thing":
+			return entry.to_upper()
+		"friend":
+			return PaintMixing.friend_name_for(entry)
+		"flag":
+			return MapData.country(entry)["name"]
+	return ""
 
 
 ## Pale enough that the friend stands out, but never white on white.
@@ -391,7 +399,7 @@ func show_close_up(from_tile: MenuTile) -> void:
 	var holder: CenterContainer = CenterContainer.new()
 	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
 	close_up.add_child(holder)
-	var big: MenuTile = make_tile(from_tile.word if not from_tile.picture.begins_with("flag:") else MapData.country(from_tile.picture.trim_prefix("flag:"))["name"], "", from_tile.paint_colour, Vector2(620, 620))
+	var big: MenuTile = make_tile(name_of_picture(from_tile.picture), "", from_tile.paint_colour, Vector2(620, 620))
 	big.picture = from_tile.picture
 	if from_tile.picture.begins_with("friend:"):
 		big.subtitle = recipe_text(from_tile.picture.trim_prefix("friend:"))
@@ -428,17 +436,28 @@ func go_back() -> void:
 	show_sections(section)
 
 
-## A dot for every page, the one you're on filled in.
+## A dot for every page, the one you're on filled in, on a cream pill like
+## the name plate's, so a white meadow flower beside them can't pass for a page.
 class PageDots extends Control:
 	const DOT_RADIUS: float = 11.0
 	const DOT_GAP: float = 36.0
+	const PILL_PADDING: float = 14.0
 	var page: int = 0
 	var page_count: int = 1
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(0, DOT_RADIUS * 2 + 12)
+		custom_minimum_size = Vector2(0, DOT_RADIUS * 2 + 18)
 
 	func _draw() -> void:
+		var pill_width: float = DOT_GAP * (page_count - 1) + (DOT_RADIUS + 3 + PILL_PADDING) * 2
+		var pill: Rect2 = Rect2(Vector2((size.x - pill_width) / 2.0, 0), Vector2(pill_width, size.y))
+		var box: StyleBoxFlat = StyleBoxFlat.new()
+		box.bg_color = Color(1, 0.98, 0.94)
+		box.set_corner_radius_all(int(size.y / 2.0))
+		box.border_color = Color(0.91, 0.85, 0.73)
+		box.set_border_width_all(4)
+		box.anti_aliasing = true
+		draw_style_box(box, pill)
 		var first_x: float = size.x / 2.0 - DOT_GAP * (page_count - 1) / 2.0
 		for dot in page_count:
 			var centre: Vector2 = Vector2(first_x + DOT_GAP * dot, size.y / 2.0)
@@ -447,3 +466,55 @@ class PageDots extends Control:
 				draw_circle(centre, DOT_RADIUS, PaintColours.INK)
 			else:
 				draw_circle(centre, DOT_RADIUS - 3, Color(0.82, 0.82, 0.86))
+
+
+## The name of the tile you're on, with its picture small beside it, on a
+## cream plate under the grid. Always the same place and size, so it never
+## jumps about; hidden when the D-pad is on Back or a page tab.
+class NamePlate extends Control:
+	const PLATE_SIZE: Vector2 = Vector2(1000, 84)
+	const PICTURE_SIZE: float = 64.0
+	const GAP: float = 22.0
+	var text: String = ""
+	## A MenuIcons picture, like "flag:japan", or "" for none.
+	var picture: String = ""
+
+	func _init() -> void:
+		custom_minimum_size = PLATE_SIZE
+		size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		modulate = Color.TRANSPARENT
+
+	func show_name(new_text: String, new_picture: String) -> void:
+		text = new_text
+		picture = new_picture
+		modulate = Color.WHITE
+		queue_redraw()
+
+	func clear() -> void:
+		modulate = Color.TRANSPARENT
+
+	func _draw() -> void:
+		var radius: int = int(size.y / 2.0)
+		draw_style_box(plate_box(Color(0, 0, 0, 0.18), radius), Rect2(Vector2(0, 8), size))
+		draw_style_box(plate_box(Color(0.91, 0.85, 0.73), radius), Rect2(Vector2.ZERO, size))
+		draw_style_box(plate_box(Color(1, 0.98, 0.94), radius - 6), Rect2(Vector2.ZERO, size).grow(-7))
+		var font: Font = get_theme_default_font()
+		var font_size: int = 50
+		var picture_width: float = PICTURE_SIZE + GAP if picture != "" else 0.0
+		while font_size > 30 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + picture_width > size.x - 80:
+			font_size -= 2
+		var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+		var left: float = (size.x - text_size.x - picture_width) / 2.0
+		if picture != "":
+			MenuIcons.draw_picture(self, picture, Vector2(left + PICTURE_SIZE / 2.0, size.y / 2.0), PICTURE_SIZE)
+		var ink: Color = PaintColours.INK if picture != "" else PaintColours.INK.lerp(Color.WHITE, 0.4)
+		draw_string(font, Vector2(left + picture_width, size.y / 2.0 + font.get_ascent(font_size) * 0.38), text,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)
+
+	func plate_box(colour: Color, corner_radius: int) -> StyleBoxFlat:
+		var box: StyleBoxFlat = StyleBoxFlat.new()
+		box.bg_color = colour
+		box.set_corner_radius_all(corner_radius)
+		box.anti_aliasing = true
+		return box
