@@ -36,7 +36,7 @@ func _ready() -> void:
 	players_tile.focus_neighbor_top = meadow.get_path()
 	var places: Dictionary = {
 		"meadow": [meadow, "res://meadow/meadow.tscn"],
-		"hills": [hills, "res://ui/hills_menu.tscn"],
+		"hills": [hills, "res://ui/hills_difficulty_menu.tscn"],
 		"paint": [paint, "res://ui/paint_menu.tscn"],
 		"splat": [splat, "res://paint/splat_party.tscn"],
 		"map": [map, "res://map/map_mode.tscn"],

@@ -6,6 +6,8 @@ extends RefCounted
 ##   step: a sudden change in height (negative is up)    gap: a hole to jump
 ## "paint" is the blob's colour; "pickup" is the paint pot that mixes into it.
 ## "scene" is how the level looks - see HillsScenes; without one it's the meadow.
+## "word_medium" (optional) is the word on Medium: same theme, a bit longer or
+## trickier. Without one, Medium uses "word". Pots and paint are shared.
 ## New levels go on the end: progress is a count, so one put in the middle
 ## would count as done for anyone already past it.
 
@@ -691,5 +693,29 @@ static func level_count() -> int:
 	return LEVELS.size()
 
 
-static func is_unlocked(level_index: int) -> bool:
-	return level_index <= GameSettings.get_progress("hills_levels_completed")
+const EASY: String = "easy"
+const MEDIUM: String = "medium"
+
+
+## Each difficulty counts its own finished levels.
+static func progress_key(difficulty: String) -> String:
+	return "hills_levels_completed_medium" if difficulty == MEDIUM else "hills_levels_completed"
+
+
+## The word to spell: the level's Medium word on Medium if it has one, else its word.
+static func word_for(level: Dictionary, difficulty: String) -> String:
+	if difficulty == MEDIUM:
+		return level.get("word_medium", level.word)
+	return level.word
+
+
+static func is_unlocked(level_index: int, difficulty: String) -> bool:
+	return level_index <= GameSettings.get_progress(progress_key(difficulty))
+
+
+## Medium opens once every Easy level is finished, or early if a grown-up
+## has switched it open in the options.
+static func is_medium_unlocked() -> bool:
+	if GameSettings.get_setting("open_hills_medium") == 1:
+		return true
+	return GameSettings.get_progress(progress_key(EASY)) >= level_count()

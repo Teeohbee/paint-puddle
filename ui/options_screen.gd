@@ -38,6 +38,7 @@ func _ready() -> void:
 	grown_up_rows.append(add_slider_row("Game speed", "speed", PaintColours.GREEN, "game_speed_percent", 10, "%"))
 	grown_up_rows.append(add_slider_row("Gap size", "gap", PaintColours.BLUE, "gap_size_percent", 10, "%"))
 	grown_up_rows.append(add_slider_row("Jump help", "jump", PaintColours.YELLOW, "coyote_time_milliseconds", 50, "ms"))
+	grown_up_rows.append(add_slider_row("Open Medium", "hills", PaintColours.ORANGE, "open_hills_medium", 1, ""))
 	reset_row = add_button_row("Reset", "reset", PaintColours.RED)
 	reset_row.choices.assign(GameSettings.RESET_PARTS.values())
 	reset_row.chosen.connect(on_reset_chosen)

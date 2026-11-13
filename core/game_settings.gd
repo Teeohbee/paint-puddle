@@ -21,10 +21,13 @@ const SETTING_LIMITS: Dictionary = {
 	"game_speed_percent": {"default": 100, "smallest": 50, "largest": 100},
 	"gap_size_percent": {"default": 100, "smallest": 50, "largest": 100},
 	"coyote_time_milliseconds": {"default": 250, "smallest": 100, "largest": 500},
+	# 1 opens Hills Medium without finishing Easy (for testing, in the grown-up settings)
+	"open_hills_medium": {"default": 0, "smallest": 0, "largest": 1},
 }
 
 const DEFAULT_PROGRESS: Dictionary = {
 	"hills_levels_completed": 0,
+	"hills_levels_completed_medium": 0,
 	"rainbows_painted": 0,
 	"tasks_completed": 0,
 	"next_task_index": 0,
@@ -104,6 +107,7 @@ func reset_part(part: String) -> void:
 			return
 		"hills":
 			progress["hills_levels_completed"] = 0
+			progress["hills_levels_completed_medium"] = 0
 		"meadow":
 			for progress_name in ["tasks_completed", "next_task_index", "rainbows_painted"]:
 				progress[progress_name] = 0
