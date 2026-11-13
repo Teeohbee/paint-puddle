@@ -76,7 +76,9 @@ func play_through(level: Node, seconds_allowed: float, jump_ahead := true) -> in
 	return rescues
 
 # Medium has wider gaps, swaying balloons and obstacles. This player waits until near the edge of a gap
-# and holds jump for the full distance, jumps obstacles, and turns back (up to three times) for a balloon
+# and holds jump for the full distance, stops under a balloon out of walking reach and jumps straight up for it
+# (even a swaying one is in reach from under its middle), jumps obstacles,
+# and turns back (up to three times) for a balloon
 # it swept past without popping.
 func play_through_medium(level: Node, seconds_allowed: float) -> int:
 	var blob: Node = level.blob
@@ -106,7 +108,8 @@ func play_through_medium(level: Node, seconds_allowed: float) -> int:
 					tries_back[balloon] = tries_back.get(balloon, 0) + 1
 					break
 		var wanted_direction := -1 if going_back_for != null else 1
-		if wanted_direction != direction:
+		# Turning round mid-jump would steer into a gap, so only on the ground
+		if wanted_direction != direction and blob.is_on_floor():
 			direction = wanted_direction
 			Input.action_release("move_right" if direction < 0 else "move_left")
 			Input.action_press("move_left" if direction < 0 else "move_right")
@@ -115,7 +118,18 @@ func play_through_medium(level: Node, seconds_allowed: float) -> int:
 			var ahead: float = ground.height_at(blob.position.x + 110 * direction)
 			var gap_close: bool = ground.height_at(blob.position.x + 50 * direction) == INF
 			var obstacle_ahead := obstacles_x.any(func(x): return (x - blob.position.x) * direction > 60 and (x - blob.position.x) * direction < 130)
-			if gap_close:
+			var under_high_balloon := balloons.any(func(b): return is_instance_valid(b) and ground.height_at(b.anchor.x) - b.anchor.y > 120 \
+				and absf(b.anchor.x - blob.position.x) < 20)
+			if under_high_balloon:
+				var walking := "move_left" if direction < 0 else "move_right"
+				Input.action_release(walking)
+				while absf(blob.velocity.x) > 5.0:
+					await get_tree().physics_frame
+				await hold("act", 0.5)
+				while not blob.is_on_floor():
+					await get_tree().physics_frame
+				Input.action_press(walking)
+			elif gap_close:
 				await hold("act", 0.5)
 			elif (ahead != INF and ahead < here - 20) or obstacle_ahead:
 				await tap("act")
