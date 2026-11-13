@@ -3,19 +3,22 @@ extends MenuScreen
 ## life in the Meadow, with its picture. Colours: a puddle friend for every
 ## colour mixed, with what made it. Countries: a flag for every country found
 ## in Map mode. Things not found yet are a grey "?", so
-## it's easy to see what's left. Twenty to a page, Back on the left, and a page
-## bar underneath. Pick a picture to see it big. Finishing a part gets it a
+## it's easy to see what's left. Thirty-two to a page, Back in the top-left
+## corner, and a tall page tab either side. Pick a picture to see it big. Finishing a part gets it a
 ## gold star, and confetti the first time the Book opens after.
 
 const ENTRY_TILE_SIZE: Vector2 = Vector2(150, 150)
-const BACK_TILE_SIZE: Vector2 = Vector2(170, 170)
-const PAGE_BUTTON_SIZE: Vector2 = Vector2(260, 100)
+const BACK_TILE_SIZE: Vector2 = Vector2(150, 150)
+const BACK_TILE_CORNER: Vector2 = Vector2(95, 80)
+const PAGE_TAB_SIZE: Vector2 = Vector2(110, 560)
+const TAB_GAP: int = 40
 const PAGE_TOP: float = 240.0
 const FOCUS_FIRST_ENTRY: String = "first entry"
 const FOCUS_PREVIOUS_PAGE: String = "previous page"
 const FOCUS_NEXT_PAGE: String = "next page"
-const ENTRIES_PER_ROW: int = 5
-const ENTRIES_PER_PAGE: int = 20
+const ENTRIES_PER_ROW: int = 8
+const ROWS_PER_PAGE: int = 4
+const ENTRIES_PER_PAGE: int = ENTRIES_PER_ROW * ROWS_PER_PAGE
 const TILE_GAP: int = 24
 const ROW_GAP: int = 8
 const NOT_FOUND_COLOUR: Color = Color(0.72, 0.72, 0.76)
@@ -44,6 +47,9 @@ var entry_tiles: Array[MenuTile] = []
 var previous_page_tile: MenuTile
 var next_page_tile: MenuTile
 var page_label: Label
+var page_footer: VBoxContainer
+## The row the D-pad was last on, so a tab leads back to the same row.
+var tab_row: int = 0
 
 
 func _ready() -> void:
@@ -148,6 +154,7 @@ func open_section(book_section: String) -> void:
 	remember_choice("book", book_section)
 	section = book_section
 	entries = entries_for(book_section)
+	tab_row = 0
 	heading.text = SECTIONS[book_section].title
 	var count: int = found_count(book_section)
 	if count == 0:
@@ -163,32 +170,46 @@ func page_count() -> int:
 	return maxi(1, ceili(entries.size() / float(ENTRIES_PER_PAGE)))
 
 
-## Builds one page: Back on the left, the entries in rows, and under them the
-## page bar - Back a page, which page this is, Next page. Down from any entry
-## reaches the bar in two presses at most. "focus" is where the D-pad goes:
-## FOCUS_FIRST_ENTRY, or the page button just pressed so mashing it flicks on.
+## Builds one page: Back in the top-left corner, the entries in rows, a tall
+## page tab either side of them, and under them which page this is. Up from
+## the top row reaches Back, left and right off the ends reach the tabs.
+## "focus" is where the D-pad goes: FOCUS_FIRST_ENTRY, or the tab just
+## pressed so mashing it flicks on.
 func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	page = new_page
 	clear_page()
-	page_holder = CenterContainer.new()
-	page_holder.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	page_holder.offset_top = PAGE_TOP
-	page_holder.offset_bottom = PAGE_TOP + 700
+	page_holder = Control.new()
+	page_holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	page_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(page_holder)
-	var page_column: VBoxContainer = VBoxContainer.new()
-	page_column.add_theme_constant_override("separation", 14)
-	page_holder.add_child(page_column)
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 50)
-	page_column.add_child(row)
 
 	back_tile = make_tile("Back", "back", PaintColours.PURPLE, BACK_TILE_SIZE)
-	back_tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	back_tile.position = BACK_TILE_CORNER
 	back_tile.chosen.connect(go_back)
-	row.add_child(back_tile)
+	page_holder.add_child(back_tile)
+
+	var centre: CenterContainer = CenterContainer.new()
+	centre.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	centre.offset_top = PAGE_TOP
+	centre.offset_bottom = PAGE_TOP + 800
+	page_holder.add_child(centre)
+	var page_column: VBoxContainer = VBoxContainer.new()
+	page_column.add_theme_constant_override("separation", 14)
+	centre.add_child(page_column)
+	var grid_row: HBoxContainer = HBoxContainer.new()
+	grid_row.add_theme_constant_override("separation", TAB_GAP)
+	page_column.add_child(grid_row)
+
+	make_page_tabs()
+	# Always the size of a full page, so a short last page doesn't shift anything
 	var entry_rows: VBoxContainer = VBoxContainer.new()
 	entry_rows.add_theme_constant_override("separation", ROW_GAP)
-	row.add_child(entry_rows)
+	entry_rows.custom_minimum_size = Vector2(
+		ENTRY_TILE_SIZE.x * ENTRIES_PER_ROW + TILE_GAP * (ENTRIES_PER_ROW - 1),
+		ENTRY_TILE_SIZE.y * ROWS_PER_PAGE + ROW_GAP * (ROWS_PER_PAGE - 1))
+	grid_row.add_child(previous_page_tile)
+	grid_row.add_child(entry_rows)
+	grid_row.add_child(next_page_tile)
 	entry_tiles = []
 	var entry_row: HBoxContainer = null
 	var first_entry: int = page * ENTRIES_PER_PAGE
@@ -199,11 +220,13 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 			entry_row.add_theme_constant_override("separation", TILE_GAP)
 			entry_rows.add_child(entry_row)
 		var tile: MenuTile = make_entry_tile(entry_index)
+		tile.focus_entered.connect(aim_tabs_at_row.bind((entry_index - first_entry) / ENTRIES_PER_ROW))
 		entry_row.add_child(tile)
 		entry_tiles.append(tile)
 
-	page_column.add_child(make_page_bar())
-	link_entries_to_page_bar()
+	page_column.add_child(make_page_footer())
+	link_entries_to_tabs()
+	link_back_tile()
 
 	var tile_to_start_on: MenuTile = back_tile if entry_tiles.is_empty() else entry_tiles[0]
 	if focus == FOCUS_PREVIOUS_PAGE and not previous_page_tile.is_locked:
@@ -214,82 +237,103 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	tile_to_start_on.grab_focus_quietly.call_deferred()
 
 
-## Back a page, "Page 2 of 5" with a dot per page, Next page. Lined up under
-## the entries rather than the Back tile. A button with nowhere to go is
-## greyed out but stays put, so nothing jumps about.
-func make_page_bar() -> HBoxContainer:
-	var bar_row: HBoxContainer = HBoxContainer.new()
-	bar_row.add_theme_constant_override("separation", 50)
-	var under_back: Control = Control.new()
-	under_back.custom_minimum_size = Vector2(BACK_TILE_SIZE.x, 0)
-	bar_row.add_child(under_back)
-	var bar: HBoxContainer = HBoxContainer.new()
-	bar.custom_minimum_size = Vector2(ENTRY_TILE_SIZE.x * ENTRIES_PER_ROW + TILE_GAP * (ENTRIES_PER_ROW - 1), 0)
-	bar_row.add_child(bar)
-
-	previous_page_tile = make_tile("Back a page", "back", PaintColours.ORANGE, PAGE_BUTTON_SIZE)
+## Back a page and Next page: tall tabs with just an arrow. A tab with nowhere
+## to go is greyed out but stays put, so nothing jumps about. A part with only
+## one page has nowhere to go either way, so its tabs vanish but keep their
+## space, and the grid sits where it does in every other part.
+func make_page_tabs() -> void:
+	previous_page_tile = make_tile("", "back", PaintColours.ORANGE, PAGE_TAB_SIZE)
 	previous_page_tile.chosen.connect(func(): show_page(page - 1, FOCUS_PREVIOUS_PAGE))
-	next_page_tile = make_tile("Next page", "more", PaintColours.ORANGE, PAGE_BUTTON_SIZE)
+	next_page_tile = make_tile("", "more", PaintColours.ORANGE, PAGE_TAB_SIZE)
 	next_page_tile.chosen.connect(func(): show_page(page + 1, FOCUS_NEXT_PAGE))
-	for page_button_and_is_possible in [[previous_page_tile, page > 0], [next_page_tile, page + 1 < page_count()]]:
-		var page_button: MenuTile = page_button_and_is_possible[0]
-		if not page_button_and_is_possible[1]:
-			page_button.is_locked = true
-			page_button.shows_padlock = false
-			page_button.focus_mode = Control.FOCUS_NONE
+	for tab_and_is_possible in [[previous_page_tile, page > 0], [next_page_tile, page + 1 < page_count()]]:
+		var tab: MenuTile = tab_and_is_possible[0]
+		tab.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		tab.icon_scale = 0.75
+		tab.icon_height = 0.5
+		if not tab_and_is_possible[1]:
+			tab.is_locked = true
+			tab.shows_padlock = false
+			tab.focus_mode = Control.FOCUS_NONE
+		if page_count() == 1:
+			tab.modulate = Color.TRANSPARENT
+			tab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var page_label_column: VBoxContainer = VBoxContainer.new()
-	page_label_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	page_label_column.alignment = BoxContainer.ALIGNMENT_CENTER
-	page_label = Label.new()
-	page_label.text = "Page %d of %d" % [page + 1, page_count()]
-	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	page_label.add_theme_font_size_override("font_size", 52)
-	page_label.add_theme_color_override("font_color", PaintColours.INK)
-	page_label.add_theme_color_override("font_outline_color", Color.WHITE)
-	page_label.add_theme_constant_override("outline_size", 18)
-	page_label_column.add_child(page_label)
+
+## A dot for every page and "Page 2 of 5", under the grid. Hidden but still
+## taking up room in a one-page part, like the tabs.
+func make_page_footer() -> VBoxContainer:
+	page_footer = VBoxContainer.new()
+	page_footer.alignment = BoxContainer.ALIGNMENT_CENTER
 	var dots: PageDots = PageDots.new()
 	dots.page = page
 	dots.page_count = page_count()
-	page_label_column.add_child(dots)
+	page_footer.add_child(dots)
+	page_label = Label.new()
+	page_label.text = "Page %d of %d" % [page + 1, page_count()]
+	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	page_label.add_theme_font_size_override("font_size", 40)
+	page_label.add_theme_color_override("font_color", PaintColours.INK)
+	page_label.add_theme_color_override("font_outline_color", Color.WHITE)
+	page_label.add_theme_constant_override("outline_size", 14)
+	page_footer.add_child(page_label)
+	if page_count() == 1:
+		page_footer.modulate = Color.TRANSPARENT
+	return page_footer
 
-	bar.add_child(previous_page_tile)
-	bar.add_child(page_label_column)
-	bar.add_child(next_page_tile)
-	return bar_row
 
-
-## Down from the bottom entries goes to the page bar: the left two columns
-## to Back a page, the rest to Next page, or whichever of them can be
-## picked. Entries with nothing under them go straight to the bar too.
-func link_entries_to_page_bar() -> void:
-	var can_go_back: bool = not previous_page_tile.is_locked
-	var can_go_on: bool = not next_page_tile.is_locked
+## Left off the first column reaches Back a page, right off the end of a row
+## Next page, unless that tab is greyed, when the D-pad stays put. Down from a
+## tile with nothing under it stays put too, rather than jumping diagonally.
+## Each tab leads back in to the row you came from; up and down on a tab go
+## nowhere.
+func link_entries_to_tabs() -> void:
+	var itself: NodePath = NodePath(".")
 	for entry_number in entry_tiles.size():
 		var tile: MenuTile = entry_tiles[entry_number]
-		var has_an_entry_below: bool = entry_number + ENTRIES_PER_ROW < entry_tiles.size()
-		if has_an_entry_below:
-			continue
 		var column: int = entry_number % ENTRIES_PER_ROW
-		var wants_previous: bool = column < 2
-		var page_button: MenuTile = null
-		if (wants_previous and can_go_back) or (not can_go_on and can_go_back):
-			page_button = previous_page_tile
-		elif can_go_on:
-			page_button = next_page_tile
-		if page_button != null:
-			tile.focus_neighbor_bottom = tile.get_path_to(page_button)
+		var is_row_end: bool = column == ENTRIES_PER_ROW - 1 or entry_number == entry_tiles.size() - 1
+		if entry_number + ENTRIES_PER_ROW >= entry_tiles.size():
+			tile.focus_neighbor_bottom = itself
+		if column == 0:
+			tile.focus_neighbor_left = itself if previous_page_tile.is_locked else tile.get_path_to(previous_page_tile)
+		if is_row_end:
+			tile.focus_neighbor_right = itself if next_page_tile.is_locked else tile.get_path_to(next_page_tile)
+	for tab in [previous_page_tile, next_page_tile]:
+		tab.focus_neighbor_top = itself
+		tab.focus_neighbor_bottom = itself
+	previous_page_tile.focus_neighbor_left = itself
+	next_page_tile.focus_neighbor_right = itself
 	if entry_tiles.is_empty():
 		return
-	var bottom_row_start: int = (entry_tiles.size() - 1) / ENTRIES_PER_ROW * ENTRIES_PER_ROW
-	previous_page_tile.focus_neighbor_top = previous_page_tile.get_path_to(entry_tiles[bottom_row_start])
-	previous_page_tile.focus_neighbor_left = previous_page_tile.get_path_to(back_tile)
-	next_page_tile.focus_neighbor_top = next_page_tile.get_path_to(entry_tiles[entry_tiles.size() - 1])
-	next_page_tile.focus_neighbor_right = NodePath(".")
-	if can_go_back and can_go_on:
-		previous_page_tile.focus_neighbor_right = previous_page_tile.get_path_to(next_page_tile)
-		next_page_tile.focus_neighbor_left = next_page_tile.get_path_to(previous_page_tile)
+	# The row carries over from the last page, but a short last page may not have it
+	var row_count: int = ceili(entry_tiles.size() / float(ENTRIES_PER_ROW))
+	aim_tabs_at_row(mini(tab_row, row_count - 1))
+
+
+## Right from Back a page goes to the start of this row, left from Next page
+## to its end. Otherwise Godot picks whichever tile is nearest the middle of
+## the tall tab, so left then right wouldn't bring you back.
+func aim_tabs_at_row(row: int) -> void:
+	tab_row = row
+	var row_start: int = row * ENTRIES_PER_ROW
+	var row_end: int = mini(row_start + ENTRIES_PER_ROW, entry_tiles.size()) - 1
+	previous_page_tile.focus_neighbor_right = previous_page_tile.get_path_to(entry_tiles[row_start])
+	next_page_tile.focus_neighbor_left = next_page_tile.get_path_to(entry_tiles[row_end])
+
+
+## Up from any tile in the top row goes to Back, and down from Back to the
+## first tile. Back sits off on its own, so left and right go nowhere.
+func link_back_tile() -> void:
+	var itself: NodePath = NodePath(".")
+	back_tile.focus_neighbor_left = itself
+	back_tile.focus_neighbor_right = itself
+	back_tile.focus_neighbor_top = itself
+	if entry_tiles.is_empty():
+		return
+	back_tile.focus_neighbor_bottom = back_tile.get_path_to(entry_tiles[0])
+	for column in mini(ENTRIES_PER_ROW, entry_tiles.size()):
+		entry_tiles[column].focus_neighbor_top = entry_tiles[column].get_path_to(back_tile)
 
 
 func make_entry_tile(entry_index: int) -> MenuTile:
