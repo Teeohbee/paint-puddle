@@ -31,6 +31,11 @@ static func proximity_fade(distance_to_target: float) -> float:
 	return clampf((distance_to_target - GONE_WITHIN) / (FULL_BEYOND - GONE_WITHIN), 0.0, 1.0)
 
 
+## Halfway along the arrow, where it is drawn.
+func middle() -> Vector2:
+	return origin + Vector2.from_angle(angle) * (DISTANCE_FROM_TIP + LENGTH / 2.0)
+
+
 func _process(delta: float) -> void:
 	var wanted_opacity: float = proximity_fade(origin.distance_to(target)) if is_wanted else 0.0
 	opacity = move_toward(opacity, wanted_opacity, FADE_SPEED * delta)
