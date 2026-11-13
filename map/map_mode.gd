@@ -178,6 +178,14 @@ func finish_changing_screen() -> void:
 		continent_entered.emit(screen_name)
 
 
+## The whale and dolphins keep away from the pin, and from the hint arrow while it shows.
+func sea_life_avoid_points() -> Array:
+	var points: Array = [pointer.position]
+	if hint_arrow.visible:
+		points.append(hint_arrow.middle())
+	return points
+
+
 ## Fills a country in on the screen being shown (other screens fill it in when they are built).
 func paint_country(country_id: String) -> void:
 	if screen is ContinentScreen:
@@ -199,6 +207,9 @@ func build_screen(new_screen_name: String, came_from_continent: String = "") -> 
 	screen.name = "Screen"
 	screen_root.add_child(screen)
 	screen_root.move_child(screen, 0)
+	if screen is WorldScreen:
+		screen.sea_life.avoid_points = sea_life_avoid_points
+		screen.sea_life.is_held = func() -> bool: return is_changing_screen
 	pointer.magnets = screen.magnets
 	pointer.target_at = screen.target_at
 	pointer.wraps_sideways = new_screen_name == WORLD

@@ -11,10 +11,15 @@ const BORDER_WIDTH: float = 1.5
 const FAR_WEST_LONGITUDE: float = -100.0
 
 var continent_labels: Array[Dictionary] = []
+var sea_life: SeaLife
 
 
 func _ready() -> void:
 	var world: Dictionary = MapData.world()
+	# First, so the land and the names are drawn over the boats.
+	sea_life = SeaLife.new()
+	sea_life.name = "SeaLife"
+	add_child(sea_life)
 	add_plain_land(world["world_land"])
 	var colour_of_continent: Dictionary = {}
 	for continent in world["continents"]:
