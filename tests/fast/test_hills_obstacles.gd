@@ -13,7 +13,7 @@ func test_hills_obstacles() -> void:
 	for level_index in levels.level_count():
 		var ground = load("res://hills/hills_ground.gd").new()
 		get_tree().root.add_child(ground)
-		ground.build(levels.LEVELS[level_index].pieces, 1.0)
+		ground.build(levels.LEVELS[level_index].pieces, level_script.gap_scale_for("medium"))
 		var first = placer.place(ground, level_index)
 		var again = placer.place(ground, level_index)
 		check(first == again, "level %d placement is repeatable" % (level_index + 1))

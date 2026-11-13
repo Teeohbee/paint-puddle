@@ -11,6 +11,8 @@ const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
 ## ends up over a gap or step.
 const SWAYING_BALLOON_EVERY: int = 3
 const BALLOON_SWAY_DISTANCE: float = 60.0
+## Medium: gaps a quarter wider, so the run-up matters.
+const MEDIUM_GAP_SCALE: float = 1.25
 ## Medium: a balloon this close to an obstacle (balloon radius plus the widest
 ## obstacle's half-width) floats higher, clear of the tallest one (a snowball,
 ## 76 up) even at the bottom of its bob, and still under the paint pots.
@@ -76,7 +78,7 @@ func _ready() -> void:
 	ground = HillsGround.new()
 	ground.scene = scene
 	add_child(ground)
-	ground.build(level.pieces, 1.0)
+	ground.build(level.pieces, gap_scale_for(difficulty))
 	for top in ground.ground_tops:
 		for point in top:
 			lowest_ground = maxf(lowest_ground, point.y)
@@ -116,6 +118,10 @@ func _ready() -> void:
 	PlayerSession.devices_changed.connect(on_devices_changed)
 	if PlayerSession.is_two_player():
 		add_player_two()
+
+
+static func gap_scale_for(level_difficulty: String) -> float:
+	return MEDIUM_GAP_SCALE if level_difficulty == HillsLevels.MEDIUM else 1.0
 
 
 ## Each blob listens to its own pad; player one keeps the keyboard. Safe to
