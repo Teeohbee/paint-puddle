@@ -1,16 +1,22 @@
 class_name LetterBalloon
 extends Area2D
 ## A balloon with a letter on it, bobbing on its string. Touch it to pop it.
+## On Medium some drift gently from side to side (sway_distance above 0).
 
 signal popped(balloon: LetterBalloon)
 
 const RADIUS: float = 44.0
+const SWAY_SPEED: float = 0.9
 
 var letter: String = "A"
 var letter_index: int = 0
 var paint_colour: Color = PaintColours.RED
 var bob_time: float = randf() * TAU
 var anchor: Vector2
+## How far it drifts either way, in units; 0 stands still. Kept inside the flat
+## ground around its place (see HillsLevel.nearest_ground_x) so it stays reachable.
+var sway_distance: float = 0.0
+var sway_time: float = 0.0
 
 
 func _ready() -> void:
@@ -35,7 +41,9 @@ func pop() -> void:
 
 func _process(delta: float) -> void:
 	bob_time += delta
-	position = anchor + Vector2(sin(bob_time * 1.3) * 4.0, sin(bob_time * 2.0) * 8.0)
+	sway_time += delta * SWAY_SPEED
+	var sway: float = sin(sway_time) * sway_distance
+	position = anchor + Vector2(sway + sin(bob_time * 1.3) * 4.0, sin(bob_time * 2.0) * 8.0)
 	queue_redraw()
 
 
