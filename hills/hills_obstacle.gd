@@ -48,8 +48,10 @@ func bump(blob: HillsBlob) -> void:
 func _draw() -> void:
 	match look:
 		"snowball":
+			# Outlined and shaded underneath, so it shows up against snow
+			draw_circle(Vector2(0, -RADIUS + 6), RADIUS + 3, Color(0.5, 0.6, 0.82))
 			draw_circle(Vector2(0, -RADIUS + 6), RADIUS, Color(0.97, 0.98, 1.0))
-			draw_arc(Vector2(0, -RADIUS + 6), RADIUS - 4, 0.3, 2.2, 16, Color(0.78, 0.84, 0.95), 6.0, true)
+			draw_arc(Vector2(0, -RADIUS + 6), RADIUS - 5, 0.2, 2.9, 16, Color(0.74, 0.8, 0.94), 8.0, true)
 		"log":
 			draw_rect(Rect2(-RADIUS - 8, -RADIUS * 1.15, RADIUS * 2 + 16, RADIUS * 1.15 + 4), Color(0.55, 0.36, 0.2))
 			draw_circle(Vector2(RADIUS + 8, -RADIUS * 0.55), RADIUS * 0.55, Color(0.78, 0.58, 0.36))
@@ -69,4 +71,4 @@ func _draw() -> void:
 				var angle: float = lerpf(PI, TAU, point_index / 13.0)
 				rock.append(Vector2(cos(angle) * RADIUS * 1.2, sin(angle) * RADIUS * 1.05 + 4))
 			draw_colored_polygon(rock, Color(0.6, 0.62, 0.66))
-			draw_arc(Vector2(-10, -RADIUS * 0.6), RADIUS * 0.5, PI, PI * 1.5, 10, Color(0.78, 0.8, 0.84), 5.0, true)
+			draw_circle(Vector2(-14, -RADIUS * 0.55), 7.0, Color(0.78, 0.8, 0.84))
