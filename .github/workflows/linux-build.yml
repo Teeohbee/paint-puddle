@@ -2,6 +2,7 @@ name: Linux build
 
 # Pull requests get a downloadable artifact; pushing a v* tag publishes a
 # GitHub Release, which steam-tools' launch.sh picks up on the next launch.
+# Both run the tests first (tests.yml).
 on:
   pull_request:
   push:
@@ -12,7 +13,12 @@ env:
   GODOT_VERSION: 4.7.1
 
 jobs:
+  # Nothing is built, or released, unless the tests pass
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   build:
+    needs: tests
     runs-on: ubuntu-latest
     permissions:
       contents: write
