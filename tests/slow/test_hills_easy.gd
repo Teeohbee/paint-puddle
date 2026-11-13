@@ -81,9 +81,3 @@ func test_falling_into_a_gap_calls_the_cloud_to_bring_the_blob_back() -> void:
 	check(level.ground.height_at(blob.position.x) != INF and blob.position.x < 700,
 		"and the blob is back on the ground before the gap: x=%.0f" % blob.position.x)
 	check(blob.is_on_floor(), "standing on it")
-
-func test_the_grown_up_gap_size_halves_the_gaps() -> void:
-	GameSettings.set_setting("gap_size_percent", 50)
-	var level := await open_level(2)
-	var tops: Array = level.ground.ground_tops
-	assert_float(tops[1][0].x - tops[0][tops[0].size() - 1].x).is_equal_approx(60.0, 0.001)

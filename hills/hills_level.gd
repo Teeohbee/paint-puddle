@@ -76,7 +76,7 @@ func _ready() -> void:
 	ground = HillsGround.new()
 	ground.scene = scene
 	add_child(ground)
-	ground.build(level.pieces, GameSettings.get_setting("gap_size_percent") / 100.0)
+	ground.build(level.pieces, 1.0)
 	for top in ground.ground_tops:
 		for point in top:
 			lowest_ground = maxf(lowest_ground, point.y)

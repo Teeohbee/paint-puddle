@@ -27,7 +27,6 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"music": draw_music_note(canvas, centre, size, colour)
 		"sound": draw_speaker(canvas, centre, size, colour)
 		"speed": draw_snail(canvas, centre, size, colour)
-		"gap": draw_gap(canvas, centre, size, colour)
 		"jump": draw_jump_arc(canvas, centre, size, colour)
 		"reset": draw_bin(canvas, centre, size, colour)
 		"controller": draw_controller(canvas, centre, size, colour)
@@ -190,16 +189,6 @@ static func draw_snail(canvas: CanvasItem, centre: Vector2, size: float, colour:
 	canvas.draw_arc(centre + Vector2(size * 0.05, -size * 0.02), size * 0.14, 0, TAU * 0.8, 16, colour.darkened(0.45), size * 0.05, true)
 	canvas.draw_line(centre + Vector2(-size * 0.38, size * 0.22), centre + Vector2(-size * 0.42, -size * 0.18), colour, size * 0.06, true)
 	canvas.draw_circle(centre + Vector2(-size * 0.42, -size * 0.2), size * 0.06, colour)
-
-
-static func draw_gap(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
-	canvas.draw_rect(Rect2(centre + Vector2(-size * 0.48, 0), Vector2(size * 0.32, size * 0.4)), colour)
-	canvas.draw_rect(Rect2(centre + Vector2(size * 0.16, 0), Vector2(size * 0.32, size * 0.4)), colour)
-	canvas.draw_line(centre + Vector2(-size * 0.12, -size * 0.18), centre + Vector2(size * 0.12, -size * 0.18), colour, size * 0.06)
-	canvas.draw_colored_polygon(PackedVector2Array([centre + Vector2(-size * 0.16, -size * 0.18),
-		centre + Vector2(-size * 0.06, -size * 0.27), centre + Vector2(-size * 0.06, -size * 0.09)]), colour)
-	canvas.draw_colored_polygon(PackedVector2Array([centre + Vector2(size * 0.16, -size * 0.18),
-		centre + Vector2(size * 0.06, -size * 0.27), centre + Vector2(size * 0.06, -size * 0.09)]), colour)
 
 
 static func draw_jump_arc(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
