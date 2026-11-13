@@ -1,0 +1,49 @@
+name: Tests
+
+# Called by linux-build.yml, so every PR and every release tag is tested before it builds, and run on
+# pushes to main so main's own state is always known.
+on:
+  workflow_call:
+  push:
+    branches: [main]
+
+env:
+  # The editor version the project is made with; linux-build.yml pins the same one
+  GODOT_VERSION: 4.7.1
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+      - name: Fast tests
+        run: tests/run.sh fast
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fast-test-report
+          path: reports/
+
+  # Only once the fast suites pass: a red fast run says enough on its own
+  slow:
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+      - name: Hills playthroughs
+        run: tests/run.sh slow
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: slow-test-report
+          path: reports/

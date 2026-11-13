@@ -1,0 +1,38 @@
+name: Set up Godot and the test addons
+description: Installs a cached headless Godot, installs gdUnit4 with gd-plug, and imports the project.
+inputs:
+  version:
+    description: Godot version, like 4.7.1
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Cache Godot
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ~/godot
+        key: godot-${{ inputs.version }}-linux
+    - name: Download Godot
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ~/godot
+        curl -fsSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${{ inputs.version }}-stable/Godot_v${{ inputs.version }}-stable_linux.x86_64.zip"
+        unzip -q godot.zip -d ~/godot
+        mv ~/godot/Godot_v${{ inputs.version }}-stable_linux.x86_64 ~/godot/godot
+        rm godot.zip
+    - name: Put Godot on the path
+      shell: bash
+      run: echo "$HOME/godot" >> "$GITHUB_PATH"
+    # A fresh clone has no class cache, so the autoloads can't find class_names like Synth until it's imported
+    - name: Import the project
+      shell: bash
+      run: godot --headless --path . --import
+    # gd-plug always exits 255 after installing (its request_quit() defaults to -1), so check the result
+    # instead of the exit code
+    - name: Install addons
+      shell: bash
+      run: |
+        godot --headless -s plug.gd install || true
+        test -f addons/gdUnit4/plugin.cfg || { echo "gd-plug didn't install gdUnit4" >&2; exit 1; }

@@ -94,6 +94,14 @@ func test_a_v1_save_that_finished_the_first_round_starts_on_cat() -> void:
 	assert_int(_fresh_settings().get_progress("next_task_index")) \
 		.override_failure_message("once saved as v2 it isn't moved again").is_equal(45)
 
+# The first round is 44 tasks: finishing exactly that many is enough to move on, one fewer isn't
+func test_a_v1_save_moves_on_from_exactly_the_end_of_the_first_round(tasks_completed: int, expected_next: int, test_parameters := [
+	[44, 41],
+	[43, 43],
+]) -> void:
+	_write({"version": 1, "progress": {"tasks_completed": tasks_completed, "next_task_index": tasks_completed}})
+	assert_int(_fresh_settings().get_progress("next_task_index")).is_equal(expected_next)
+
 func test_a_v1_save_part_way_through_the_first_round_stays_put() -> void:
 	_write({"version": 1, "progress": {"tasks_completed": 10, "next_task_index": 10}})
 	assert_int(_fresh_settings().get_progress("next_task_index")).is_equal(10)

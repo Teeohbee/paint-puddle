@@ -47,6 +47,16 @@ func test_bad_tasks_are_skipped(task: Dictionary, test_parameters := [
 ]) -> void:
 	assert_object(MeadowTask.from_dictionary(task)).is_null()
 
+# The meadow has room for 13 things, 2 of them wrong-colour drops, so a task can ask for 1 to 11 drops
+func test_a_collect_task_asks_for_as_many_drops_as_the_meadow_has_room_for(count: int, is_kept: bool, test_parameters := [
+	[0, false],
+	[1, true],
+	[11, true],
+	[12, false],
+]) -> void:
+	var task := MeadowTask.from_dictionary({"type": "collect", "paint": "blue", "count": count, "text": "?"})
+	assert_bool(task != null).override_failure_message("collecting %d drops should be %s" % [count, "kept" if is_kept else "skipped"]).is_equal(is_kept)
+
 func test_the_starter_pack_loads_every_task_and_kind() -> void:
 	var tasks := MeadowTask.load_list("res://data/tasks.json")
 	var raw_count: int = JSON.parse_string(FileAccess.get_file_as_string("res://data/tasks.json")).size()
