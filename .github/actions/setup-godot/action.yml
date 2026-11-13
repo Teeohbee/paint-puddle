@@ -25,6 +25,10 @@ runs:
     - name: Put Godot on the path
       shell: bash
       run: echo "$HOME/godot" >> "$GITHUB_PATH"
+    # A fresh clone has no class cache, so the autoloads can't find class_names like Synth until it's imported
+    - name: Import the project
+      shell: bash
+      run: godot --headless --path . --import
     - name: Install addons
       shell: bash
       run: godot --headless -s plug.gd install
