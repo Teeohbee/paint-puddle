@@ -211,6 +211,10 @@ func place_obstacles(scene: Dictionary) -> void:
 	for child in effects_layer.get_children():
 		if child is LetterBalloon or child is HillsPaintPot:
 			things_x.append(child.position.x)
+			if child is LetterBalloon and child.sway_distance > 0.0:
+				# A drifting balloon covers its whole travel, not just where it starts
+				things_x.append(child.position.x - child.sway_distance)
+				things_x.append(child.position.x + child.sway_distance)
 	for obstacle_x in HillsObstacles.place(ground, level_to_play, things_x):
 		var obstacle: HillsObstacle = HillsObstacle.new()
 		obstacle.look = scene.obstacle
