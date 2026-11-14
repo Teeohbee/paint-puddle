@@ -6,11 +6,22 @@ extends Node2D
 const HILLS_MENU: String = "res://ui/hills_menu.tscn"
 const FALL_LINE_BELOW_GROUND: float = 260.0
 const BALLOON_HEIGHT_ABOVE_GROUND: float = 85.0
+## Medium: out of walking reach, but a quick hop gets it (a tap reaches ~200).
+const BALLOON_HOP_HEIGHT: float = 170.0
+## Medium: above the paint pots, only a held jump gets it (that reaches ~320).
+const BALLOON_HIGH_HEIGHT: float = 250.0
+## Medium: from this level (counting from 0) swaying balloons go high too.
+const HIGH_SWAYING_FROM_LEVEL: int = 20
+## A high balloon nearer a pot than this (plus its sway) would sit on top of
+## it, so it stays low instead: the pot is the jump there.
+const BALLOON_CLEAR_OF_POT: float = 110.0
 ## Medium: every third letter drifts this far either way. Under the 70 of flat
 ## ground nearest_ground_x keeps either side, so a drifting balloon never
 ## ends up over a gap or step.
 const SWAYING_BALLOON_EVERY: int = 3
 const BALLOON_SWAY_DISTANCE: float = 60.0
+## Medium: gaps a quarter wider, so the run-up matters.
+const MEDIUM_GAP_SCALE: float = 1.25
 ## Medium: a balloon this close to an obstacle (balloon radius plus the widest
 ## obstacle's half-width) floats higher, clear of the tallest one (a snowball,
 ## 76 up) even at the bottom of its bob, and still under the paint pots.
@@ -76,7 +87,7 @@ func _ready() -> void:
 	ground = HillsGround.new()
 	ground.scene = scene
 	add_child(ground)
-	ground.build(level.pieces, GameSettings.get_setting("gap_size_percent") / 100.0)
+	ground.build(level.pieces, gap_scale_for(difficulty))
 	for top in ground.ground_tops:
 		for point in top:
 			lowest_ground = maxf(lowest_ground, point.y)
@@ -116,6 +127,10 @@ func _ready() -> void:
 	PlayerSession.devices_changed.connect(on_devices_changed)
 	if PlayerSession.is_two_player():
 		add_player_two()
+
+
+static func gap_scale_for(level_difficulty: String) -> float:
+	return MEDIUM_GAP_SCALE if level_difficulty == HillsLevels.MEDIUM else 1.0
 
 
 ## Each blob listens to its own pad; player one keeps the keyboard. Safe to
@@ -176,6 +191,7 @@ func place_balloons() -> void:
 	var word: String = HillsLevels.word_for(level, difficulty)
 	var usable_start: float = 500.0
 	var usable_end: float = ground.level_length - 400.0
+	var pots_x: Array[float] = pot_positions_x()
 	for letter_index in word.length():
 		var x: float = lerpf(usable_start, usable_end, (letter_index + 0.5) / word.length())
 		x = nearest_ground_x(x)
@@ -183,12 +199,28 @@ func place_balloons() -> void:
 		balloon.letter = word[letter_index]
 		balloon.letter_index = letter_index
 		balloon.paint_colour = PaintColours.RAINBOW[letter_index % PaintColours.RAINBOW.size()]
-		balloon.position = Vector2(x, ground.height_at(x) - BALLOON_HEIGHT_ABOVE_GROUND)
 		if difficulty == HillsLevels.MEDIUM and letter_index % SWAYING_BALLOON_EVERY == 1:
 			balloon.sway_distance = BALLOON_SWAY_DISTANCE
 			balloon.sway_time = letter_index * 1.7
+		var height: float = balloon_height(letter_index, level_to_play, difficulty)
+		if height > PAINT_POT_HEIGHT_ABOVE_GROUND and pots_x.any(func(pot_x): return absf(pot_x - x) < balloon.sway_distance + BALLOON_CLEAR_OF_POT):
+			height = BALLOON_HEIGHT_ABOVE_GROUND
+		balloon.position = Vector2(x, ground.height_at(x) - height)
 		balloon.popped.connect(func(popped_balloon): word_bar.pop_letter(popped_balloon.letter_index))
 		effects_layer.add_child(balloon)
+
+
+## How far above the ground a letter floats. Easy: all walked through. Medium:
+## the swaying ones need a hop (a held jump from level 21), the other odd ones
+## a held jump, and the rest - the first among them - are walked through.
+static func balloon_height(letter_index: int, level_index: int, level_difficulty: String) -> float:
+	if level_difficulty != HillsLevels.MEDIUM:
+		return BALLOON_HEIGHT_ABOVE_GROUND
+	if letter_index % SWAYING_BALLOON_EVERY == 1:
+		return BALLOON_HIGH_HEIGHT if level_index >= HIGH_SWAYING_FROM_LEVEL else BALLOON_HOP_HEIGHT
+	if letter_index % 2 == 1:
+		return BALLOON_HIGH_HEIGHT
+	return BALLOON_HEIGHT_ABOVE_GROUND
 
 
 ## Two pots of paint along the second third of the way, up where it takes
@@ -196,17 +228,27 @@ func place_balloons() -> void:
 ## is another colour, so two players can have a pot each.
 func place_paint_pots() -> void:
 	var paints: Array[String] = HillsLevels.pot_paints(level_to_play)
+	var pots_x: Array[float] = pot_positions_x()
 	for pot_index in paints.size():
-		var how_far: float = lerpf(POT_FIRST_FRACTION, POT_LAST_FRACTION, pot_index / float(maxi(paints.size() - 1, 1)))
-		if paints.size() == 1:
-			how_far = POT_LAST_FRACTION
-		var x: float = nearest_ground_x(ground.level_length * how_far)
+		var x: float = pots_x[pot_index]
 		var pot: HillsPaintPot = HillsPaintPot.new()
 		pot.paint_name = paints[pot_index]
 		pot.position = Vector2(x, ground.height_at(x) - PAINT_POT_HEIGHT_ABOVE_GROUND)
 		# The level listens for the blob itself, so it knows whose paint to mix
 		pot.body_entered.connect(func(body): on_pot_touched(pot, body))
 		effects_layer.add_child(pot)
+
+
+## Where each pot stands, in order. Balloons need to know before the pots go in.
+func pot_positions_x() -> Array[float]:
+	var count: int = HillsLevels.pot_paints(level_to_play).size()
+	var positions: Array[float] = []
+	for pot_index in count:
+		var how_far: float = lerpf(POT_FIRST_FRACTION, POT_LAST_FRACTION, pot_index / float(maxi(count - 1, 1)))
+		if count == 1:
+			how_far = POT_LAST_FRACTION
+		positions.append(nearest_ground_x(ground.level_length * how_far))
+	return positions
 
 
 ## Medium only: obstacles on flat ground. The same level always gets them in
@@ -231,7 +273,8 @@ func lift_balloons_over(obstacles_x: Array[float]) -> void:
 		for obstacle_x in obstacles_x:
 			# A drifting balloon counts anywhere along its travel
 			if absf(balloon.anchor.x - obstacle_x) < balloon.sway_distance + BALLOON_OVER_OBSTACLE_REACH:
-				balloon.anchor.y = ground.height_at(balloon.anchor.x) - BALLOON_HEIGHT_OVER_OBSTACLE
+				# Only ever up: a balloon already higher stays put
+				balloon.anchor.y = minf(balloon.anchor.y, ground.height_at(balloon.anchor.x) - BALLOON_HEIGHT_OVER_OBSTACLE)
 				break
 
 

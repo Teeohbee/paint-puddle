@@ -21,9 +21,17 @@ finished (or early with "Open Medium" in the grown-up settings: hold all four
 face buttons, or G, on the Options screen). Each difficulty keeps its own
 progress.
 
-Medium uses the same 40 layouts. A level can set an optional `word_medium` in
-`hills/hills_levels.gd`, for example `"word": "SUN", "word_medium": "SUNSHINE"`.
-Without one, Medium spells the Easy word. Pots and paint are shared.
+Medium uses the same 40 layouts, made harder:
+
+- Gaps are a quarter wider, so the widest needs a held jump from near the edge.
+- Every other letter floats above the paint pots and needs a held jump.
+  Swaying letters need a hop in levels 1-20, and a held jump from level 21.
+  The first letter is always walked through.
+- Rocks, logs and snowballs stand in the way and bump you back.
+
+A level can set an optional `word_medium` in `hills/hills_levels.gd`, for
+example `"word": "SUN", "word_medium": "SUNSHINE"`. Without one, Medium spells
+the Easy word. Pots and paint are shared.
 
 ## Tests
 

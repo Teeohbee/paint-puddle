@@ -13,7 +13,7 @@ func test_hills_obstacles() -> void:
 	for level_index in levels.level_count():
 		var ground = load("res://hills/hills_ground.gd").new()
 		get_tree().root.add_child(ground)
-		ground.build(levels.LEVELS[level_index].pieces, 1.0)
+		ground.build(levels.LEVELS[level_index].pieces, level_script.gap_scale_for("medium"))
 		var first = placer.place(ground, level_index)
 		var again = placer.place(ground, level_index)
 		check(first == again, "level %d placement is repeatable" % (level_index + 1))
@@ -47,16 +47,21 @@ func test_hills_obstacles() -> void:
 		var level = get_tree().current_scene
 		var obstacles = level.get_children().filter(func(c): return is_script(c, "res://hills/hills_obstacle.gd"))
 		check(obstacles.size() == planned[level_index].size(), "level %d gets all %d planned obstacles in game: %d" % [level_index + 1, planned[level_index].size(), obstacles.size()])
+		var pots_x = level.effects_layer.get_children().filter(func(c): return is_script(c, "res://hills/paint_pot.gd")).map(func(p): return p.position.x)
 		for balloon in level.effects_layer.get_children().filter(func(c): return is_script(c, "res://hills/letter_balloon.gd")):
 			var height = level.ground.height_at(balloon.anchor.x) - balloon.anchor.y
+			var own = level_script.balloon_height(balloon.letter_index, level_index, "medium")
+			if own > level_script.PAINT_POT_HEIGHT_ABOVE_GROUND and pots_x.any(func(x): return absf(x - balloon.anchor.x) < balloon.sway_distance + level_script.BALLOON_CLEAR_OF_POT):
+				own = level_script.BALLOON_HEIGHT_ABOVE_GROUND
 			var over = obstacles.any(func(o): return absf(o.position.x - balloon.anchor.x) < balloon.sway_distance + level_script.BALLOON_OVER_OBSTACLE_REACH)
 			if over:
 				lifted_total += 1
 				# balloon bottom (radius 44, bobs 8) clear of the tallest obstacle (snowball, top 76 up)
 				check(height - 44 - 8 > 76, "level %d: balloon %s over an obstacle is lifted clear: %d" % [level_index + 1, balloon.letter, height])
-				check(height < level_script.PAINT_POT_HEIGHT_ABOVE_GROUND, "level %d: lifted balloon %s still in jump reach: %d" % [level_index + 1, balloon.letter, height])
+				# only ever up: one already higher keeps its height
+				check(is_equal_approx(height, maxf(own, level_script.BALLOON_HEIGHT_OVER_OBSTACLE)), "level %d: balloon %s over an obstacle at %d, wanted %d" % [level_index + 1, balloon.letter, height, maxf(own, level_script.BALLOON_HEIGHT_OVER_OBSTACLE)])
 			else:
-				check(is_equal_approx(height, level_script.BALLOON_HEIGHT_ABOVE_GROUND), "level %d: balloon %s away from obstacles stays put: %d" % [level_index + 1, balloon.letter, height])
+				check(is_equal_approx(height, own), "level %d: balloon %s away from obstacles at %d, wanted %d" % [level_index + 1, balloon.letter, height, own])
 	print("balloons lifted over obstacles: %d" % lifted_total)
 	check(lifted_total > 0, "some balloons are lifted over obstacles")
 

@@ -19,7 +19,6 @@ const SETTING_LIMITS: Dictionary = {
 	"music_volume": {"default": 7, "smallest": 0, "largest": 10},
 	"sound_volume": {"default": 8, "smallest": 0, "largest": 10},
 	"game_speed_percent": {"default": 100, "smallest": 50, "largest": 100},
-	"gap_size_percent": {"default": 100, "smallest": 50, "largest": 100},
 	"coyote_time_milliseconds": {"default": 250, "smallest": 100, "largest": 500},
 	# 1 opens Hills Medium without finishing Easy (for testing, in the grown-up settings)
 	"open_hills_medium": {"default": 0, "smallest": 0, "largest": 1},
