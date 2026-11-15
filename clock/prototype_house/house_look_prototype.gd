@@ -16,6 +16,7 @@ const VARIANT_NAMES := [
 	"B  Busy doll's house: four furnished rooms and a garden, lights room by room",
 	"C  Peeping in: the outside wall, one big window onto the moment, garden beside",
 	"D  Storybook: the room in a round picture, big sky round it, sun and moon arc over the top",
+	"E  Zoom: the doll's house while winding, A zooms into the moment's room",
 ]
 
 const CLOCK_CENTRE := Vector2(500, 600)
@@ -62,6 +63,9 @@ var wound_minutes := 7 * 60
 var displayed_minutes := float(7 * 60)
 var confirmed_minutes_of_day := 7 * 60
 var shows_caption := true
+## E: 0 = whole house, 1 = zoomed into the moment's room.
+var zoom := 0.0
+var zoom_target := 0.0
 var time := 0.0
 var font: Font
 var room_transform := Transform2D.IDENTITY
@@ -75,7 +79,9 @@ func _ready() -> void:
 
 
 ## For the capture script.
-func show_state(new_variant: int, new_rung: int, minutes_of_day: int) -> void:
+func show_state(new_variant: int, new_rung: int, minutes_of_day: int, new_zoom: float = 1.0) -> void:
+	zoom = new_zoom
+	zoom_target = new_zoom
 	variant_index = new_variant
 	rung_index = new_rung
 	wound_minutes = minutes_of_day
@@ -89,8 +95,10 @@ func _process(delta: float) -> void:
 		get_tree().quit()
 	if Input.is_action_just_pressed("move_right"):
 		wound_minutes += RUNG_STEP_MINUTES[rung_index]
+		zoom_target = 0.0
 	if Input.is_action_just_pressed("move_left"):
 		wound_minutes -= RUNG_STEP_MINUTES[rung_index]
+		zoom_target = 0.0
 	if Input.is_action_just_pressed("move_up"):
 		rung_index = mini(rung_index + 1, 7)
 		snap_to_rung()
@@ -99,6 +107,8 @@ func _process(delta: float) -> void:
 		snap_to_rung()
 	if Input.is_action_just_pressed("act"):
 		confirmed_minutes_of_day = minutes_of_day()
+		zoom_target = 1.0
+	zoom = move_toward(zoom, zoom_target, delta / 0.6)
 	displayed_minutes = lerpf(displayed_minutes, float(wound_minutes), 1.0 - exp(-14.0 * delta))
 	queue_redraw()
 
@@ -146,6 +156,7 @@ func _draw() -> void:
 		1: draw_dolls_house()
 		2: draw_peeping_in()
 		3: draw_storybook()
+		4: draw_zoom()
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 	if shows_caption:
 		draw_caption()
@@ -876,6 +887,38 @@ func draw_dolls_house() -> void:
 func lamp_on_anywhere() -> bool:
 	var doing: String = moment()[2]
 	return doing != "asleep" and darkness() > 0.2
+
+
+# ---------------------------------------------------------------- E: zoom
+
+## Where each room sits inside the doll's house, matching draw_dolls_house.
+func dolls_house_rect(room_name: String) -> Rect2:
+	var ground_y := 962.0
+	var room_size := ROOM * DOLLS_ROOM_SCALE
+	var left := PANEL.position.x + 30
+	var downstairs_top := ground_y - room_size.y
+	var upstairs_top := downstairs_top - 14 - room_size.y
+	match room_name:
+		"bedroom": return Rect2(Vector2(left, upstairs_top), room_size)
+		"bathroom": return Rect2(Vector2(left + room_size.x + 14, upstairs_top), room_size)
+		"kitchen": return Rect2(Vector2(left, downstairs_top), room_size)
+		"living": return Rect2(Vector2(left + room_size.x + 14, downstairs_top), room_size)
+	var garden_left := left + room_size.x * 2 + 14 + 30
+	return Rect2(Vector2(garden_left - 70, ground_y - 760 * 0.42 + 10), ROOM * 0.42)
+
+
+func draw_zoom() -> void:
+	draw_dolls_house()
+	if zoom <= 0.0:
+		return
+	var eased := zoom * zoom * (3.0 - 2.0 * zoom)
+	var from := dolls_house_rect(moment()[1])
+	var to := Rect2(PANEL.position + Vector2(0, (PANEL.size.y - 836) / 2.0), Vector2(880, 836))
+	var rect := Rect2(from.position.lerp(to.position, eased), from.size.lerp(to.size, eased))
+	draw_rect(rect.grow(4 + 6 * eased), INK)
+	begin_room(rect)
+	draw_room(moment()[1], true)
+	end_room()
 
 
 # ---------------------------------------------------------------- C: peeping in

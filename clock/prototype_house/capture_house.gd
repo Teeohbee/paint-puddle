@@ -15,4 +15,8 @@ func _initialize() -> void:
 			prototype.show_state(variant, 2, hour * 60)
 			await create_timer(0.2).timeout
 			root.get_texture().get_image().save_png("%s/%s-%02d.png" % [out, "ABCD"[variant], hour])
+	for zoom in [0.0, 0.5, 1.0]:
+		prototype.show_state(4, 2, 18 * 60, zoom)
+		await create_timer(0.2).timeout
+		root.get_texture().get_image().save_png("%s/E-18-zoom-%d.png" % [out, int(zoom * 100)])
 	quit()
