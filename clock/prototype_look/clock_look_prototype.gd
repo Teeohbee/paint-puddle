@@ -15,6 +15,8 @@ const VARIANT_NAMES := [
 	"A  Schoolroom: plain face, numbers and minute marks",
 	"B  Teaching clock: past and to halves, minute ring, coloured hands",
 	"C  Paint pots: a puddle per number, the brush paints the minutes",
+	"D  Mix: schoolroom face, small puddle behind each number, puddle blob in the middle",
+	"E  Mix: schoolroom face, coloured numbers, puddle blob in the middle",
 ]
 
 const CLOCK_CENTRE := Vector2(500, 600)
@@ -166,6 +168,8 @@ func _draw() -> void:
 		0: draw_schoolroom_clock()
 		1: draw_teaching_clock()
 		2: draw_paint_pots_clock()
+		3: draw_mixed_clock(true)
+		4: draw_mixed_clock(false)
 	draw_card()
 	draw_prototype_bar()
 
@@ -320,6 +324,47 @@ func draw_paint_pots_clock() -> void:
 		draw_circle(eye, 11, Color.WHITE)
 		draw_circle(eye + look * 4, 6, INK)
 	draw_arc(CLOCK_CENTRE + Vector2(0, 10), 10, 0.3, PI - 0.3, 12, INK, 3.0)
+
+
+# D and E: Toby's mix. The schoolroom face (clear minute marks, plain
+# hands) with Paint Puddle colour on the numbers and a puddle blob in the
+# middle holding the hands.
+func number_colour(number: int) -> Color:
+	return Color.from_hsv(fposmod(number / 12.0 - 0.02, 1.0), 0.6, 1.0)
+
+
+func draw_mixed_clock(puddles_behind_numbers: bool) -> void:
+	draw_circle(CLOCK_CENTRE + Vector2(0, 14), CLOCK_RADIUS + 22, Color(0, 0, 0, 0.12))
+	draw_circle(CLOCK_CENTRE, CLOCK_RADIUS + 22, INK)
+	draw_circle(CLOCK_CENTRE, CLOCK_RADIUS, Color.WHITE)
+	for minute in 60:
+		var angle := TAU * minute / 60.0 - PI / 2.0
+		var is_five := minute % 5 == 0
+		var mark_length := 30.0 if is_five else 14.0
+		draw_line(angle_point(angle, CLOCK_RADIUS - 10 - mark_length), angle_point(angle, CLOCK_RADIUS - 10), INK, 8.0 if is_five else 3.0)
+	for number in range(1, 13):
+		var spot := angle_point(TAU * number / 12.0 - PI / 2.0, CLOCK_RADIUS - 100)
+		if puddles_behind_numbers:
+			draw_colored_polygon(wobbly_circle(spot, 50, number * 1.7), number_colour(number).darkened(0.25))
+			draw_colored_polygon(wobbly_circle(spot, 45, number * 1.7), number_colour(number))
+			draw_circle(spot + Vector2(-16, -18), 7, Color(1, 1, 1, 0.55))
+			draw_centred_text(str(number), spot, 64, INK)
+		else:
+			draw_centred_text(str(number), spot + Vector2(3, 3), 80, number_colour(number).darkened(0.45))
+			draw_centred_text(str(number), spot, 80, number_colour(number).darkened(0.15))
+	draw_rounded_hand(hour_angle(), CLOCK_RADIUS * 0.5, 30, INK, INK)
+	if shows_minute_hand():
+		draw_rounded_hand(minute_angle(), CLOCK_RADIUS * 0.8, 16, INK, INK)
+	# the puddle blob in the middle, holding the hands and watching the big one
+	var look := Vector2.from_angle(minute_angle() if shows_minute_hand() else hour_angle())
+	draw_colored_polygon(wobbly_circle(CLOCK_CENTRE, 50, 2.0), Color(1.0, 0.36, 0.43).darkened(0.35))
+	draw_colored_polygon(wobbly_circle(CLOCK_CENTRE, 45, 2.0), Color(1.0, 0.36, 0.43))
+	draw_circle(CLOCK_CENTRE + Vector2(-18, -20), 7, Color(1, 1, 1, 0.55))
+	for eye_side in [-1, 1]:
+		var eye := CLOCK_CENTRE + Vector2(eye_side * 14, -6)
+		draw_circle(eye, 11, Color.WHITE)
+		draw_circle(eye + look * 4, 6, INK)
+	draw_arc(CLOCK_CENTRE + Vector2(0, 12), 10, 0.3, PI - 0.3, 12, INK, 3.0)
 
 
 # ---------------------------------------------------------------- house

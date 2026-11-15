@@ -15,9 +15,9 @@ func _initialize() -> void:
 	var prototype = load("res://clock/prototype_look/clock_look_prototype.tscn").instantiate()
 	root.add_child(prototype)
 	await create_timer(0.3).timeout
-	for variant in 3:
+	for variant in range(3, 5):
 		for shot in SHOTS:
 			prototype.show_state(variant, shot[1], shot[2])
 			await create_timer(0.25).timeout
-			root.get_texture().get_image().save_png("%s/%s-%s.png" % [out, "ABC"[variant], shot[0]])
+			root.get_texture().get_image().save_png("%s/%s-%s.png" % [out, "ABCDE"[variant], shot[0]])
 	quit()
