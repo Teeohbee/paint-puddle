@@ -15,6 +15,7 @@ const VARIANT_NAMES := [
 	"A  Close-up room: one room fills the panel, big blobs, sky through its window",
 	"B  Busy doll's house: four furnished rooms and a garden, lights room by room",
 	"C  Peeping in: the outside wall, one big window onto the moment, garden beside",
+	"D  Storybook: the room in a round picture, big sky round it, sun and moon arc over the top",
 ]
 
 const CLOCK_CENTRE := Vector2(500, 600)
@@ -144,6 +145,7 @@ func _draw() -> void:
 		0: draw_close_up_room()
 		1: draw_dolls_house()
 		2: draw_peeping_in()
+		3: draw_storybook()
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 	if shows_caption:
 		draw_caption()
@@ -155,7 +157,8 @@ func _draw() -> void:
 func draw_caption() -> void:
 	var text: String = moment()[0]
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 40).x
-	var tag := Rect2(PANEL.get_center().x - text_width / 2.0 - 30, PANEL.position.y + 20, text_width + 60, 64)
+	var tag_y := PANEL.end.y - 84 if variant_index == 3 else PANEL.position.y + 20
+	var tag := Rect2(PANEL.get_center().x - text_width / 2.0 - 30, tag_y, text_width + 60, 64)
 	draw_rect(tag.grow(5), INK)
 	draw_rect(tag, CREAM)
 	draw_centred_text(text, tag.get_center(), 40, INK)
@@ -259,6 +262,13 @@ func draw_sky_visitors(rect: Rect2) -> void:
 ## A circle cut to a box, so glows and clouds never spill out of their room.
 func clipped_circle(centre: Vector2, radius: float, colour: Color, box: Rect2) -> void:
 	var points := ThingDrawings.ellipse_points(centre, Vector2(radius, radius), 0.0, 48)
+	for index in points.size():
+		points[index] = points[index].clamp(box.position, box.end)
+	draw_colored_polygon(points, colour)
+
+
+func clipped_ellipse(centre: Vector2, radii: Vector2, colour: Color, box: Rect2) -> void:
+	var points := ThingDrawings.ellipse_points(centre, radii, 0.0, 48)
 	for index in points.size():
 		points[index] = points[index].clamp(box.position, box.end)
 	draw_colored_polygon(points, colour)
@@ -929,6 +939,82 @@ func draw_peeping_in() -> void:
 		begin_room(Rect2(Vector2(PANEL.position.x + 20, lawn_y - 760 * 0.62 + 110), ROOM * 0.62))
 		draw_garden_doings(true, Vector2(500, 600), 0.9)
 		end_room()
+
+
+# ---------------------------------------------------------------- D: storybook
+
+func draw_storybook() -> void:
+	var minutes := live_minutes()
+	var sky := sky_colour(minutes)
+	var dark := darkness()
+	var centre := PANEL.position + Vector2(PANEL.size.x / 2.0, 370)
+	var radius := 280.0
+	var hills_y := PANEL.position.y + 760
+	draw_rect(Rect2(PANEL.position + Vector2(0, 12), PANEL.size), Color(0, 0, 0, 0.12))
+	draw_rect(PANEL.grow(10), INK)
+	draw_rect(PANEL, sky)
+	# the picture: a room drawn square, its corners masked back to sky
+	var square_size := Vector2(radius * 2 * 800.0 / 760.0, radius * 2) + Vector2(8, 8)
+	var square := Rect2(centre - square_size / 2.0, square_size)
+	begin_room(square)
+	draw_room(moment()[1], true)
+	end_room()
+	# each quadrant: the arc out to the square's edges, so nothing of the room shows outside the circle
+	for quadrant in 4:
+		var start_angle := PI + quadrant * PI / 2.0
+		var mask := PackedVector2Array()
+		for step in 13:
+			mask.append(centre + Vector2.from_angle(start_angle + PI / 2.0 * step / 12.0) * radius)
+		var end_direction := Vector2.from_angle(start_angle + PI / 2.0).round()
+		var start_direction := Vector2.from_angle(start_angle).round()
+		var half := square.size / 2.0
+		mask.append(centre + end_direction * half)
+		mask.append(centre + (end_direction + start_direction) * half)
+		mask.append(centre + start_direction * half)
+		draw_colored_polygon(mask, sky)
+	# stars and clouds keep clear of the picture
+	if dark > 0.3:
+		for index in 70:
+			var star := PANEL.position + Vector2(fposmod(sin(index * 12.9898) * 43758.5, PANEL.size.x - 16) + 8, fposmod(sin(index * 78.233) * 24634.6, hills_y - PANEL.position.y) + 8)
+			if star.distance_to(centre) > radius + 40:
+				draw_circle(star, 3.5, Color(1, 1, 0.85, (dark - 0.3) * 2.2 * (0.6 + 0.4 * sin(time * 2.0 + index))))
+	else:
+		for cloud in 3:
+			var drift := fposmod(time * 14.0 + cloud * 330.0, PANEL.size.x + 200) - 100
+			var at := Vector2(PANEL.position.x + drift, PANEL.position.y + 120 + cloud * 210)
+			if at.distance_to(centre) > radius + 90:
+				for puff in 3:
+					clipped_circle(at + Vector2((puff - 1) * 40, -14 * float(puff == 1)), 34 + 12 * float(puff == 1), Color(1, 1, 1, 0.85), PANEL)
+	draw_sky_visitors(Rect2(PANEL.position, Vector2(PANEL.size.x, 260)))
+	# rolling hills with a little tree, a bin and the flowers
+	clipped_ellipse(Vector2(PANEL.position.x + 180, hills_y + 60), Vector2(380, 110), outdoor(GREEN.darkened(0.15)), PANEL)
+	clipped_ellipse(Vector2(PANEL.end.x - 160, hills_y + 40), Vector2(360, 120), outdoor(GREEN.darkened(0.05)), PANEL)
+	draw_rect(Rect2(PANEL.position.x, hills_y + 60, PANEL.size.x, PANEL.end.y - hills_y - 60), outdoor(GREEN))
+	begin_room(Rect2(Vector2(PANEL.end.x - 300, hills_y - 210), ROOM * 0.36))
+	draw_garden_tree(Vector2(400, 760), 1.0)
+	end_room()
+	begin_room(Rect2(Vector2(PANEL.position.x + 30, hills_y - 230), ROOM * 0.36))
+	draw_bin(Vector2(120, 760))
+	draw_flowers(Vector2(260, 800), 6, 1.2)
+	end_room()
+	# sun and moon arc over the top of the picture
+	var is_day := minutes >= 360 and minutes < 1080
+	var progress := fposmod(minutes - 360.0, 720.0) / 720.0
+	var body := centre + Vector2.from_angle(PI + progress * PI) * (radius + 80)
+	if is_day:
+		for ring in 3:
+			draw_circle(body, 44 + ring * 12, Color(1.0, 0.9, 0.4, 0.14))
+		draw_circle(body, 40, Color(1.0, 0.85, 0.25))
+	else:
+		for ring in 2:
+			draw_circle(body, 42 + ring * 12, Color(1.0, 1.0, 0.85, 0.08))
+		draw_circle(body, 36, Color(0.97, 0.95, 0.82))
+		draw_circle(body + Vector2(14, -8), 30, sky)
+	# gold frame with little painted dots round it
+	draw_arc(centre, radius + 8, 0, TAU, 96, INK, 22)
+	draw_arc(centre, radius + 8, 0, TAU, 96, Color(0.98, 0.78, 0.35), 12)
+	for dot in 24:
+		draw_circle(centre + Vector2.from_angle(TAU * dot / 24.0) * (radius + 8), 5, PaintColours.RAINBOW[dot % 6])
 
 
 # ---------------------------------------------------------------- clock (face E) and card
