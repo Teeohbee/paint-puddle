@@ -167,7 +167,7 @@ func wind_one_step(direction: int) -> void:
 	if passed_through_target(minutes_before, wound_minutes):
 		overshoots_this_card += 1
 	feedback_text = ""
-	Sound.play("pick", 0.02, 1.0 + 0.15 * direction)
+	Sound.play("move", 0.02, 1.0 + 0.15 * direction)
 
 
 func passed_through_target(minutes_before: int, minutes_after: int) -> bool:
@@ -218,7 +218,7 @@ func confirm_time() -> void:
 	revealed_moment_text = moment_name(minutes_of_day)
 	if minutes_of_day == target_minutes_of_day:
 		feedback_text = "Yes! " + spoken_time(minutes_of_day)
-		Sound.play("bell")
+		Sound.play("chime")
 		finished_card_log.push_front("%s  %d presses  %.1fs  %d overshoots" % [
 			spoken_time(target_minutes_of_day), presses_this_card, seconds_this_card, overshoots_this_card])
 		if finished_card_log.size() > 6:
