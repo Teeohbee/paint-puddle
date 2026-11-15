@@ -272,17 +272,32 @@ func draw_sky_visitors(rect: Rect2) -> void:
 
 ## A circle cut to a box, so glows and clouds never spill out of their room.
 func clipped_circle(centre: Vector2, radius: float, colour: Color, box: Rect2) -> void:
-	var points := ThingDrawings.ellipse_points(centre, Vector2(radius, radius), 0.0, 48)
-	for index in points.size():
-		points[index] = points[index].clamp(box.position, box.end)
-	draw_colored_polygon(points, colour)
+	draw_clamped(ThingDrawings.ellipse_points(centre, Vector2(radius, radius), 0.0, 48), colour, box)
+
+
+## Clamps a convex shape into the box. Skips it when nothing is left inside
+## (a shape fully outside clamps flat onto the edge and can't be drawn).
+func draw_clamped(points: PackedVector2Array, colour: Color, box: Rect2) -> void:
+	var kept := PackedVector2Array()
+	for point in points:
+		var clamped := point.clamp(box.position, box.end)
+		if kept.is_empty() or not kept[kept.size() - 1].is_equal_approx(clamped):
+			kept.append(clamped)
+	if kept.size() > 1 and kept[0].is_equal_approx(kept[kept.size() - 1]):
+		kept.remove_at(kept.size() - 1)
+	if kept.size() < 3:
+		return
+	var twice_area := 0.0
+	for index in kept.size():
+		var next := kept[(index + 1) % kept.size()]
+		twice_area += kept[index].x * next.y - next.x * kept[index].y
+	if absf(twice_area) < 2.0:
+		return
+	draw_colored_polygon(kept, colour)
 
 
 func clipped_ellipse(centre: Vector2, radii: Vector2, colour: Color, box: Rect2) -> void:
-	var points := ThingDrawings.ellipse_points(centre, radii, 0.0, 48)
-	for index in points.size():
-		points[index] = points[index].clamp(box.position, box.end)
-	draw_colored_polygon(points, colour)
+	draw_clamped(ThingDrawings.ellipse_points(centre, radii, 0.0, 48), colour, box)
 
 
 func night_shade(lights: Array) -> void:
