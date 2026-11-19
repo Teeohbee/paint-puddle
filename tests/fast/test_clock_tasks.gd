@@ -150,12 +150,20 @@ func test_the_blobs_only_change_on_confirm_but_the_sky_follows_the_hands() -> vo
 	await tap("act")
 	check(mode.house.moment["name"] == "Bath time", "confirming plays the moment")
 
-func test_a_read_answer_plays_its_moment() -> void:
+func test_a_read_card_shows_its_moment_once_the_clock_has_wound() -> void:
+	var mode: ClockMode = await open_with_deck(3, [read_card(18, 0), set_card(9, 0)])
+	check(mode.house.moment["name"] == "Wake up", "still the last moment while the clock winds itself")
+	await seconds(1.7)
+	check(mode.house.moment["name"] == "Bath time", "then the blobs play the card's moment, so the house and sky agree: %s" % mode.house.moment["name"])
+
+func test_a_wrong_read_pick_plays_its_moment_then_goes_back_to_the_cards() -> void:
 	var mode: ClockMode = await open_with_deck(3, [read_card(18, 0), set_card(9, 0)])
 	await seconds(1.7)
-	check(mode.house.moment["name"] == "Wake up", "the moment doesn't change while the clock winds itself")
-	var right_index: int = mode.answer_cards.answers.find(18 * 60)
-	for move in right_index:
+	var wrong_index: int = 0 if mode.answer_cards.answers[0] != 18 * 60 else 1
+	var wrong_time: int = mode.answer_cards.answers[wrong_index]
+	for move in wrong_index:
 		await tap("move_right")
 	await tap("act")
-	check(mode.house.moment["name"] == "Bath time", "picking it plays bath time")
+	check(mode.house.moment["name"] == DayMoments.moment_at(wrong_time)["name"], "the picked time's moment plays")
+	await seconds(4.5)
+	check(mode.house.moment["name"] == "Bath time", "then back to the card's own moment: %s" % mode.house.moment["name"])

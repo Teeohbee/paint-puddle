@@ -145,6 +145,9 @@ func play_read_card() -> void:
 	await mode.wind_itself_by(minutes_forward, SECONDS_TO_WIND_TO_A_READ_TIME)
 	if this_card != current_card:
 		return
+	# The house is the am/pm clue, so once the clock has wound the blobs play this card's
+	# moment. (Set cards keep them back until A, so watching the house can't solve those.)
+	mode.house.show_moment(current_card.minutes_of_the_day)
 	var answers: Array[int] = ClockDeck.read_answers(rung, current_card.minutes_of_the_day, random)
 	mode.answer_cards.show_answers(answers, ClockRungs.shows_digital_helper(rung))
 	state = State.CHOOSING
@@ -232,6 +235,7 @@ func choose_answer() -> void:
 	await mode.wind_itself_by(-minutes_to_the_picked_time, SECONDS_TO_WIND_TO_A_PICKED_TIME)
 	if this_card != current_card:
 		return
+	mode.house.show_moment(current_card.minutes_of_the_day)
 	mode.task_banner.show_text("What time is it?")
 	state = State.CHOOSING
 
