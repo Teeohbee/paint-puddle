@@ -33,6 +33,30 @@ A level can set an optional `word_medium` in `hills/hills_levels.gd`, for
 example `"word": "SUN", "word_medium": "SUNSHINE"`. Without one, Medium spells
 the Easy word. Pots and paint are shared.
 
+## Clock mode
+
+Clock mode teaches reading and setting an analogue clock, to five minutes,
+with single minutes as a stretch. The clock is on the left and the blob
+household's doll's house is on the right, and the house shows what's
+happening at that time of a real 24-hour day.
+
+- **Set cards** ("Bath time - make it 6 in the evening"): wind the hands
+  with left and right (hold to speed up), then press A. The half of the day
+  counts. A wrong time plays its own moment, then the card asks again.
+- **Read cards** ("What time is it?"): the clock winds itself to a time;
+  pick one of three answers under it.
+- **Eight rungs**, in the order schools teach them: o'clock, half past, both
+  hands, quarter past, quarter to, 5 past, 5 to, minutes. Getting through a
+  rung's deck once opens the next rung and a tricky clock face. Rung 8 is
+  tap for a minute, hold for fives.
+- **Tricky clocks**: once a rung is cleared, the Tricky tile on the Clock
+  menu replays cleared rungs with a random unlocked face on every card.
+
+"Open all rungs" in the grown-up settings opens every rung and face without
+changing how far the player has climbed. The Clock part of Reset clears the
+climb and never the setting. Moments of the day live in
+`data/clock_moments.json`; the words for Clock mode are in `GLOSSARY.md`.
+
 ## Tests
 
 Tests use [gdUnit4](https://github.com/godot-gdunit-labs/gdUnit4), installed by
