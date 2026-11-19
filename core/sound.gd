@@ -58,6 +58,11 @@ func build_sounds() -> void:
 	Synth.add_note(move, 0.0, Synth.note_frequency(84), 0.08, "marimba", 0.35)
 	sounds["move"] = Synth.to_stream(move)
 
+	# The clock's tick as the hands step round: short and woody
+	var tick: PackedFloat32Array = Synth.empty_buffer(0.05)
+	Synth.add_note(tick, 0.0, Synth.note_frequency(96), 0.045, "marimba", 0.3)
+	sounds["tick"] = Synth.to_stream(tick)
+
 	var pick: PackedFloat32Array = Synth.empty_buffer(0.6)
 	Synth.add_note(pick, 0.0, Synth.note_frequency(84), 0.5, "bell", 0.35)
 	Synth.add_note(pick, 0.09, Synth.note_frequency(91), 0.5, "bell", 0.35)
