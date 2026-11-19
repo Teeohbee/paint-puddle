@@ -30,6 +30,11 @@ var timed_sweep: Tween
 var glowing_number: int = 0
 var glowing_minute: int = -1
 var glow: float = 0.0
+## Minute marks lit up, for counting single minutes in the rung 8 intro.
+var lit_minutes: Array[int] = []
+## How much of the minute hand is drawn, 0 to 1, so it can slide on in the
+## rung 3 intro.
+var minute_hand_reach: float = 1.0
 
 
 func wind_to(new_wound_minutes: int) -> void:
@@ -47,6 +52,21 @@ func sweep_to(new_wound_minutes: int, seconds: float) -> void:
 	timed_sweep = create_tween()
 	timed_sweep.tween_method(show_minutes, shown_minutes, float(new_wound_minutes), seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await timed_sweep.finished
+
+
+func light_minute(minute: int) -> void:
+	lit_minutes.append(minute)
+	queue_redraw()
+
+
+func clear_lit_minutes() -> void:
+	lit_minutes.clear()
+	queue_redraw()
+
+
+func set_minute_hand_reach(reach: float) -> void:
+	minute_hand_reach = reach
+	queue_redraw()
 
 
 func show_minutes(minutes: float) -> void:
@@ -126,6 +146,8 @@ func draw_face() -> void:
 
 
 func draw_glow() -> void:
+	for minute in lit_minutes:
+		draw_circle(point_at(angle_of_turns(minute / 60.0), RADIUS - 24), 18, Color(PaintColours.YELLOW, 0.8))
 	if glow <= 0.0:
 		return
 	var pulse: float = 0.75 + 0.25 * sin(Time.get_ticks_msec() / 250.0)
@@ -138,8 +160,8 @@ func draw_glow() -> void:
 
 func draw_hands() -> void:
 	draw_hand(angle_of_turns(ClockTime.hour_hand_turns(shown_minutes)), RADIUS * 0.5, 28.0)
-	if shows_minute_hand:
-		draw_hand(angle_of_turns(ClockTime.minute_hand_turns(shown_minutes)), RADIUS * 0.8, 15.0)
+	if shows_minute_hand and minute_hand_reach > 0.0:
+		draw_hand(angle_of_turns(ClockTime.minute_hand_turns(shown_minutes)), RADIUS * 0.8 * minute_hand_reach, 15.0)
 
 
 ## A rounded ink hand with a short tail behind the middle.

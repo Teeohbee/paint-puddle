@@ -12,6 +12,7 @@ const ANSWER_CARDS_BOTTOM: float = 1066.0
 ## Every visit starts at 7 in the morning.
 const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
+const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
 
 ## The rung picked on the Clock menu.
 static var rung_to_play: int = 1
@@ -50,7 +51,6 @@ func _ready() -> void:
 	add_child(house)
 	rung = rung_to_play
 	is_climbing = rung == ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
-	show_rung(rung)
 	effects_layer = Node2D.new()
 	effects_layer.name = "Effects"
 	add_hud()
@@ -59,7 +59,7 @@ func _ready() -> void:
 	add_child(task_runner)
 	task_runner.card_finished.connect(on_card_finished)
 	task_runner.deck_finished.connect(on_deck_finished)
-	task_runner.start_deck(rung, first_deck())
+	task_runner.start_deck(rung, first_deck(), true)
 	var pause_menu: PauseMenu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
@@ -138,6 +138,8 @@ func on_deck_finished() -> void:
 func show_rung(new_rung: int) -> void:
 	rung = new_rung
 	clock_face.shows_minute_hand = ClockRungs.shows_minute_hand(rung)
+	clock_face.minute_hand_reach = 1.0
+	controls_hint.caption = RUNG_8_CONTROLS if rung == ClockRungs.SINGLE_MINUTES_RUNG else ""
 	clock_face.queue_redraw()
 
 
