@@ -64,7 +64,11 @@ func test_the_starter_pack_loads_every_task_and_kind() -> void:
 	var types := {}
 	for task in tasks:
 		types[task.type] = true
-	assert_int(types.size()).is_equal(9)
+	assert_int(types.size()).is_equal(MeadowTask.TYPES.size())
+
+func test_number_stack_tasks_are_gone_and_skipped() -> void:
+	for details in [{"type": "join", "target": 3, "stacks": [1, 2], "text": "?"}, {"type": "split", "start": 5, "take": 2, "text": "?"}]:
+		assert_object(MeadowTask.from_dictionary(details)).is_null()
 
 func test_the_second_round_starts_with_cat_after_the_first_rainbow() -> void:
 	# Old saves are moved to index 41, so this order is load-bearing
