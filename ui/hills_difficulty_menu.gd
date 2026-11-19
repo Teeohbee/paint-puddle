@@ -9,7 +9,7 @@ func _ready() -> void:
 	add_child(MenuBackdrop.new())
 	make_heading("Rainbow Hills", 150)
 	var row: HBoxContainer = make_tile_row(400, 60)
-	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
+	var back: MenuTile = make_back_tile()
 	var easy: MenuTile = make_tile("Easy", "hills", PaintColours.GREEN, DIFFICULTY_TILE_SIZE)
 	var medium: MenuTile = make_tile("Medium", "hills", PaintColours.ORANGE, DIFFICULTY_TILE_SIZE)
 	medium.is_locked = not HillsLevels.is_medium_unlocked()

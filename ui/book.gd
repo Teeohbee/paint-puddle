@@ -11,7 +11,8 @@ extends MenuScreen
 ## gold star, and confetti the first time the Book opens after.
 
 const ENTRY_TILE_SIZE: Vector2 = Vector2(150, 150)
-const BACK_TILE_SIZE: Vector2 = Vector2(150, 150)
+## Smaller than the usual Back: on a page it tucks into the corner, as the page tabs take both sides.
+const PAGE_BACK_TILE_SIZE: Vector2 = Vector2(150, 150)
 const BACK_TILE_CORNER: Vector2 = Vector2(95, 80)
 const PAGE_TAB_SIZE: Vector2 = Vector2(110, 560)
 const TAB_GAP: int = 40
@@ -127,7 +128,7 @@ func show_sections(section_to_focus: String) -> void:
 	found_label.text = ""
 	var row: HBoxContainer = make_tile_row(330, 50)
 	page_holder = row.get_parent()
-	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(220, 220))
+	var back: MenuTile = make_back_tile()
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
 	var words: MenuTile = make_tile("Words", "", PaintColours.ORANGE, Vector2(400, 400))
 	words.picture = "thing:cat"
@@ -183,7 +184,7 @@ func show_page(new_page: int, focus: String = FOCUS_FIRST_ENTRY) -> void:
 	page_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(page_holder)
 
-	back_tile = make_tile("Back", "back", PaintColours.PURPLE, BACK_TILE_SIZE)
+	back_tile = make_tile("Back", "back", PaintColours.PURPLE, PAGE_BACK_TILE_SIZE)
 	back_tile.position = BACK_TILE_CORNER
 	back_tile.chosen.connect(go_back)
 	page_holder.add_child(back_tile)

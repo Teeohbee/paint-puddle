@@ -3,8 +3,9 @@ extends MenuScreen
 ## (or all of them, with "Open all rungs" in the grown-up settings). Starts on
 ## the rung after the one just cleared, or the one being climbed.
 ##
-## Once a rung is cleared, a Tricky tile under Back switches the menu to
-## tricky replays: cleared rungs again, with a random tricky face each card.
+## Back stands on its own left of the rungs. Once a rung is cleared, a Tricky
+## tile on the right switches the menu to tricky replays: cleared rungs again,
+## with a random tricky face each card.
 
 const RUNG_TILE_SIZE: Vector2 = Vector2(220, 220)
 const RUNGS_PER_ROW: int = 4
@@ -31,19 +32,9 @@ func _ready() -> void:
 	all_rungs_opened = GameSettings.get_setting("open_all_clock_rungs") == 1
 	var row: HBoxContainer = make_tile_row(200, 50)
 	row.get_parent().offset_bottom = 1040
-	var left_column: VBoxContainer = VBoxContainer.new()
-	left_column.add_theme_constant_override("separation", TILE_GAP)
-	left_column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(left_column)
-	back = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
-	left_column.add_child(back)
+	back = make_back_tile()
+	row.add_child(back)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
-	tricky = make_tile("Tricky", "clock", PaintColours.MAGENTA, Vector2(200, 200))
-	tricky.visible = rungs_cleared > 0 or all_rungs_opened
-	left_column.add_child(tricky)
-	tricky.chosen.connect(toggle_tricky)
-	if not tricky.visible:
-		ClockMode.tricky_replay = false
 	var rung_rows: VBoxContainer = VBoxContainer.new()
 	rung_rows.add_theme_constant_override("separation", TILE_GAP)
 	row.add_child(rung_rows)
@@ -57,6 +48,14 @@ func _ready() -> void:
 		tile.chosen.connect(play_rung.bind(rung))
 		rung_row.add_child(tile)
 		rung_tiles.append(tile)
+	# Tricky on the right, where Hills keeps More: the way on to something else
+	tricky = make_tile("Tricky", "clock", PaintColours.MAGENTA, BACK_TILE_SIZE)
+	tricky.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tricky.visible = rungs_cleared > 0 or all_rungs_opened
+	row.add_child(tricky)
+	tricky.chosen.connect(toggle_tricky)
+	if not tricky.visible:
+		ClockMode.tricky_replay = false
 	show_tricky_or_not()
 	first_focus = rung_tiles[rung_to_start_on(rungs_cleared) - 1]
 	if first_focus.is_locked:

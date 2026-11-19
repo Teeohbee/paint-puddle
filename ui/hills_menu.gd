@@ -30,8 +30,7 @@ func show_page(new_page: int, level_to_focus: int) -> void:
 	var row: HBoxContainer = make_tile_row(200, 50)
 	page_holder = row.get_parent()
 	page_holder.offset_bottom = 1040
-	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var back: MenuTile = make_back_tile()
 	row.add_child(back)
 	back.chosen.connect(go_back)
 	var level_rows: VBoxContainer = VBoxContainer.new()
