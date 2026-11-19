@@ -43,3 +43,36 @@ func test_the_afternoon_looks_the_same_as_the_morning() -> void:
 	assert_float(ClockTime.hour_hand_turns(minutes_of(15, 20))).is_equal_approx(ClockTime.hour_hand_turns(minutes_of(3, 20)), 0.0001)
 	assert_float(ClockTime.hour_hand_turns(minutes_of(0, 0))).is_equal_approx(0.0, 0.0001)
 	assert_float(ClockTime.hour_hand_turns(minutes_of(12, 0))).is_equal_approx(0.0, 0.0001)
+
+
+# ---- saying the time: numbers in digits, the rest in words
+
+func test_o_clock_and_half_past() -> void:
+	assert_str(ClockTime.time_words(minutes_of(3, 0))).is_equal("3 o'clock")
+	assert_str(ClockTime.time_words(minutes_of(3, 30))).is_equal("half past 3")
+
+func test_quarters() -> void:
+	assert_str(ClockTime.time_words(minutes_of(3, 15))).is_equal("quarter past 3")
+	assert_str(ClockTime.time_words(minutes_of(3, 45))).is_equal("quarter to 4")
+
+func test_fives_say_past_up_to_half_past_and_to_after_it() -> void:
+	assert_str(ClockTime.time_words(minutes_of(3, 5))).is_equal("5 past 3")
+	assert_str(ClockTime.time_words(minutes_of(3, 25))).is_equal("25 past 3")
+	assert_str(ClockTime.time_words(minutes_of(3, 35))).is_equal("25 to 4")
+	assert_str(ClockTime.time_words(minutes_of(3, 40))).is_equal("20 to 4")
+	assert_str(ClockTime.time_words(minutes_of(3, 55))).is_equal("5 to 4")
+
+func test_single_minutes_say_minutes() -> void:
+	assert_str(ClockTime.time_words(minutes_of(3, 17))).is_equal("17 minutes past 3")
+	assert_str(ClockTime.time_words(minutes_of(3, 1))).is_equal("1 minute past 3")
+	assert_str(ClockTime.time_words(minutes_of(3, 43))).is_equal("17 minutes to 4")
+	assert_str(ClockTime.time_words(minutes_of(3, 59))).is_equal("1 minute to 4")
+
+func test_the_hours_are_1_to_12_never_0_or_13() -> void:
+	assert_str(ClockTime.time_words(minutes_of(0, 0))).is_equal("12 o'clock")
+	assert_str(ClockTime.time_words(minutes_of(12, 30))).is_equal("half past 12")
+	assert_str(ClockTime.time_words(minutes_of(15, 0))).is_equal("3 o'clock")
+	# "to" names the next hour, round past 12 and past midnight
+	assert_str(ClockTime.time_words(minutes_of(12, 45))).is_equal("quarter to 1")
+	assert_str(ClockTime.time_words(minutes_of(23, 40))).is_equal("20 to 12")
+	assert_str(ClockTime.time_words(minutes_of(11, 50))).is_equal("10 to 12")
