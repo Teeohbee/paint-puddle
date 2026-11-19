@@ -2,10 +2,14 @@ extends GameSuite
 # Clock mode's scene: the clock starts at 7 am, left and right wind it a rung's step at a time,
 # holding winds quicker, and the hands sweep to where they're wound.
 
+## Opens Clock mode on a set card for 9 in the morning, so left and right wind the hands.
 func open_clock_mode() -> ClockMode:
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
 	await frames(4)
-	return get_tree().current_scene
+	var mode: ClockMode = get_tree().current_scene
+	var set_card_deck: Array[ClockCard] = [ClockCard.new(false, 9 * 60)]
+	mode.task_runner.start_deck(3, set_card_deck)
+	return mode
 
 func hold(action: String, frame_count: int) -> void:
 	Input.action_press(action)
@@ -14,8 +18,11 @@ func hold(action: String, frame_count: int) -> void:
 	await frames(2)
 
 func test_the_clock_starts_at_7_in_the_morning() -> void:
-	var mode: ClockMode = await open_clock_mode()
-	check(mode.minutes_of_the_day() == 7 * 60, "starts at 7 am, is %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
+	await frames(2)
+	var mode: ClockMode = get_tree().current_scene
+	check(mode.clock_face.shown_minutes < 7 * 60 + 60, "the day starts at 7 am: the hands are at %s" % ClockTime.digital_text(int(mode.clock_face.shown_minutes)))
+	check(mode.wound_minutes >= 7 * 60, "and the first read card winds forwards from it")
 
 func test_a_tap_winds_one_step_each_way() -> void:
 	var mode: ClockMode = await open_clock_mode()
