@@ -171,7 +171,7 @@ func confirm_set_time() -> void:
 		finish_card()
 		return
 	misses += 1
-	Sound.play("move", 0.02, 0.7)
+	Sound.play("plop", 0.02, 0.8)
 	show_message_then_the_card(what_was_made(made, current_card.minutes_of_the_day), set_card_words(current_card.minutes_of_the_day))
 	if misses >= MISSES_BEFORE_THE_GLOW:
 		glow_the_target()

@@ -42,7 +42,7 @@ var player_can_wind: bool = true
 
 
 func _ready() -> void:
-	Music.play_track("meadow")
+	Music.play_track("clock")
 	add_to_group("gameplay")
 	clock_face = ClockFace.new()
 	clock_face.name = "ClockFace"
@@ -190,7 +190,7 @@ func held_direction() -> int:
 func wind_by_steps(steps: int) -> void:
 	wound_minutes += steps * ClockRungs.step_minutes(rung)
 	clock_face.wind_to(wound_minutes)
-	Sound.play("move", 0.02, 1.0 + 0.15 * signi(steps))
+	Sound.play("tick", 0.02, 1.0 + 0.12 * signi(steps))
 
 
 func start_the_day() -> void:
@@ -206,7 +206,7 @@ func wind_in_fives(repeats: int) -> void:
 	for repeat in absi(repeats):
 		wound_minutes += ClockWinder.minutes_to_the_next_five(minutes_of_the_day(), signi(repeats))
 	clock_face.wind_to(wound_minutes)
-	Sound.play("move", 0.02, 1.0 + 0.15 * signi(repeats))
+	Sound.play("tick", 0.02, 1.0 + 0.12 * signi(repeats))
 
 
 ## The clock winds itself, over a set time however far it is.
