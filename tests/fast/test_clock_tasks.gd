@@ -167,3 +167,24 @@ func test_a_wrong_read_pick_plays_its_moment_then_goes_back_to_the_cards() -> vo
 	check(mode.house.moment["name"] == DayMoments.moment_at(wrong_time)["name"], "the picked time's moment plays")
 	await seconds(4.5)
 	check(mode.house.moment["name"] == "Bath time", "then back to the card's own moment: %s" % mode.house.moment["name"])
+
+
+# ---- answer card layout
+
+func test_the_answer_cards_stay_clear_of_the_house() -> void:
+	var mode: ClockMode = await open_with_deck(4, [read_card(14, 15), set_card(9, 0)])
+	await seconds(1.7)
+	var cards_right: float = mode.answer_cards.position.x + mode.answer_cards.size.x
+	check(cards_right <= ClockMode.HOUSE_BOX.position.x, "the cards end at %d, before the house at %d" % [cards_right, ClockMode.HOUSE_BOX.position.x])
+	check(mode.answer_cards.position.x >= 0.0, "and start on screen: %d" % mode.answer_cards.position.x)
+
+func test_the_longest_part_of_the_day_line_fits_inside_a_card() -> void:
+	var cards: ClockAnswerCards = ClockAnswerCards.new()
+	add_child(cards)
+	var font: Font = cards.get_theme_default_font()
+	var longest: String = "in the afternoon · pm"
+	var room: float = ClockAnswerCards.CARD_SIZE.x - ClockAnswerCards.CARD_PADDING - ClockAnswerCards.SUN_OR_MOON_ROOM
+	var font_size: int = cards.fitting_font_size(font, longest, room, ClockAnswerCards.SMALL_FONT_SIZE)
+	check(font.get_string_size(longest, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= room, "'%s' fits at size %d" % [longest, font_size])
+	check(font_size >= 20, "and stays readable: size %d" % font_size)
+	cards.queue_free()

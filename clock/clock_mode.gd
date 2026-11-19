@@ -9,6 +9,8 @@ const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
 const HOUSE_BOX: Rect2 = Rect2(895, 175, 1000, 890)
 ## The read answers sit under the clock, their bottoms on this line.
 const ANSWER_CARDS_BOTTOM: float = 1066.0
+## The answer cards stay this far clear of the house and the screen's left edge.
+const ANSWER_CARDS_MARGIN: float = 20.0
 ## Every visit starts at 7 in the morning.
 const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
@@ -82,7 +84,14 @@ func add_hud() -> void:
 	answer_cards.visible = false
 	hud.add_child(answer_cards)
 	answer_cards.bottom_y = ANSWER_CARDS_BOTTOM
-	answer_cards.position = Vector2(CLOCK_CENTRE.x - answer_cards.size.x / 2.0, ANSWER_CARDS_BOTTOM - answer_cards.size.y)
+	answer_cards.position = Vector2(answer_cards_left(answer_cards.size.x), ANSWER_CARDS_BOTTOM - answer_cards.size.y)
+
+
+## Centred under the clock where they fit, nudged left so they never cover the house.
+static func answer_cards_left(cards_width: float) -> float:
+	var centred_left: float = CLOCK_CENTRE.x - cards_width / 2.0
+	var furthest_right_left: float = HOUSE_BOX.position.x - ANSWER_CARDS_MARGIN - cards_width
+	return maxf(ANSWER_CARDS_MARGIN, minf(centred_left, furthest_right_left))
 
 
 ## The climbing rung picks up its saved deck where it left off (or deals and
