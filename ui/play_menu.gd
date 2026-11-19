@@ -3,7 +3,6 @@ extends MenuScreen
 ## Starts on whichever was picked last.
 
 const PLACE_TILE_SIZE: Vector2 = Vector2(250, 250)
-const BACK_TILE_SIZE: Vector2 = Vector2(210, 210)
 const TOP_ROW_Y: float = 260.0
 const BOTTOM_ROW_Y: float = 580.0
 const TILE_GAP: int = 40
@@ -13,7 +12,7 @@ func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
 	make_heading("Where shall we play?", 150)
-	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, BACK_TILE_SIZE)
+	var back: MenuTile = make_back_tile()
 	var meadow: MenuTile = make_tile("Meadow", "meadow", PaintColours.RED, PLACE_TILE_SIZE)
 	var hills: MenuTile = make_tile("Hills", "hills", PaintColours.BLUE, PLACE_TILE_SIZE)
 	var paint: MenuTile = make_tile("Paint", "paint", PaintColours.GREEN, PLACE_TILE_SIZE)

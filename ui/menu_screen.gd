@@ -3,6 +3,9 @@ extends Control
 ## Shared by every menu: puts the D-pad on the first tile, and if focus ever
 ## goes missing (a mouse click on nothing, say), puts it back.
 
+## Every menu's Back tile is this size, so it looks the same wherever you meet it.
+const BACK_TILE_SIZE: Vector2 = Vector2(200, 200)
+
 var first_focus: Control
 
 ## The tile last picked on each screen, so coming back to a screen lands on
@@ -51,6 +54,13 @@ func make_tile(word: String, icon_kind: String, colour: Color, tile_size: Vector
 	tile.icon_kind = icon_kind
 	tile.paint_colour = colour
 	tile.custom_minimum_size = tile_size
+	return tile
+
+
+## The purple Back arrow, sized and centred the same on every menu.
+func make_back_tile() -> MenuTile:
+	var tile: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, BACK_TILE_SIZE)
+	tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return tile
 
 

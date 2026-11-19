@@ -8,7 +8,7 @@ func _ready() -> void:
 	add_child(MenuBackdrop.new())
 	make_heading("Which colours?", 150)
 	var row: HBoxContainer = make_tile_row(360)
-	var back: MenuTile = make_tile("Back", "back", PaintColours.PURPLE, Vector2(240, 240))
+	var back: MenuTile = make_back_tile()
 	var paint_colours: MenuTile = make_tile("Paint colours", "colour_set:paint", PaintColours.GREEN, Vector2(460, 360))
 	var printer_colours: MenuTile = make_tile("Printer colours", "colour_set:printer", PaintColours.BLUE, Vector2(460, 360))
 	for tile in [back, paint_colours, printer_colours]:

@@ -35,7 +35,7 @@ func _ready() -> void:
 	left_column.add_theme_constant_override("separation", TILE_GAP)
 	left_column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(left_column)
-	back = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
+	back = make_back_tile()
 	left_column.add_child(back)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
 	tricky = make_tile("Tricky", "clock", PaintColours.MAGENTA, Vector2(200, 200))
