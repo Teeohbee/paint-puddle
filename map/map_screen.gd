@@ -66,6 +66,17 @@ func name_of(target: String) -> String:
 	return ""
 
 
+## The box around every shape of one target, or an empty one if there's none.
+func bounds_of(target: String) -> Rect2:
+	var bounds: Rect2 = Rect2()
+	var found_one: bool = false
+	for shape in shapes:
+		if shape.target_id == target:
+			bounds = shape.bounds if not found_one else bounds.merge(shape.bounds)
+			found_one = true
+	return bounds
+
+
 ## Rings (or lightens) every shape of one target. "" clears it.
 func set_highlight(target: String) -> void:
 	if target == highlighted_target:

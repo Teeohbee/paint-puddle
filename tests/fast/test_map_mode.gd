@@ -146,3 +146,31 @@ func test_map_mode() -> void:
 	var pale = shape.fills[0].color
 	mode.screen.paint_country(shape.target_id)
 	check(shape.fills[0].color != pale and shape.fills[0].color.is_equal_approx(shape.rainbow_colour), "painting gives a country its full colour")
+
+
+func pill_rect(mode) -> Rect2:
+	return mode.name_pill.get_global_rect()
+
+func bounds_of(mode, target) -> Rect2:
+	for shape in mode.screen.shapes:
+		if shape.target_id == target: return shape.bounds
+	return Rect2()
+
+func test_the_name_steps_aside_for_a_country_low_on_the_screen() -> void:
+	get_tree().change_scene_to_file("res://map/map_mode.tscn")
+	await frames(4)
+	var mode = get_tree().current_scene
+	mode.zoom_to("africa")
+	await frames(50)
+	mode.pointer.position = label_of(mode, "egypt")
+	await frames(3)
+	var middle = MapData.SCREEN_SIZE.x / 2.0
+	check(absf(pill_rect(mode).get_center().x - middle) < 2.0, "up north the name sits in the middle: %s" % pill_rect(mode))
+	mode.pointer.position = label_of(mode, "south_africa")
+	await frames(3)
+	check(mode.name_label.text == "South Africa", "the tip is over South Africa")
+	check(not pill_rect(mode).intersects(bounds_of(mode, "south_africa")), "the name keeps off South Africa: %s vs %s" % [pill_rect(mode), bounds_of(mode, "south_africa")])
+	check(pill_rect(mode).end.y <= MapData.SCREEN_SIZE.y, "and stays on the screen")
+	mode.pointer.position = label_of(mode, "egypt")
+	await frames(3)
+	check(absf(pill_rect(mode).get_center().x - middle) < 2.0, "back up north it returns to the middle: %s" % pill_rect(mode))

@@ -21,6 +21,9 @@ const ZOOM_OUT_SCALE: float = 1.6
 const ZOOM_IN_START_SCALE: float = 0.7
 const NAME_PILL_COLOUR: Color = Color(1.0, 0.97, 0.9, 0.92)
 const NAME_FONT_SIZE: int = 76
+const NAME_PILL_GAP: float = 40.0
+## How far the name keeps from the edge of the shape it names.
+const NAME_PILL_CLEARANCE: float = 16.0
 
 var screen_name: String = WORLD
 var screen: MapScreen
@@ -83,10 +86,6 @@ func add_hud() -> void:
 	globe_button.visible = false
 	hud.add_child(globe_button)
 	name_pill = PanelContainer.new()
-	name_pill.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	name_pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	name_pill.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	name_pill.offset_bottom = -40
 	name_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var pill_style: StyleBoxFlat = StyleBoxFlat.new()
 	pill_style.bg_color = NAME_PILL_COLOUR
@@ -122,8 +121,27 @@ func update_target_under_pointer() -> void:
 	name_pill.visible = now_over != ""
 	if now_over != "":
 		name_label.text = screen.name_of(now_over)
+		place_name_pill(now_over)
 	if screen_name != WORLD and now_over != "":
 		last_continent = screen_name
+
+
+## Along the bottom in the middle, unless that covers the shape being named (South Africa, say):
+## then whichever bottom corner covers least of it.
+func place_name_pill(target: String) -> void:
+	name_pill.reset_size()
+	var pill_size: Vector2 = name_pill.size
+	var y: float = MapData.SCREEN_SIZE.y - NAME_PILL_GAP - pill_size.y
+	var keep_off: Rect2 = screen.bounds_of(target).grow(NAME_PILL_CLEARANCE)
+	var spots: Array[float] = [(MapData.SCREEN_SIZE.x - pill_size.x) / 2.0, NAME_PILL_GAP, MapData.SCREEN_SIZE.x - NAME_PILL_GAP - pill_size.x]
+	var best_x: float = spots[0]
+	var least_covered: float = INF
+	for x in spots:
+		var covered: float = Rect2(Vector2(x, y), pill_size).intersection(keep_off).get_area()
+		if covered < least_covered:
+			least_covered = covered
+			best_x = x
+	name_pill.position = Vector2(best_x, y)
 
 
 func press_a() -> void:
