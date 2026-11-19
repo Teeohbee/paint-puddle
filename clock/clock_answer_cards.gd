@@ -5,10 +5,15 @@ extends Control
 ## move between them; the runner asks which one is picked. A wrong pick
 ## fades away, so it can't be picked again.
 
-const CARD_SIZE: Vector2 = Vector2(300, 124)
+## Three of these and the gaps have to fit between the screen edge and the house.
+const CARD_SIZE: Vector2 = Vector2(276, 124)
 ## Taller with the digital time on its own line under the rest.
-const CARD_SIZE_WITH_DIGITAL: Vector2 = Vector2(300, 158)
-const GAP: float = 16.0
+const CARD_SIZE_WITH_DIGITAL: Vector2 = Vector2(276, 158)
+const GAP: float = 12.0
+## Room left and right inside a card for the words, clear of the chosen card's border.
+const CARD_PADDING: float = 36.0
+## The sun or moon's width plus the space before the words.
+const SUN_OR_MOON_ROOM: float = 33.0
 const WORDS_FONT_SIZE: int = 40
 const SMALL_FONT_SIZE: int = 26
 
@@ -117,14 +122,17 @@ func draw_answer_card(font: Font, index: int, top_left: Vector2) -> void:
 	draw_style_box(card, Rect2(top_left, card_size()))
 	var ink: Color = Color(PaintColours.INK, opacity)
 	var words: String = ClockTime.time_words(time)
-	var words_size: int = fitting_font_size(font, words, CARD_SIZE.x - 30)
+	var words_size: int = fitting_font_size(font, words, CARD_SIZE.x - CARD_PADDING, WORDS_FONT_SIZE)
 	draw_centred(font, words, top_left + Vector2(CARD_SIZE.x / 2.0, 50), words_size, ink)
 	var small_line: String = "%s · %s" % [part_of_the_day_words(time), ClockTime.am_or_pm(time)]
 	if shows_digital_helper:
 		draw_centred(font, ClockTime.digital_text(time), top_left + Vector2(CARD_SIZE.x / 2.0, 132), SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6 * opacity))
-	draw_centred(font, small_line, top_left + Vector2(CARD_SIZE.x / 2.0 + 18, 96), SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6 * opacity))
-	var small_width: float = font.get_string_size(small_line, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE).x
-	draw_sun_or_moon(top_left + Vector2(CARD_SIZE.x / 2.0 - small_width / 2.0 - 4, 87), time, opacity)
+	# The sun or moon and the words after it are centred together, shrinking to fit the card.
+	var small_size: int = fitting_font_size(font, small_line, CARD_SIZE.x - CARD_PADDING - SUN_OR_MOON_ROOM, SMALL_FONT_SIZE)
+	var small_width: float = font.get_string_size(small_line, HORIZONTAL_ALIGNMENT_LEFT, -1, small_size).x
+	var line_left: float = top_left.x + (CARD_SIZE.x - SUN_OR_MOON_ROOM - small_width) / 2.0
+	draw_sun_or_moon(Vector2(line_left + 12, top_left.y + 87), time, opacity)
+	draw_string(font, Vector2(line_left + SUN_OR_MOON_ROOM, top_left.y + 96 + small_size * 0.35), small_line, HORIZONTAL_ALIGNMENT_LEFT, -1, small_size, Color(PaintColours.INK, 0.6 * opacity))
 
 
 ## "in the morning", "at night"...
@@ -146,11 +154,12 @@ func draw_sun_or_moon(centre: Vector2, time: int, opacity: float) -> void:
 	draw_circle(centre, 10, Color(PaintColours.YELLOW, opacity))
 
 
-func fitting_font_size(font: Font, text: String, room: float) -> int:
-	for font_size in range(WORDS_FONT_SIZE, 23, -2):
+## The biggest size up to largest_size, in steps of two, that fits the room.
+func fitting_font_size(font: Font, text: String, room: float, largest_size: int) -> int:
+	for font_size in range(largest_size, 17, -2):
 		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= room:
 			return font_size
-	return 24
+	return 18
 
 
 func draw_centred(font: Font, text: String, centre: Vector2, font_size: int, colour: Color) -> void:
