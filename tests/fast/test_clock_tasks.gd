@@ -150,6 +150,31 @@ func test_the_blobs_only_change_on_confirm_but_the_sky_follows_the_hands() -> vo
 	await tap("act")
 	check(mode.house.moment["name"] == "Bath time", "confirming plays the moment")
 
+func test_while_the_hands_are_away_from_the_moment_the_blobs_rest_by_the_sky() -> void:
+	var mode: ClockMode = await open_with_deck(1, [set_card(4, 0), set_card(9, 0)])
+	check(mode.house.acted_out_moment()["doing"] == "wake", "at 7am the blobs act out waking up")
+	check(mode.house.highlighted_room() == "bedroom", "with the bedroom outlined")
+	for step in 9:
+		await tap("move_left")
+	await seconds(0.5)
+	check(mode.minutes_of_the_day() == 22 * 60, "wound back to 10 at night: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	check(mode.house.acted_out_moment()["doing"] == "asleep" and mode.house.acted_out_moment()["room"] == "bedroom", "in the dark they're asleep in bed: %s" % mode.house.acted_out_moment())
+	check(mode.house.highlighted_room() == "", "and no room is outlined, so nothing is given away")
+	for step in 10:
+		await tap("move_right")
+	await seconds(0.5)
+	check(mode.house.acted_out_moment()["doing"] == "sofa", "by day they rest on the sofa: %s" % mode.house.acted_out_moment())
+	check(mode.house.highlighted_room() == "", "still no outline")
+
+func test_winding_back_to_the_moment_s_own_time_acts_it_out_again() -> void:
+	var mode: ClockMode = await open_with_deck(1, [set_card(4, 0), set_card(9, 0)])
+	await tap("move_right")
+	await seconds(0.5)
+	check(mode.house.acted_out_moment()["doing"] == "sofa", "away at 8am they rest on the sofa, not breakfast: %s" % mode.house.acted_out_moment())
+	await tap("move_left")
+	await seconds(0.5)
+	check(mode.house.acted_out_moment()["doing"] == "wake", "back at 7am, waking up again")
+
 func test_a_read_card_shows_its_moment_once_the_clock_has_wound() -> void:
 	var mode: ClockMode = await open_with_deck(3, [read_card(18, 0), set_card(9, 0)])
 	check(mode.house.moment["name"] == "Wake up", "still the last moment while the clock winds itself")
