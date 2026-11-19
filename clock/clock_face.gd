@@ -23,10 +23,56 @@ var blob_colour: Color = PaintColours.RED
 ## Where the hands are wound to, and where they're drawn on the way there.
 var wound_minutes: int = 0
 var shown_minutes: float = 0.0
+## A sweep that takes a set time, when the clock winds itself.
+var timed_sweep: Tween
+## A soft glow behind a number (0 for none) and a minute mark (-1 for none),
+## to help after a second miss. Moving the hands fades it.
+var glowing_number: int = 0
+var glowing_minute: int = -1
+var glow: float = 0.0
 
 
 func wind_to(new_wound_minutes: int) -> void:
+	if timed_sweep != null:
+		timed_sweep.kill()
+		timed_sweep = null
+	if new_wound_minutes != wound_minutes:
+		fade_glow()
 	wound_minutes = new_wound_minutes
+
+
+## Winds there in the given time, however far it is, easing in and out.
+func sweep_to(new_wound_minutes: int, seconds: float) -> void:
+	wind_to(new_wound_minutes)
+	timed_sweep = create_tween()
+	timed_sweep.tween_method(show_minutes, shown_minutes, float(new_wound_minutes), seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await timed_sweep.finished
+
+
+func show_minutes(minutes: float) -> void:
+	shown_minutes = minutes
+	queue_redraw()
+
+
+## Glows the number the time is named by, and on rungs that need it the
+## minute mark the minute hand should reach.
+func glow_target(number: int, minute: int) -> void:
+	glowing_number = number
+	glowing_minute = minute
+	glow = 1.0
+	queue_redraw()
+
+
+func fade_glow() -> void:
+	if glow > 0.0:
+		var fade: Tween = create_tween()
+		fade.tween_property(self, "glow", 0.0, 0.5)
+		fade.tween_callback(clear_glow)
+
+
+func clear_glow() -> void:
+	glowing_number = 0
+	glowing_minute = -1
 
 
 ## Straight there, no sweep.
@@ -41,6 +87,10 @@ func is_sweeping() -> bool:
 
 
 func _process(delta: float) -> void:
+	if glow > 0.0:
+		queue_redraw()
+	if timed_sweep != null and timed_sweep.is_running():
+		return
 	if not is_sweeping():
 		return
 	var catch_up: float = 1.0 - exp(-delta * SWEEP_SPEED)
@@ -52,6 +102,7 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	draw_face()
+	draw_glow()
 	draw_hands()
 	draw_puddle_blob()
 
@@ -72,6 +123,17 @@ func draw_face() -> void:
 		var colour: Color = number_colour(number)
 		draw_centred_text(font, str(number), spot + Vector2(3, 3), colour.darkened(0.45))
 		draw_centred_text(font, str(number), spot, colour.darkened(0.15))
+
+
+func draw_glow() -> void:
+	if glow <= 0.0:
+		return
+	var pulse: float = 0.75 + 0.25 * sin(Time.get_ticks_msec() / 250.0)
+	var glow_colour: Color = Color(PaintColours.YELLOW, 0.55 * glow * pulse)
+	if glowing_number > 0:
+		draw_circle(point_at(angle_of_turns(glowing_number / 12.0), RADIUS - 90), 56, glow_colour)
+	if glowing_minute >= 0:
+		draw_circle(point_at(angle_of_turns(glowing_minute / 60.0), RADIUS - 24), 26, glow_colour)
 
 
 func draw_hands() -> void:
