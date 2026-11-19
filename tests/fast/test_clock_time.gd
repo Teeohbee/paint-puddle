@@ -76,3 +76,37 @@ func test_the_hours_are_1_to_12_never_0_or_13() -> void:
 	assert_str(ClockTime.time_words(minutes_of(12, 45))).is_equal("quarter to 1")
 	assert_str(ClockTime.time_words(minutes_of(23, 40))).is_equal("20 to 12")
 	assert_str(ClockTime.time_words(minutes_of(11, 50))).is_equal("10 to 12")
+
+
+# ---- which half of the day: the part of the day in words, am/pm small alongside
+
+func test_parts_of_the_day_change_at_6_12_5_and_8() -> void:
+	var expected_parts: Dictionary = {
+		minutes_of(5, 59): "night", minutes_of(6, 0): "morning",
+		minutes_of(11, 59): "morning", minutes_of(12, 0): "afternoon",
+		minutes_of(16, 59): "afternoon", minutes_of(17, 0): "evening",
+		minutes_of(19, 59): "evening", minutes_of(20, 0): "night",
+		minutes_of(0, 0): "night",
+	}
+	for minutes in expected_parts:
+		assert_str(ClockTime.part_of_the_day(minutes)).override_failure_message(
+			"%s should be %s" % [ClockTime.digital_text(minutes), expected_parts[minutes]]).is_equal(expected_parts[minutes])
+
+func test_am_before_noon_and_pm_from_it() -> void:
+	assert_str(ClockTime.am_or_pm(minutes_of(0, 0))).is_equal("am")
+	assert_str(ClockTime.am_or_pm(minutes_of(11, 59))).is_equal("am")
+	assert_str(ClockTime.am_or_pm(minutes_of(12, 0))).is_equal("pm")
+	assert_str(ClockTime.am_or_pm(minutes_of(23, 59))).is_equal("pm")
+
+func test_digital_time_is_on_the_12_hour_clock() -> void:
+	assert_str(ClockTime.digital_text(minutes_of(3, 5))).is_equal("3:05")
+	assert_str(ClockTime.digital_text(minutes_of(15, 45))).is_equal("3:45")
+	assert_str(ClockTime.digital_text(minutes_of(0, 0))).is_equal("12:00")
+	assert_str(ClockTime.digital_text(minutes_of(12, 30))).is_equal("12:30")
+
+func test_the_time_with_its_part_of_the_day() -> void:
+	# o'clock drops the "o'clock": "6 in the evening"
+	assert_str(ClockTime.time_in_the_day_words(minutes_of(18, 0))).is_equal("6 in the evening")
+	assert_str(ClockTime.time_in_the_day_words(minutes_of(15, 40))).is_equal("20 to 4 in the afternoon")
+	assert_str(ClockTime.time_in_the_day_words(minutes_of(8, 30))).is_equal("half past 8 in the morning")
+	assert_str(ClockTime.time_in_the_day_words(minutes_of(2, 0))).is_equal("2 at night")

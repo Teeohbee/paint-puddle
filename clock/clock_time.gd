@@ -72,3 +72,38 @@ static func hour_on_the_face(minutes_of_the_day: int) -> int:
 @warning_ignore("integer_division")
 static func hour_of_the_day(minutes_of_the_day: int) -> int:
 	return minutes_of_the_day / MINUTES_IN_AN_HOUR
+
+
+## Morning (6 am to 12), afternoon (12 to 5), evening (5 to 8) or night
+## (8 pm to 6 am). It's how a card says which half of the day it means.
+static func part_of_the_day(minutes_of_the_day: int) -> String:
+	var hour: int = hour_of_the_day(minutes_of_the_day)
+	if hour >= 6 and hour < 12:
+		return "morning"
+	if hour >= 12 and hour < 17:
+		return "afternoon"
+	if hour >= 17 and hour < 20:
+		return "evening"
+	return "night"
+
+
+## "am" before noon, "pm" from noon. Shown small beside the part of the day.
+static func am_or_pm(minutes_of_the_day: int) -> String:
+	if minutes_of_the_day < MINUTES_IN_HALF_A_DAY:
+		return "am"
+	return "pm"
+
+
+## The time as a digital clock shows it, on the 12-hour clock: "3:05".
+static func digital_text(minutes_of_the_day: int) -> String:
+	return "%d:%02d" % [hour_on_the_face(minutes_of_the_day), minutes_of_the_day % MINUTES_IN_AN_HOUR]
+
+
+## The time with its part of the day, as a card says it: "6 in the evening",
+## "20 to 4 in the afternoon", "2 at night".
+static func time_in_the_day_words(minutes_of_the_day: int) -> String:
+	var words: String = time_words(minutes_of_the_day).trim_suffix(" o'clock")
+	var part: String = part_of_the_day(minutes_of_the_day)
+	if part == "night":
+		return "%s at night" % words
+	return "%s in the %s" % [words, part]
