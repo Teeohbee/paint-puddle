@@ -6,9 +6,13 @@ extends Node2D
 ## round. Ported from the prototype on prototype/house-look (variant B).
 ##
 ## The sky, sun and moon, stars and the lights follow the hands live
-## (live_minutes, set every frame). The blobs only change when a time is
+## (live_minutes, set every frame). The moment only changes when a time is
 ## confirmed (show_moment), so a set card can't be solved by watching them.
-## The moment's room gets a faint warm outline and the others dim a little.
+## The blobs act the moment out only while the hands show its time; while
+## the hands are away they rest by the sky (asleep in the dark, on the sofa
+## by day), so the house never shows the wrong part of the day and gives
+## nothing away the sky doesn't. The moment's room gets a faint warm outline
+## and the others dim a little, only while it's acted out.
 ##
 ## Everything is drawn in the prototype's own space (PANEL below), and the
 ## node's position and scale fit it to the space it's given.
@@ -41,6 +45,8 @@ const MOMENT_ROOM_OUTLINE: Color = Color(1.0, 0.8, 0.35, 0.85)
 var live_minutes_of_the_day: float = 7 * 60
 ## The moment the blobs are doing: the last time confirmed.
 var moment: Dictionary = {}
+## The time that moment was confirmed at. The blobs act it out only while the hands show it.
+var moment_minutes_of_the_day: int = 7 * 60
 ## The little blob is the player's own, in the colour it is in the Meadow and Hills.
 var player_blob_colour: Color = PaintMixing.colour_of("clean")
 var time: float = 0.0
@@ -51,7 +57,7 @@ var room_transform: Transform2D = Transform2D.IDENTITY
 func _ready() -> void:
 	font = ThemeDB.fallback_font if get_tree().root.theme == null else get_tree().root.theme.default_font
 	if moment.is_empty():
-		moment = DayMoments.moment_at(int(live_minutes_of_the_day))
+		show_moment(int(live_minutes_of_the_day))
 
 
 ## Fits the house into a box on screen, as big as it goes without stretching.
@@ -65,6 +71,7 @@ func fit_into(box: Rect2) -> void:
 ## The blobs go and do what happens at this time.
 func show_moment(minutes_of_the_day: int) -> void:
 	moment = DayMoments.moment_at(minutes_of_the_day)
+	moment_minutes_of_the_day = posmod(minutes_of_the_day, ClockTime.MINUTES_IN_A_DAY)
 	queue_redraw()
 
 
@@ -81,16 +88,47 @@ func live_minutes() -> float:
 	return fposmod(live_minutes_of_the_day, ClockTime.MINUTES_IN_A_DAY)
 
 
+## Closer than this and the hands count as showing the moment's time. Under
+## a minute, so rung 8's single minutes still count as away.
+const SAME_TIME_MINUTES: float = 0.5
+## What the blobs do while the hands are away from the moment's time.
+const RESTING_IN_THE_DARK: Dictionary = {"room": "bedroom", "doing": "asleep"}
+const RESTING_BY_DAY: Dictionary = {"room": "living", "doing": "sofa"}
+## Darker than this and the blobs rest in bed.
+const DARK_ENOUGH_FOR_BED: float = 0.2
+
+
+func hands_show_the_moment() -> bool:
+	var apart: float = absf(live_minutes() - moment_minutes_of_the_day)
+	return minf(apart, ClockTime.MINUTES_IN_A_DAY - apart) < SAME_TIME_MINUTES
+
+
+## The moment while the hands show its time, otherwise resting by the sky.
+func acted_out_moment() -> Dictionary:
+	if hands_show_the_moment():
+		return moment
+	if darkness() > DARK_ENOUGH_FOR_BED:
+		return RESTING_IN_THE_DARK
+	return RESTING_BY_DAY
+
+
+## The room with the warm outline, or "" while the blobs are resting.
+func highlighted_room() -> String:
+	if not hands_show_the_moment():
+		return ""
+	return moment_room()
+
+
 func doing() -> String:
-	return moment.get("doing", "asleep")
+	return acted_out_moment().get("doing", "asleep")
 
 
 func visitor() -> String:
-	return moment.get("visitor", "")
+	return acted_out_moment().get("visitor", "")
 
 
 func moment_room() -> String:
-	return moment.get("room", "bedroom")
+	return acted_out_moment().get("room", "bedroom")
 
 
 # ---------------------------------------------------------------- room space
@@ -535,7 +573,7 @@ func draw_kitchen(occupied: bool) -> void:
 	for square in 11:
 		draw_rect(Rect2(200 + square * 40, 640 + (square % 2) * 15, 20, 15), RED.lightened(0.2))
 	if at_table:
-		draw_meal(moment.get("meal", "tea"))
+		draw_meal(acted_out_moment().get("meal", "tea"))
 	if occupied and doing == "drink":
 		blob(Vector2(250, 640), LITTLE, player_blob_colour, "open", 2.6, Vector2(-1, -0.4))
 		var glass := Rect2(196, 630, 30, 44)
@@ -831,13 +869,13 @@ func draw_dolls_house() -> void:
 	for entry in rooms:
 		begin_room(Rect2(entry[1], room_size))
 		draw_room(entry[0], entry[0] == moment_room())
-		if entry[0] != moment_room():
+		if highlighted_room() != "" and entry[0] != highlighted_room():
 			draw_rect(Rect2(Vector2.ZERO, ROOM), Color(0, 0, 0, OTHER_ROOMS_DIMMED))
 		end_room()
 	draw_line(Vector2(house.position.x, downstairs_top - 7), Vector2(house.end.x, downstairs_top - 7), INK, 14)
 	draw_line(Vector2(left + room_size.x + 7, house.position.y), Vector2(left + room_size.x + 7, house.end.y), INK, 14)
 	for entry in rooms:
-		if entry[0] == moment_room():
+		if entry[0] == highlighted_room():
 			draw_rect(Rect2(entry[1], room_size).grow(-4), MOMENT_ROOM_OUTLINE, false, 8)
 	# garden down the side
 	var garden_left := house.end.x + 30
@@ -848,7 +886,7 @@ func draw_dolls_house() -> void:
 	if visitor() == "hedgehog":
 		draw_hedgehog(Vector2(230 + sin(time * 0.4) * 50, 790), 1.8)
 	end_room()
-	if moment_room() == "garden":
+	if highlighted_room() == "garden":
 		var garden_box: Rect2 = Rect2(Vector2(garden_left - 10, ground_y - 760 * 0.5), Vector2(PANEL.end.x - garden_left, 760 * 0.5 + 40))
 		draw_rect(garden_box.grow(-8), MOMENT_ROOM_OUTLINE, false, 8)
 	var playing_outside: bool = doing() == "play" or doing() == "watering"

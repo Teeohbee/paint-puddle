@@ -99,8 +99,11 @@ func clear_glow() -> void:
 	glowing_minute = -1
 
 
-## Straight there, no sweep.
+## Straight there, no sweep. Stops any sweep still on its way, or it would drag the hands off again.
 func jump_to(new_wound_minutes: int) -> void:
+	if timed_sweep != null:
+		timed_sweep.kill()
+		timed_sweep = null
 	wound_minutes = new_wound_minutes
 	shown_minutes = new_wound_minutes
 	queue_redraw()
