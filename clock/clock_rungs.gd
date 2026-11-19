@@ -7,17 +7,18 @@ extends RefCounted
 const RUNG_COUNT: int = 8
 
 ## title: what the rung teaches, on its menu tile.
+## example_minutes: the time its menu tile's little clock shows.
 ## minutes_past_the_hour: the times it asks for, in any hour of the day.
 ## step_minutes: how far one press winds the clock.
 const RUNGS: Array[Dictionary] = [
-	{"title": "o'clock", "minutes_past_the_hour": [0], "step_minutes": 60},
-	{"title": "half past", "minutes_past_the_hour": [30], "step_minutes": 30},
-	{"title": "o'clock and half past", "minutes_past_the_hour": [0, 30], "step_minutes": 30},
-	{"title": "quarter past", "minutes_past_the_hour": [15], "step_minutes": 15},
-	{"title": "quarter to", "minutes_past_the_hour": [45], "step_minutes": 15},
-	{"title": "5 past", "minutes_past_the_hour": [5, 10, 20, 25], "step_minutes": 5},
-	{"title": "5 to", "minutes_past_the_hour": [35, 40, 50, 55], "step_minutes": 5},
-	{"title": "minutes", "minutes_past_the_hour": [], "step_minutes": 1},
+	{"title": "o'clock", "example_minutes": 180, "minutes_past_the_hour": [0], "step_minutes": 60},
+	{"title": "half past", "example_minutes": 210, "minutes_past_the_hour": [30], "step_minutes": 30},
+	{"title": "both hands", "example_minutes": 210, "minutes_past_the_hour": [0, 30], "step_minutes": 30},
+	{"title": "quarter past", "example_minutes": 195, "minutes_past_the_hour": [15], "step_minutes": 15},
+	{"title": "quarter to", "example_minutes": 225, "minutes_past_the_hour": [45], "step_minutes": 15},
+	{"title": "5 past", "example_minutes": 190, "minutes_past_the_hour": [5, 10, 20, 25], "step_minutes": 5},
+	{"title": "5 to", "example_minutes": 220, "minutes_past_the_hour": [35, 40, 50, 55], "step_minutes": 5},
+	{"title": "minutes", "example_minutes": 197, "minutes_past_the_hour": [], "step_minutes": 1},
 ]
 
 ## The tricky faces, in the order they unlock: one for each rung cleared.
@@ -35,6 +36,10 @@ const SINGLE_MINUTES_RUNG: int = 8
 
 static func title(rung: int) -> String:
 	return RUNGS[rung - 1]["title"]
+
+
+static func example_minutes(rung: int) -> int:
+	return RUNGS[rung - 1]["example_minutes"]
 
 
 static func step_minutes(rung: int) -> int:
@@ -83,6 +88,20 @@ static func minute_hand_name(rung: int) -> String:
 ## minutes first get tricky. It fades out again after them.
 static func shows_digital_helper(rung: int) -> bool:
 	return DIGITAL_HELPER_RUNGS.has(rung)
+
+
+## The rung being climbed: the lowest one not cleared yet. Once all eight
+## are cleared there isn't one.
+static func climbing_rung(rungs_cleared: int) -> int:
+	if rungs_cleared >= RUNG_COUNT:
+		return 0
+	return rungs_cleared + 1
+
+
+## Whether a rung can be played: cleared ones, the one being climbed, or all
+## of them while a grown-up has opened them.
+static func is_open(rung: int, rungs_cleared: int, all_rungs_opened: bool) -> bool:
+	return all_rungs_opened or rung <= rungs_cleared + 1
 
 
 ## The tricky faces open for this many rungs cleared.

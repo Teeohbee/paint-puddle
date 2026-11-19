@@ -60,3 +60,19 @@ func test_each_rung_cleared_unlocks_the_next_tricky_face() -> void:
 func test_every_rung_has_a_short_title() -> void:
 	for rung in EVERY_RUNG:
 		assert_str(ClockRungs.title(rung)).is_not_empty()
+
+func test_the_climbing_rung_is_the_lowest_not_cleared() -> void:
+	assert_int(ClockRungs.climbing_rung(0)).is_equal(1)
+	assert_int(ClockRungs.climbing_rung(7)).is_equal(8)
+	assert_int(ClockRungs.climbing_rung(8)).override_failure_message("nothing left to climb").is_equal(0)
+
+func test_cleared_rungs_and_the_climbing_rung_are_open() -> void:
+	assert_bool(ClockRungs.is_open(1, 0, false)).is_true()
+	assert_bool(ClockRungs.is_open(2, 0, false)).is_false()
+	assert_bool(ClockRungs.is_open(3, 2, false)).is_true()
+	assert_bool(ClockRungs.is_open(8, 0, true)).override_failure_message("open all rungs opens every rung").is_true()
+
+func test_every_rung_has_an_example_time_of_its_own() -> void:
+	for rung in EVERY_RUNG:
+		var example: int = ClockRungs.example_minutes(rung)
+		assert_bool(ClockRungs.minutes_past_the_hour(rung).has(example % 60)).override_failure_message("rung %d" % rung).is_true()
