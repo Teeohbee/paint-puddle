@@ -104,6 +104,25 @@ static func is_open(rung: int, rungs_cleared: int, all_rungs_opened: bool) -> bo
 	return all_rungs_opened or rung <= rungs_cleared + 1
 
 
+## Faces without minute marks, which rung 8 never deals: you can only count
+## minutes you can see.
+const FACES_WITHOUT_MINUTE_MARKS: Array[String] = ["bare"]
+
+
+## The tricky faces a tricky replay of this rung can deal.
+static func tricky_faces_for(rung: int, rungs_cleared: int, all_rungs_opened: bool) -> Array[String]:
+	var faces: Array[String] = TRICKY_FACES.duplicate() if all_rungs_opened else tricky_faces_unlocked(rungs_cleared)
+	if rung == SINGLE_MINUTES_RUNG:
+		faces = faces.filter(func(face: String) -> bool: return not FACES_WITHOUT_MINUTE_MARKS.has(face))
+	return faces
+
+
+## Whether a rung can be replayed with tricky faces: it's been cleared, or a
+## grown-up has opened everything.
+static func is_open_for_tricky(rung: int, rungs_cleared: int, all_rungs_opened: bool) -> bool:
+	return all_rungs_opened or rung <= rungs_cleared
+
+
 ## The tricky faces open for this many rungs cleared.
 static func tricky_faces_unlocked(rungs_cleared: int) -> Array[String]:
 	var faces: Array[String] = []
