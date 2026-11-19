@@ -10,6 +10,7 @@ extends Node
 ## under the clock. A wrong pick winds the hands to the time he picked, shows
 ## it, winds back, and that card fades away so he can't go round in circles.
 
+signal card_started(card: ClockCard)
 signal card_finished(card: ClockCard)
 signal deck_finished
 
@@ -105,6 +106,7 @@ func play_single_minutes_intro() -> void:
 func play_card() -> void:
 	current_card = deck[card_index]
 	misses = 0
+	card_started.emit(current_card)
 	if current_card.is_read:
 		play_read_card()
 	else:

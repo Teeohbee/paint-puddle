@@ -18,6 +18,9 @@ const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
 static var rung_to_play: int = 1
 ## The rung just finished, so the Clock menu can start on the next one (0 for none).
 static var rung_just_finished: int = 0
+## Tricky replay, chosen on the Clock menu: each card deals a random unlocked
+## tricky face. Kept for the session, so the menu comes back in tricky mode.
+static var tricky_replay: bool = false
 
 var rung: int = 1
 ## Whether this is the rung being climbed: only its deck is saved, and only
@@ -50,7 +53,7 @@ func _ready() -> void:
 	house.fit_into(HOUSE_BOX)
 	add_child(house)
 	rung = rung_to_play
-	is_climbing = rung == ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
+	is_climbing = not tricky_replay and rung == ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
 	effects_layer = Node2D.new()
 	effects_layer.name = "Effects"
 	add_hud()
@@ -58,6 +61,7 @@ func _ready() -> void:
 	task_runner.name = "TaskRunner"
 	add_child(task_runner)
 	task_runner.card_finished.connect(on_card_finished)
+	task_runner.card_started.connect(on_card_started)
 	task_runner.deck_finished.connect(on_deck_finished)
 	task_runner.start_deck(rung, first_deck(), true)
 	var pause_menu: PauseMenu = PauseMenu.new()
@@ -112,6 +116,16 @@ func save_deck(cards: Array[ClockCard]) -> void:
 	GameSettings.set_clock_task_deck(saved_numbers)
 
 
+## On a tricky replay, every card deals a random unlocked tricky face.
+func on_card_started(_card: ClockCard) -> void:
+	if not tricky_replay:
+		return
+	var faces: Array[String] = ClockRungs.tricky_faces_for(rung, GameSettings.get_progress("clock_rungs_cleared"), GameSettings.get_setting("open_all_clock_rungs") == 1)
+	if faces.is_empty():
+		return
+	clock_face.show_face(faces[task_runner.random.randi() % faces.size()])
+
+
 ## On the climbing rung, the cards still to come are saved after each one.
 func on_card_finished(_card: ClockCard) -> void:
 	if is_climbing:
@@ -122,14 +136,21 @@ func on_card_finished(_card: ClockCard) -> void:
 ## face) opens. Then back to the Clock menu, on the next rung.
 func on_deck_finished() -> void:
 	var cheer: String = "Well done!"
+	var new_face: String = ""
 	if is_climbing:
 		GameSettings.record_progress("clock_rungs_cleared", rung)
 		GameSettings.set_clock_task_deck([])
 		cheer = "You cleared %s!" % ClockRungs.title(rung)
+		new_face = ClockRungs.TRICKY_FACES[rung - 1]
 		effects_layer.add_child(Confetti.new())
 	Sound.play("chime", 0.0, 1.25)
 	task_banner.celebrate()
-	task_banner.show_text(cheer)
+	if new_face == "":
+		task_banner.show_text(cheer)
+	else:
+		# The new tricky clock shows itself off
+		task_banner.show_text(cheer, "A new tricky clock!")
+		clock_face.show_face(new_face)
 	rung_just_finished = rung
 	await get_tree().create_timer(SECONDS_TO_CHEER).timeout
 	SceneManager.go_to("res://ui/clock_menu.tscn")
