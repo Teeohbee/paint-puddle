@@ -42,7 +42,7 @@ func _ready() -> void:
 		"paint": [paint, "res://ui/paint_menu.tscn"],
 		"splat": [splat, "res://paint/splat_party.tscn"],
 		"map": [map, "res://map/map_mode.tscn"],
-		"clock": [clock, "res://clock/clock_mode.tscn"],
+		"clock": [clock, "res://ui/clock_menu.tscn"],
 		"book": [book, "res://ui/book.tscn"],
 	}
 	for place_name in places:

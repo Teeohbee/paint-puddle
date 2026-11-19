@@ -7,6 +7,9 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 	if kind.begins_with("text:"):
 		draw_big_text(canvas, kind.trim_prefix("text:"), centre, size, colour)
 		return
+	if kind.begins_with("clock_at:"):
+		draw_clock_at(canvas, int(kind.trim_prefix("clock_at:")), centre, size, colour)
+		return
 	if kind.begins_with("colour_set:"):
 		draw_three_paints(canvas, kind.trim_prefix("colour_set:"), centre, size, colour)
 		return
@@ -114,6 +117,25 @@ static func draw_clock(canvas: CanvasItem, centre: Vector2, size: float, colour:
 	canvas.draw_line(centre, hour_hand_tip, PaintColours.INK, size * 0.06)
 	canvas.draw_line(centre, minute_hand_tip, PaintColours.INK, size * 0.04)
 	canvas.draw_circle(centre, size * 0.045, PaintColours.INK)
+
+
+## A clock showing a time, given as minutes since midnight. A negative
+## time leaves the minute hand off, the way rungs 1 and 2 show it.
+static func draw_clock_at(canvas: CanvasItem, minutes: int, centre: Vector2, size: float, colour: Color) -> void:
+	var radius: float = size * 0.48
+	canvas.draw_circle(centre, radius, colour)
+	canvas.draw_circle(centre, radius - size * 0.07, Color.WHITE)
+	for hour in 12:
+		var mark_direction: Vector2 = Vector2.from_angle(TAU * hour / 12.0)
+		canvas.draw_line(centre + mark_direction * (radius - size * 0.17), centre + mark_direction * (radius - size * 0.1), colour, size * 0.035)
+	var shows_minute_hand: bool = minutes >= 0
+	var time: int = absi(minutes)
+	var hour_direction: Vector2 = Vector2.from_angle(TAU * ClockTime.hour_hand_turns(time) - PI / 2.0)
+	canvas.draw_line(centre, centre + hour_direction * size * 0.2, PaintColours.INK, size * 0.07)
+	if shows_minute_hand:
+		var minute_direction: Vector2 = Vector2.from_angle(TAU * ClockTime.minute_hand_turns(time) - PI / 2.0)
+		canvas.draw_line(centre, centre + minute_direction * size * 0.32, PaintColours.INK, size * 0.045)
+	canvas.draw_circle(centre, size * 0.05, PaintColours.INK)
 
 
 static func draw_brush(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:

@@ -40,7 +40,7 @@ func test_holding_winds_many_steps_and_the_hands_catch_up() -> void:
 	await frames(60)
 	check(not mode.clock_face.is_sweeping() and is_equal_approx(mode.clock_face.shown_minutes, mode.wound_minutes), "the hands settle where they're wound")
 
-func test_the_play_menu_has_a_clock_tile_that_opens_clock_mode() -> void:
+func test_the_play_menu_has_a_clock_tile_that_opens_the_clock_menu() -> void:
 	get_tree().change_scene_to_file("res://ui/play_menu.tscn")
 	await frames(4)
 	var clock_tile = null
@@ -49,4 +49,4 @@ func test_the_play_menu_has_a_clock_tile_that_opens_clock_mode() -> void:
 	check(clock_tile != null, "there's a Clock tile")
 	clock_tile.chosen.emit()
 	await frames(40)
-	check(get_tree().current_scene is ClockMode, "it opens Clock mode")
+	check(get_tree().current_scene.scene_file_path == "res://ui/clock_menu.tscn", "it opens the Clock menu")

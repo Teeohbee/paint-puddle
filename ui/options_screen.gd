@@ -23,7 +23,7 @@ func _ready() -> void:
 	make_heading("Options", 60)
 	rows = VBoxContainer.new()
 	rows.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	rows.offset_top = 185
+	rows.offset_top = 165
 	rows.add_theme_constant_override("separation", 12)
 	add_child(rows)
 
@@ -38,6 +38,7 @@ func _ready() -> void:
 	grown_up_rows.append(add_slider_row("Game speed", "speed", PaintColours.GREEN, "game_speed_percent", 10, "%"))
 	grown_up_rows.append(add_slider_row("Jump help", "jump", PaintColours.YELLOW, "coyote_time_milliseconds", 50, "ms"))
 	grown_up_rows.append(add_slider_row("Open Medium", "hills", PaintColours.ORANGE, "open_hills_medium", 1, ""))
+	grown_up_rows.append(add_slider_row("Open all rungs", "clock", PaintColours.CYAN, "open_all_clock_rungs", 1, ""))
 	reset_row = add_button_row("Reset", "reset", PaintColours.RED)
 	reset_row.choices.assign(GameSettings.RESET_PARTS.values())
 	reset_row.chosen.connect(on_reset_chosen)

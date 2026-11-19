@@ -22,6 +22,8 @@ const SETTING_LIMITS: Dictionary = {
 	"coyote_time_milliseconds": {"default": 250, "smallest": 100, "largest": 500},
 	# 1 opens Hills Medium without finishing Easy (for testing, in the grown-up settings)
 	"open_hills_medium": {"default": 0, "smallest": 0, "largest": 1},
+	# 1 opens every Clock rung and tricky face, without changing rungs cleared (grown-up settings)
+	"open_all_clock_rungs": {"default": 0, "smallest": 0, "largest": 1},
 }
 
 const DEFAULT_PROGRESS: Dictionary = {
@@ -30,6 +32,8 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"rainbows_painted": 0,
 	"tasks_completed": 0,
 	"next_task_index": 0,
+	# How far up the Clock mode ladder, 0 to 8. Rungs and tricky faces open from it.
+	"clock_rungs_cleared": 0,
 }
 
 ## Lists of things found, by name, in the order they were found. The last
@@ -46,6 +50,9 @@ var collections: Dictionary = {}
 var task_deck: Array[int] = []
 ## The same for Map mode's tasks. See MapTaskRunner.
 var map_task_deck: Array[int] = []
+## The Clock mode cards left on the climbing rung, as ClockCard saved numbers.
+## Replays never save a deck.
+var clock_task_deck: Array[int] = []
 
 
 func _ready() -> void:
@@ -81,6 +88,7 @@ func reset_progress() -> void:
 	collections = empty_collections()
 	task_deck.clear()
 	map_task_deck.clear()
+	clock_task_deck.clear()
 	save_to_disk()
 
 
@@ -90,6 +98,7 @@ const RESET_PARTS: Dictionary = {
 	"hills": "Hills",
 	"meadow": "Meadow",
 	"map": "Map",
+	"clock": "Clock",
 	"words": "Book words",
 	"colours": "Book colours",
 }
@@ -97,7 +106,8 @@ const RESET_PARTS: Dictionary = {
 
 ## Resets one part and leaves the rest. The Meadow is its tasks and
 ## rainbows; the words spelled there belong to the Book. The Map is the
-## countries found and its tasks. Emptying a Book part lets its
+## countries found and its tasks. The Clock is the rungs cleared and the
+## climbing rung's deck, never the open-all setting. Emptying a Book part lets its
 ## finished-it confetti happen again.
 func reset_part(part: String) -> void:
 	match part:
@@ -115,6 +125,9 @@ func reset_part(part: String) -> void:
 			collections["countries_found"].clear()
 			collections["book_parts_celebrated"].erase("countries")
 			map_task_deck.clear()
+		"clock":
+			progress["clock_rungs_cleared"] = 0
+			clock_task_deck.clear()
 		"words", "colours":
 			var collection_name: String = "words_spelled" if part == "words" else "colours_found"
 			collections[collection_name].clear()
@@ -135,6 +148,16 @@ func set_task_deck(new_deck: Array[int]) -> void:
 ## A copy, so changing it doesn't change the save.
 func get_map_task_deck() -> Array[int]:
 	return map_task_deck.duplicate()
+
+
+## A copy, so changing it doesn't change the save.
+func get_clock_task_deck() -> Array[int]:
+	return clock_task_deck.duplicate()
+
+
+func set_clock_task_deck(new_deck: Array[int]) -> void:
+	clock_task_deck = new_deck.duplicate()
+	save_to_disk()
 
 
 func set_map_task_deck(new_deck: Array[int]) -> void:
@@ -174,6 +197,7 @@ func load_from_disk() -> void:
 	collections = empty_collections()
 	task_deck.clear()
 	map_task_deck.clear()
+	clock_task_deck.clear()
 	if not FileAccess.file_exists(save_file_path):
 		return
 	var saved_text: String = FileAccess.get_file_as_string(save_file_path)
@@ -194,6 +218,8 @@ func load_from_disk() -> void:
 	copy_known_collections(saved.get("collections", {}))
 	copy_task_deck(saved.get("task_deck", []), task_deck)
 	copy_task_deck(saved.get("map_task_deck", []), map_task_deck)
+	copy_task_deck(saved.get("clock_task_deck", []), clock_task_deck)
+	progress.clock_rungs_cleared = mini(progress.clock_rungs_cleared, ClockRungs.RUNG_COUNT)
 	var saved_version: Variant = saved.get("version", 1)
 	var is_from_before_collections: bool = not (saved_version is float or saved_version is int) or saved_version < 2
 	if is_from_before_collections and progress.tasks_completed >= TASKS_IN_THE_FIRST_ROUND:
@@ -247,6 +273,7 @@ func save_to_disk() -> void:
 		"collections": collections,
 		"task_deck": task_deck,
 		"map_task_deck": map_task_deck,
+		"clock_task_deck": clock_task_deck,
 	}, "\t"))
 
 
