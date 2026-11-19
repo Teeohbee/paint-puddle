@@ -15,6 +15,7 @@ var root_children_before: Array[Node] = []
 const MenuScreenScript = preload("res://ui/menu_screen.gd")
 const HillsLevelScript = preload("res://hills/hills_level.gd")
 const PaintStudioScript = preload("res://paint/paint_studio.gd")
+const ClockModeScript = preload("res://clock/clock_mode.gd")
 
 func before_test() -> void:
 	real_path = GameSettings.save_file_path
@@ -48,6 +49,8 @@ func reset_world() -> void:
 	SceneManager.coverage = 0.0
 	MenuScreenScript.last_choices = {}
 	HillsLevelScript.level_to_play = 0
+	ClockModeScript.rung_to_play = 1
+	ClockModeScript.rung_just_finished = 0
 	HillsLevelScript.difficulty = HillsLevels.EASY
 	HillsLevelScript.level_just_finished = -1
 	PaintStudioScript.colour_set = "paint"
