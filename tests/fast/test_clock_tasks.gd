@@ -153,18 +153,30 @@ func test_the_blobs_only_change_on_confirm_but_the_sky_follows_the_hands() -> vo
 func test_while_the_hands_are_away_from_the_moment_the_blobs_rest_by_the_sky() -> void:
 	var mode: ClockMode = await open_with_deck(1, [set_card(4, 0), set_card(9, 0)])
 	check(mode.house.acted_out_moment()["doing"] == "wake", "at 7am the blobs act out waking up")
-	check(mode.house.highlighted_room() == "bedroom", "with the bedroom outlined")
+	check(mode.house.highlighted_room() == "bedroom", "with the bedroom highlighted")
+	check(not mode.house.is_dimmed("bedroom") and mode.house.is_dimmed("kitchen"), "and the other rooms dimmed")
 	for step in 9:
 		await tap("move_left")
 	await seconds(0.5)
 	check(mode.minutes_of_the_day() == 22 * 60, "wound back to 10 at night: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
 	check(mode.house.acted_out_moment()["doing"] == "asleep" and mode.house.acted_out_moment()["room"] == "bedroom", "in the dark they're asleep in bed: %s" % mode.house.acted_out_moment())
-	check(mode.house.highlighted_room() == "", "and no room is outlined, so nothing is given away")
+	check(mode.house.highlighted_room() == "", "and no room is highlighted, so nothing is given away")
+	check(not mode.house.is_dimmed("bedroom") and not mode.house.is_dimmed("kitchen"), "nothing is dimmed")
 	for step in 10:
 		await tap("move_right")
 	await seconds(0.5)
 	check(mode.house.acted_out_moment()["doing"] == "sofa", "by day they rest on the sofa: %s" % mode.house.acted_out_moment())
-	check(mode.house.highlighted_room() == "", "still no outline")
+	check(mode.house.highlighted_room() == "", "still nothing highlighted")
+
+func test_a_garden_moment_dims_every_room_in_the_house() -> void:
+	var mode: ClockMode = await open_with_deck(1, [set_card(9, 0), set_card(4, 0)])
+	await tap("move_right")
+	await tap("move_right")
+	await seconds(0.5)
+	await tap("act")
+	check(mode.house.highlighted_room() == "garden", "9am is out in the garden: %s" % mode.house.highlighted_room())
+	for room in ["bedroom", "bathroom", "kitchen", "living"]:
+		check(mode.house.is_dimmed(room), "the %s is dimmed" % room)
 
 func test_winding_back_to_the_moment_s_own_time_acts_it_out_again() -> void:
 	var mode: ClockMode = await open_with_deck(1, [set_card(4, 0), set_card(9, 0)])

@@ -11,8 +11,8 @@ extends Node2D
 ## The blobs act the moment out only while the hands show its time; while
 ## the hands are away they rest by the sky (asleep in the dark, on the sofa
 ## by day), so the house never shows the wrong part of the day and gives
-## nothing away the sky doesn't. The moment's room gets a faint warm outline
-## and the others dim a little, only while it's acted out.
+## nothing away the sky doesn't. While it's acted out, the rooms it isn't in
+## dim a little (all four, when it's out in the garden).
 ##
 ## Everything is drawn in the prototype's own space (PANEL below), and the
 ## node's position and scale fit it to the space it's given.
@@ -37,9 +37,8 @@ const SKY_KEYS: Array = [
 	[480, Color(0.62, 0.84, 1.0)], [1020, Color(0.6, 0.82, 1.0)], [1140, Color(1.0, 0.62, 0.45)],
 	[1230, Color(0.3, 0.22, 0.48)], [1320, Color(0.1, 0.12, 0.3)], [1440, Color(0.1, 0.12, 0.3)],
 ]
-## The moment's room glows warm and the rest dim this much.
-const OTHER_ROOMS_DIMMED: float = 0.1
-const MOMENT_ROOM_OUTLINE: Color = Color(1.0, 0.8, 0.35, 0.85)
+## The rooms the moment isn't in dim this much.
+const OTHER_ROOMS_DIMMED: float = 0.14
 
 ## The time the hands show right now, as they sweep. Drives the sky and lights.
 var live_minutes_of_the_day: float = 7 * 60
@@ -112,11 +111,16 @@ func acted_out_moment() -> Dictionary:
 	return RESTING_BY_DAY
 
 
-## The room with the warm outline, or "" while the blobs are resting.
+## The room the moment is in, or "" while the blobs are resting.
 func highlighted_room() -> String:
 	if not hands_show_the_moment():
 		return ""
 	return moment_room()
+
+
+## A room dims while the moment is acted out somewhere else, garden included.
+func is_dimmed(room: String) -> bool:
+	return highlighted_room() != "" and room != highlighted_room()
 
 
 func doing() -> String:
@@ -869,14 +873,11 @@ func draw_dolls_house() -> void:
 	for entry in rooms:
 		begin_room(Rect2(entry[1], room_size))
 		draw_room(entry[0], entry[0] == moment_room())
-		if highlighted_room() != "" and entry[0] != highlighted_room():
+		if is_dimmed(entry[0]):
 			draw_rect(Rect2(Vector2.ZERO, ROOM), Color(0, 0, 0, OTHER_ROOMS_DIMMED))
 		end_room()
 	draw_line(Vector2(house.position.x, downstairs_top - 7), Vector2(house.end.x, downstairs_top - 7), INK, 14)
 	draw_line(Vector2(left + room_size.x + 7, house.position.y), Vector2(left + room_size.x + 7, house.end.y), INK, 14)
-	for entry in rooms:
-		if entry[0] == highlighted_room():
-			draw_rect(Rect2(entry[1], room_size).grow(-4), MOMENT_ROOM_OUTLINE, false, 8)
 	# garden down the side
 	var garden_left := house.end.x + 30
 	begin_room(Rect2(Vector2(garden_left - 40, ground_y - 760 * 0.5), ROOM * 0.5))
@@ -886,9 +887,6 @@ func draw_dolls_house() -> void:
 	if visitor() == "hedgehog":
 		draw_hedgehog(Vector2(230 + sin(time * 0.4) * 50, 790), 1.8)
 	end_room()
-	if highlighted_room() == "garden":
-		var garden_box: Rect2 = Rect2(Vector2(garden_left - 10, ground_y - 760 * 0.5), Vector2(PANEL.end.x - garden_left, 760 * 0.5 + 40))
-		draw_rect(garden_box.grow(-8), MOMENT_ROOM_OUTLINE, false, 8)
 	var playing_outside: bool = doing() == "play" or doing() == "watering"
 	if moment_room() == "garden" and playing_outside:
 		begin_room(Rect2(Vector2(garden_left - 70, ground_y - 760 * 0.42 + 10), ROOM * 0.42))
