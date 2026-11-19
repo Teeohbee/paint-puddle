@@ -5,6 +5,8 @@ extends Node2D
 ## time of day. One press winds one step of the rung; holding speeds up.
 
 const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
+## The house fills the space right of the clock, under the banner.
+const HOUSE_BOX: Rect2 = Rect2(895, 175, 1000, 890)
 ## The read answers sit under the clock, their bottoms on this line.
 const ANSWER_CARDS_BOTTOM: float = 1066.0
 ## Every visit starts at 7 in the morning.
@@ -21,6 +23,7 @@ var rung: int = 1
 ## finishing it clears a rung. Replays (and rungs opened by a grown-up) aren't.
 var is_climbing: bool = false
 var clock_face: ClockFace
+var house: ClockHouse
 var winder: ClockWinder = ClockWinder.new()
 var controls_hint: ControlsHint
 var effects_layer: Node2D
@@ -41,6 +44,10 @@ func _ready() -> void:
 	clock_face.name = "ClockFace"
 	clock_face.position = CLOCK_CENTRE
 	add_child(clock_face)
+	house = ClockHouse.new()
+	house.name = "House"
+	house.fit_into(HOUSE_BOX)
+	add_child(house)
 	rung = rung_to_play
 	is_climbing = rung == ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
 	show_rung(rung)
@@ -135,6 +142,7 @@ func show_rung(new_rung: int) -> void:
 
 
 func _process(delta: float) -> void:
+	house.live_minutes_of_the_day = clock_face.shown_minutes
 	var direction: int = 0
 	if player_can_wind:
 		direction = held_direction()
@@ -161,6 +169,8 @@ func wind_by_steps(steps: int) -> void:
 func start_the_day() -> void:
 	wound_minutes = STARTING_MINUTES
 	clock_face.jump_to(wound_minutes)
+	house.live_minutes_of_the_day = wound_minutes
+	house.show_moment(wound_minutes)
 
 
 ## The clock winds itself, over a set time however far it is.
