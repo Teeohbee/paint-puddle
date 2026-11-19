@@ -14,3 +14,16 @@ const MINUTES_IN_A_DAY: int = 24 * 60
 ## negative). The day wraps round at midnight both ways.
 static func wound(minutes_of_the_day: int, minutes_to_wind: int) -> int:
 	return posmod(minutes_of_the_day + minutes_to_wind, MINUTES_IN_A_DAY)
+
+
+## Where the minute hand points, as a fraction of one lap from the 12.
+static func minute_hand_turns(minutes_of_the_day: int) -> float:
+	return float(minutes_of_the_day % MINUTES_IN_AN_HOUR) / MINUTES_IN_AN_HOUR
+
+
+## Where the hour hand points, as a fraction of one lap from the 12. It's
+## geared to the minute hand, so it creeps between the numbers: at half past
+## 3 it sits halfway between the 3 and the 4.
+static func hour_hand_turns(minutes_of_the_day: int) -> float:
+	var minutes_in_half_a_day: int = MINUTES_IN_A_DAY / 2
+	return float(minutes_of_the_day % minutes_in_half_a_day) / minutes_in_half_a_day
