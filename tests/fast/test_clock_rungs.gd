@@ -76,3 +76,17 @@ func test_every_rung_has_an_example_time_of_its_own() -> void:
 	for rung in EVERY_RUNG:
 		var example: int = ClockRungs.example_minutes(rung)
 		assert_bool(ClockRungs.minutes_past_the_hour(rung).has(example % 60)).override_failure_message("rung %d" % rung).is_true()
+
+func test_tricky_replays_deal_only_unlocked_faces() -> void:
+	assert_array(ClockRungs.tricky_faces_for(2, 3, false)).contains_exactly(["four numbers", "kitchen", "square"])
+	assert_array(ClockRungs.tricky_faces_for(1, 0, true)).has_size(8)
+
+func test_tricky_rung_8_never_deals_the_bare_face() -> void:
+	assert_array(ClockRungs.tricky_faces_for(8, 8, false)).not_contains(["bare"])
+	assert_array(ClockRungs.tricky_faces_for(8, 0, true)).not_contains(["bare"])
+	assert_array(ClockRungs.tricky_faces_for(7, 8, false)).contains(["bare"])
+
+func test_only_cleared_rungs_open_for_tricky_replays() -> void:
+	assert_bool(ClockRungs.is_open_for_tricky(2, 2, false)).is_true()
+	assert_bool(ClockRungs.is_open_for_tricky(3, 2, false)).override_failure_message("the climbing rung isn't cleared yet").is_false()
+	assert_bool(ClockRungs.is_open_for_tricky(8, 0, true)).is_true()

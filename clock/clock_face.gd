@@ -18,6 +18,10 @@ const SWEEP_SPEED: float = 16.0
 const SETTLED_MINUTES: float = 0.02
 
 var shows_minute_hand: bool = true
+## Which face to draw: "" for the home face, or one of ClockRungs.TRICKY_FACES.
+var face_name: String = ""
+## The kitchen clock and the wristwatch tick a seconds hand while he thinks.
+var seconds: float = 0.0
 ## The colour of the puddle blob in the middle.
 var blob_colour: Color = PaintColours.RED
 ## Where the hands are wound to, and where they're drawn on the way there.
@@ -109,6 +113,11 @@ func is_sweeping() -> bool:
 func _process(delta: float) -> void:
 	if glow > 0.0:
 		queue_redraw()
+	if face_name != "":
+		var whole_seconds_before: int = int(seconds)
+		seconds = fposmod(seconds + delta, 60.0)
+		if int(seconds) != whole_seconds_before:
+			queue_redraw()
 	if timed_sweep != null and timed_sweep.is_running():
 		return
 	if not is_sweeping():
@@ -120,7 +129,16 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+func show_face(new_face_name: String) -> void:
+	face_name = new_face_name
+	queue_redraw()
+
+
 func _draw() -> void:
+	if face_name != "":
+		TrickyFaces.draw(self, face_name)
+		draw_glow()
+		return
 	draw_face()
 	draw_glow()
 	draw_hands()

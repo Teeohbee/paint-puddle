@@ -51,6 +51,7 @@ func reset_world() -> void:
 	HillsLevelScript.level_to_play = 0
 	ClockModeScript.rung_to_play = 1
 	ClockModeScript.rung_just_finished = 0
+	ClockModeScript.tricky_replay = false
 	HillsLevelScript.difficulty = HillsLevels.EASY
 	HillsLevelScript.level_just_finished = -1
 	PaintStudioScript.colour_set = "paint"

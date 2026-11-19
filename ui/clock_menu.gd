@@ -2,6 +2,9 @@ extends MenuScreen
 ## Pick a Clock mode rung. Each one opens when the one before it is cleared
 ## (or all of them, with "Open all rungs" in the grown-up settings). Starts on
 ## the rung after the one just cleared, or the one being climbed.
+##
+## Once a rung is cleared, a Tricky tile under Back switches the menu to
+## tricky replays: cleared rungs again, with a random tricky face each card.
 
 const RUNG_TILE_SIZE: Vector2 = Vector2(220, 220)
 const RUNGS_PER_ROW: int = 4
@@ -14,35 +17,50 @@ const RUNG_COLOURS: Array[Color] = [
 
 var rung_tiles: Array[MenuTile] = []
 var back: MenuTile
+var tricky: MenuTile
+var heading: Label
+var rungs_cleared: int = 0
+var all_rungs_opened: bool = false
 
 
 func _ready() -> void:
 	Music.play_track("title")
 	add_child(MenuBackdrop.new())
-	make_heading("Clock", 50)
+	heading = make_heading("Clock", 50)
+	rungs_cleared = GameSettings.get_progress("clock_rungs_cleared")
+	all_rungs_opened = GameSettings.get_setting("open_all_clock_rungs") == 1
 	var row: HBoxContainer = make_tile_row(200, 50)
 	row.get_parent().offset_bottom = 1040
+	var left_column: VBoxContainer = VBoxContainer.new()
+	left_column.add_theme_constant_override("separation", TILE_GAP)
+	left_column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(left_column)
 	back = make_tile("Back", "back", PaintColours.PURPLE, Vector2(200, 200))
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(back)
+	left_column.add_child(back)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/play_menu.tscn"))
+	tricky = make_tile("Tricky", "clock", PaintColours.MAGENTA, Vector2(200, 200))
+	tricky.visible = rungs_cleared > 0 or all_rungs_opened
+	left_column.add_child(tricky)
+	tricky.chosen.connect(toggle_tricky)
+	if not tricky.visible:
+		ClockMode.tricky_replay = false
 	var rung_rows: VBoxContainer = VBoxContainer.new()
 	rung_rows.add_theme_constant_override("separation", TILE_GAP)
 	row.add_child(rung_rows)
 	var rung_row: HBoxContainer = null
-	var rungs_cleared: int = GameSettings.get_progress("clock_rungs_cleared")
-	var all_rungs_opened: bool = GameSettings.get_setting("open_all_clock_rungs") == 1
 	for rung in range(1, ClockRungs.RUNG_COUNT + 1):
 		if (rung - 1) % RUNGS_PER_ROW == 0:
 			rung_row = HBoxContainer.new()
 			rung_row.add_theme_constant_override("separation", TILE_GAP)
 			rung_rows.add_child(rung_row)
 		var tile: MenuTile = make_tile(ClockRungs.title(rung), icon_for(rung), RUNG_COLOURS[rung - 1], RUNG_TILE_SIZE)
-		tile.is_locked = not ClockRungs.is_open(rung, rungs_cleared, all_rungs_opened)
 		tile.chosen.connect(play_rung.bind(rung))
 		rung_row.add_child(tile)
 		rung_tiles.append(tile)
+	show_tricky_or_not()
 	first_focus = rung_tiles[rung_to_start_on(rungs_cleared) - 1]
+	if first_focus.is_locked:
+		first_focus = back
 	first_focus.grab_focus_quietly.call_deferred()
 
 
@@ -53,6 +71,25 @@ func icon_for(rung: int) -> String:
 	if not ClockRungs.shows_minute_hand(rung):
 		example = -example
 	return "clock_at:%d" % example
+
+
+func toggle_tricky() -> void:
+	ClockMode.tricky_replay = not ClockMode.tricky_replay
+	show_tricky_or_not()
+
+
+## Locks and labels for plain or tricky replays.
+func show_tricky_or_not() -> void:
+	var is_tricky: bool = ClockMode.tricky_replay
+	heading.text = "Tricky clocks" if is_tricky else "Clock"
+	tricky.subtitle = "on" if is_tricky else "off"
+	tricky.queue_redraw()
+	for index in rung_tiles.size():
+		var rung: int = index + 1
+		if is_tricky:
+			rung_tiles[index].is_locked = not ClockRungs.is_open_for_tricky(rung, rungs_cleared, all_rungs_opened)
+		else:
+			rung_tiles[index].is_locked = not ClockRungs.is_open(rung, rungs_cleared, all_rungs_opened)
 
 
 func play_rung(rung: int) -> void:
