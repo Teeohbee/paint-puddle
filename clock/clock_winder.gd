@@ -53,3 +53,15 @@ func gap_after_repeat(repeat_number: int) -> float:
 ## True once a hold has started repeating, rather than a single press.
 func is_repeating() -> bool:
 	return held_direction != 0 and repeats_this_hold > 0
+
+
+## On rung 8 a tap moves one minute, and each repeat of a hold moves on to
+## the next five in the direction it's winding: backwards from 3:17 it goes
+## to 3:15, then 3:10. Returns the minutes to wind (negative is back).
+static func minutes_to_the_next_five(minutes_of_the_day: int, direction: int) -> int:
+	var past_a_five: int = minutes_of_the_day % 5
+	if direction > 0:
+		return 5 - past_a_five
+	if past_a_five == 0:
+		return -5
+	return -past_a_five

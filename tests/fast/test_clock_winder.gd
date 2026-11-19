@@ -56,3 +56,13 @@ func test_turning_round_winds_the_other_way_straight_away() -> void:
 	steps_while_holding(winder, 1, 2.0)
 	assert_int(winder.update(-1, FRAME)).is_equal(-1)
 	assert_int(steps_while_holding(winder, -1, 0.3)).is_equal(0)
+
+
+# ---- rung 8: a tap is one minute, a hold goes in fives
+
+func test_a_held_repeat_on_rung_8_snaps_to_the_next_five_the_way_its_going() -> void:
+	assert_int(ClockWinder.minutes_to_the_next_five(3 * 60 + 17, 1)).is_equal(3)
+	assert_int(ClockWinder.minutes_to_the_next_five(3 * 60 + 17, -1)).is_equal(-2)
+	# already on a five: on to the next one
+	assert_int(ClockWinder.minutes_to_the_next_five(3 * 60 + 20, 1)).is_equal(5)
+	assert_int(ClockWinder.minutes_to_the_next_five(3 * 60 + 20, -1)).is_equal(-5)

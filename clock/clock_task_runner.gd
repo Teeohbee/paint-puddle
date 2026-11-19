@@ -23,6 +23,8 @@ const SECONDS_TO_SHOW_A_MESSAGE: float = 2.6
 const MISSES_BEFORE_THE_GLOW: int = 2
 ## From this rung the minute mark glows too, not just the number.
 const FIRST_RUNG_TO_GLOW_THE_MINUTES: int = 4
+const RUNGS_WITH_AN_INTRO: Array[int] = [3, 8]
+const SECONDS_FOR_THE_INTRO_LAP: float = 3.0
 
 var mode: ClockMode
 var rung: int = 1
@@ -41,15 +43,63 @@ func _init(clock_mode: ClockMode) -> void:
 	random.randomize()
 
 
-## Every deck starts at 7 in the morning, and the day carries on from card to card.
-func start_deck(new_rung: int, new_deck: Array[ClockCard]) -> void:
+## Every deck starts at 7 in the morning, and the day carries on from card to
+## card. Rungs 3 and 8 can open with a short intro to what's new on them.
+func start_deck(new_rung: int, new_deck: Array[ClockCard], with_intro: bool = false) -> void:
 	rung = new_rung
 	deck = new_deck
 	card_index = 0
+	current_card = null
+	state = State.BETWEEN_CARDS
 	mode.show_rung(rung)
 	mode.answer_cards.hide_answers()
 	mode.start_the_day()
+	if with_intro and RUNGS_WITH_AN_INTRO.has(rung):
+		await play_intro()
+		if deck != new_deck:
+			return
+		mode.start_the_day()
 	play_card()
+
+
+func play_intro() -> void:
+	mode.player_can_wind = false
+	if rung == ClockRungs.FIRST_RUNG_WITH_THE_MINUTE_HAND:
+		await play_minute_hand_intro()
+	else:
+		await play_single_minutes_intro()
+	mode.clock_face.clear_lit_minutes()
+
+
+## Rung 3: the big minute hand slides on, then goes once round while the
+## little hour hand creeps on to the next number.
+func play_minute_hand_intro() -> void:
+	mode.clock_face.set_minute_hand_reach(0.0)
+	mode.task_banner.show_text("Meet the big minute hand!", "It shows the minutes")
+	await get_tree().create_timer(0.8).timeout
+	var slide_on: Tween = create_tween()
+	slide_on.tween_method(mode.clock_face.set_minute_hand_reach, 0.0, 1.0, 1.0).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await slide_on.finished
+	await get_tree().create_timer(1.4).timeout
+	mode.task_banner.show_text("All the way round is an hour", "and the little hour hand moves on to the next number")
+	await mode.wind_itself_by(ClockTime.MINUTES_IN_AN_HOUR, SECONDS_FOR_THE_INTRO_LAP)
+	await get_tree().create_timer(1.6).timeout
+
+
+## Rung 8: a hold sweeps on to quarter past in fives, then three taps count
+## 16, 17, 18 with the marks lighting up.
+func play_single_minutes_intro() -> void:
+	mode.task_banner.show_text("Hold to go in fives. Tap to count the minutes.")
+	await get_tree().create_timer(1.2).timeout
+	for five in 3:
+		await mode.wind_itself_by(5, 0.3)
+	await get_tree().create_timer(0.6).timeout
+	for tap in 3:
+		await mode.wind_itself_by(1, 0.25)
+		mode.clock_face.light_minute(mode.minutes_of_the_day() % ClockTime.MINUTES_IN_AN_HOUR)
+		Sound.play("pop", 0.02, 1.0 + tap * 0.12)
+		await get_tree().create_timer(0.45).timeout
+	await get_tree().create_timer(1.2).timeout
 
 
 func play_card() -> void:

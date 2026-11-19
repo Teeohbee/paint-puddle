@@ -50,3 +50,19 @@ func test_the_play_menu_has_a_clock_tile_that_opens_the_clock_menu() -> void:
 	clock_tile.chosen.emit()
 	await frames(40)
 	check(get_tree().current_scene.scene_file_path == "res://ui/clock_menu.tscn", "it opens the Clock menu")
+
+func test_rung_8_taps_count_minutes_and_a_hold_goes_in_fives() -> void:
+	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
+	await frames(4)
+	var mode: ClockMode = get_tree().current_scene
+	var set_card_deck: Array[ClockCard] = [ClockCard.new(false, 9 * 60 + 17)]
+	mode.task_runner.start_deck(8, set_card_deck)
+	await frames(2)
+	await hold("move_right", 2)
+	await hold("move_right", 2)
+	check(mode.minutes_of_the_day() == 7 * 60 + 2, "two taps are two minutes: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	await hold("move_right", 60)
+	var minute: int = mode.minutes_of_the_day() % 60
+	check(minute % 5 == 0 and minute >= 5, "a hold snaps to the fives: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	await hold("move_left", 2)
+	check(mode.minutes_of_the_day() % 5 == 4, "and a tap counts a single minute back: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))

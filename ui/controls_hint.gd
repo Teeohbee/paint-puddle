@@ -19,6 +19,12 @@ const FADE_SPEED: float = 3.0
 var shows_jump: bool = true
 ## With shows_jump off: all four arrows and the A button, for places where A does something else.
 var shows_act_button: bool = false
+## A short line under the card, for controls that need words
+## ("Tap: 1 minute · Hold: 5 minutes"). Empty for none.
+var caption: String = "":
+	set(new_caption):
+		caption = new_caption
+		queue_redraw()
 ## How lit each part is, from 0 (resting) to 1 (pressed).
 var glow: Dictionary = {}
 var actions: Dictionary = {}
@@ -58,6 +64,8 @@ func _draw() -> void:
 	draw_dpad()
 	if glow.has("jump"):
 		draw_jump_button()
+	if caption != "":
+		draw_caption()
 
 
 func draw_dpad() -> void:
@@ -95,3 +103,15 @@ func draw_jump_button() -> void:
 	var font_size: int = int(radius * 1.3)
 	var letter_size: Vector2 = font.get_string_size("A", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 	draw_string(font, BUTTON_CENTRE + Vector2(-letter_size.x / 2.0, font_size * 0.36), "A", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, letter_colour)
+
+
+func draw_caption() -> void:
+	var font: Font = get_theme_default_font()
+	var caption_size: int = 28
+	var width: float = font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, caption_size).x
+	var pill: StyleBoxFlat = StyleBoxFlat.new()
+	pill.bg_color = Color(1, 1, 1, 0.6)
+	pill.set_corner_radius_all(22)
+	pill.anti_aliasing = true
+	draw_style_box(pill, Rect2(Vector2(0, size.y + 10), Vector2(width + 36, 46)))
+	draw_string(font, Vector2(18, size.y + 10 + 33), caption, HORIZONTAL_ALIGNMENT_LEFT, -1, caption_size, PaintColours.INK)
