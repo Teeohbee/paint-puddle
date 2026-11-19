@@ -147,7 +147,11 @@ func _process(delta: float) -> void:
 	if player_can_wind:
 		direction = held_direction()
 	var steps: int = winder.update(direction, delta)
-	if steps != 0:
+	if steps == 0:
+		return
+	if rung == ClockRungs.SINGLE_MINUTES_RUNG and winder.is_repeating():
+		wind_in_fives(steps)
+	else:
 		wind_by_steps(steps)
 
 
@@ -171,6 +175,15 @@ func start_the_day() -> void:
 	clock_face.jump_to(wound_minutes)
 	house.live_minutes_of_the_day = wound_minutes
 	house.show_moment(wound_minutes)
+
+
+## Rung 8's hold: each repeat goes on to the next five, so a hold from
+## 3:17 lands on 3:20, 3:25... and a tap still counts single minutes.
+func wind_in_fives(repeats: int) -> void:
+	for repeat in absi(repeats):
+		wound_minutes += ClockWinder.minutes_to_the_next_five(minutes_of_the_day(), signi(repeats))
+	clock_face.wind_to(wound_minutes)
+	Sound.play("move", 0.02, 1.0 + 0.15 * signi(repeats))
 
 
 ## The clock winds itself, over a set time however far it is.
