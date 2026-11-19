@@ -19,6 +19,7 @@ static func draw_icon(canvas: CanvasItem, kind: String, centre: Vector2, size: f
 		"splat": draw_splat(canvas, centre, size, colour)
 		"hills": draw_hills(canvas, centre, size, colour)
 		"map": draw_globe(canvas, centre, size, colour)
+		"clock": draw_clock(canvas, centre, size, colour)
 		"restart": draw_restart(canvas, centre, size, colour)
 		"home": draw_house(canvas, centre, size, colour)
 		"back": draw_back_arrow(canvas, centre, size, colour)
@@ -96,6 +97,23 @@ static func draw_globe(canvas: CanvasItem, centre: Vector2, size: float, colour:
 	canvas.draw_colored_polygon(PackedVector2Array([
 		centre + Vector2(0.1, 0.0) * size, centre + Vector2(0.28, -0.06) * size, centre + Vector2(0.26, 0.16) * size,
 		centre + Vector2(0.12, 0.28) * size, centre + Vector2(0.04, 0.14) * size]), colour)
+
+
+## A round clock at ten past ten, the way clocks smile in shop windows.
+static func draw_clock(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:
+	var radius: float = size * 0.42
+	canvas.draw_circle(centre, radius, colour)
+	canvas.draw_circle(centre, radius - size * 0.08, Color.WHITE)
+	for hour in 12:
+		var angle: float = TAU * hour / 12.0
+		var mark_start: Vector2 = centre + Vector2.from_angle(angle) * (radius - size * 0.17)
+		var mark_end: Vector2 = centre + Vector2.from_angle(angle) * (radius - size * 0.11)
+		canvas.draw_line(mark_start, mark_end, colour, size * 0.03)
+	var hour_hand_tip: Vector2 = centre + Vector2.from_angle(TAU * 10.0 / 12.0 - PI / 2.0) * size * 0.18
+	var minute_hand_tip: Vector2 = centre + Vector2.from_angle(TAU * 2.0 / 12.0 - PI / 2.0) * size * 0.27
+	canvas.draw_line(centre, hour_hand_tip, PaintColours.INK, size * 0.06)
+	canvas.draw_line(centre, minute_hand_tip, PaintColours.INK, size * 0.04)
+	canvas.draw_circle(centre, size * 0.045, PaintColours.INK)
 
 
 static func draw_brush(canvas: CanvasItem, centre: Vector2, size: float, colour: Color) -> void:

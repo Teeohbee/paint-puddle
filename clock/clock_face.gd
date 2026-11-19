@@ -66,7 +66,7 @@ func draw_face() -> void:
 		var mark_length: float = 28.0 if is_a_five else 13.0
 		var mark_width: float = 7.0 if is_a_five else 3.0
 		draw_line(point_at(angle, RADIUS - 10 - mark_length), point_at(angle, RADIUS - 10), PaintColours.INK, mark_width)
-	var font: Font = get_theme_default_font()
+	var font: Font = game_font()
 	for number in range(1, 13):
 		var spot: Vector2 = point_at(angle_of_turns(number / 12.0), RADIUS - 90)
 		var colour: Color = number_colour(number)
@@ -104,6 +104,13 @@ func draw_puddle_blob() -> void:
 		draw_circle(eye, 11, Color.WHITE)
 		draw_circle(eye + looking * 4, 6, PaintColours.INK)
 	draw_arc(Vector2(0, 12), 10, 0.3, PI - 0.3, 12, PaintColours.INK, 3.0)
+
+
+## The game's chunky font, or Godot's own when there's no theme (in a bare test).
+func game_font() -> Font:
+	if get_tree().root.theme == null:
+		return ThemeDB.fallback_font
+	return get_tree().root.theme.default_font
 
 
 ## The numbers go round the rainbow, red at 12.
