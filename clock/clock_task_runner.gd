@@ -68,7 +68,12 @@ func play_set_card() -> void:
 
 
 func show_set_card_text() -> void:
-	mode.task_banner.show_text("Make it %s" % ClockTime.time_in_the_day_words(current_card.minutes_of_the_day), small_line(current_card.minutes_of_the_day))
+	mode.task_banner.show_text(set_card_words(current_card.minutes_of_the_day), small_line(current_card.minutes_of_the_day))
+
+
+## "Bath time - make it 6 in the evening": the moment, then the time.
+static func set_card_words(time: int) -> String:
+	return "%s - make it %s" % [DayMoments.moment_at(time)["name"], ClockTime.time_in_the_day_words(time)]
 
 
 ## am/pm, and the digital time on the rungs that show it.
@@ -108,16 +113,25 @@ func _process(_delta: float) -> void:
 
 
 func confirm_set_time() -> void:
-	if mode.minutes_of_the_day() == current_card.minutes_of_the_day:
+	var made: int = mode.minutes_of_the_day()
+	mode.house.show_moment(made)
+	if made == current_card.minutes_of_the_day:
 		finish_card()
 		return
 	misses += 1
 	Sound.play("move", 0.02, 0.7)
-	var made: String = ClockTime.time_in_the_day_words(mode.minutes_of_the_day())
-	var wanted: String = ClockTime.time_in_the_day_words(current_card.minutes_of_the_day)
-	show_message_then_the_card("That's %s!" % made, "Make it %s" % wanted)
+	show_message_then_the_card(what_was_made(made, current_card.minutes_of_the_day), set_card_words(current_card.minutes_of_the_day))
 	if misses >= MISSES_BEFORE_THE_GLOW:
 		glow_the_target()
+
+
+## "That's bath time!" - or, when it's the same moment as the one wanted,
+## the time itself: "That's half past 6 in the evening!"
+static func what_was_made(made: int, wanted: int) -> String:
+	var made_moment: Dictionary = DayMoments.moment_at(made)
+	if made_moment["name"] == DayMoments.moment_at(wanted)["name"]:
+		return "That's %s!" % ClockTime.time_in_the_day_words(made)
+	return made_moment["that_is"]
 
 
 func show_message_then_the_card(main_text: String, small_text: String) -> void:
@@ -146,6 +160,7 @@ func glow_the_target() -> void:
 
 func choose_answer() -> void:
 	var picked: int = mode.answer_cards.chosen_answer()
+	mode.house.show_moment(picked)
 	if picked == current_card.minutes_of_the_day:
 		mode.answer_cards.hide_answers()
 		finish_card()
