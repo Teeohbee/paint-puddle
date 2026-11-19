@@ -40,13 +40,10 @@ func test_menu_memory() -> void:
 
 	# Play menu: pick the Book, come back out
 	await open("res://ui/play_menu.tscn")
+	await press("ui_down")
 	await press("ui_right")
 	await press("ui_right")
-	await press("ui_right")
-	await press("ui_right")
-	await press("ui_right")
-	await press("ui_right")
-	check(focused().word == "Book", "right six times is the Book")
+	check(focused().word == "Book", "down and right twice is the Book")
 	await pick_and_wait()
 	check(get_tree().current_scene.scene_file_path == "res://ui/book.tscn", "the Book opened")
 	# Open Colours, then Back, Back to the play menu
@@ -67,12 +64,9 @@ func test_menu_memory() -> void:
 
 	# Play menu remembers Hills too
 	await open("res://ui/play_menu.tscn")
+	await press("ui_up")
 	await press("ui_left")
-	await press("ui_left")
-	await press("ui_left")
-	await press("ui_left")
-	await press("ui_left")
-	check(focused().word == "Hills", "left five times from the Book is Hills")
+	check(focused().word == "Hills", "up and left from the Book is Hills")
 	await pick_and_wait()
 	await open("res://ui/play_menu.tscn")
 	check(focused().word == "Hills", "coming back, the play menu is on Hills")

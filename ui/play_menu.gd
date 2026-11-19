@@ -3,9 +3,10 @@ extends MenuScreen
 ## Starts on whichever was picked last.
 
 const PLACE_TILE_SIZE: Vector2 = Vector2(250, 250)
-const TOP_ROW_Y: float = 260.0
-const BOTTOM_ROW_Y: float = 580.0
+const GRID_TOP: float = 320.0
 const TILE_GAP: int = 40
+## Back stands a little apart from the places, like on the Hills levels.
+const BACK_GAP: int = 70
 
 
 func _ready() -> void:
@@ -21,11 +22,22 @@ func _ready() -> void:
 	var clock: MenuTile = make_tile("Clock", "clock", PaintColours.CYAN, PLACE_TILE_SIZE)
 	var book: MenuTile = make_tile("Book", "book", PaintColours.ORANGE, PLACE_TILE_SIZE)
 	var players: MenuTile = make_players_tile()
-	var top_row: Array[MenuTile] = [back, meadow, hills, paint, splat]
+	var top_row: Array[MenuTile] = [meadow, hills, paint, splat]
 	var bottom_row: Array[MenuTile] = [map, clock, book, players]
-	fill_row(make_tile_row(TOP_ROW_Y, TILE_GAP), top_row)
-	fill_row(make_tile_row(BOTTOM_ROW_Y, TILE_GAP), bottom_row)
-	link_focus(top_row, bottom_row)
+	# Back on its own on the left, then the places in two rows beside it
+	var row: HBoxContainer = make_tile_row(GRID_TOP, BACK_GAP)
+	row.get_parent().offset_bottom = GRID_TOP + PLACE_TILE_SIZE.y * 2 + TILE_GAP
+	row.add_child(back)
+	var grid: VBoxContainer = VBoxContainer.new()
+	grid.add_theme_constant_override("separation", TILE_GAP)
+	row.add_child(grid)
+	for tiles in [top_row, bottom_row]:
+		var grid_row: HBoxContainer = HBoxContainer.new()
+		grid_row.add_theme_constant_override("separation", TILE_GAP)
+		grid.add_child(grid_row)
+		for tile in tiles:
+			grid_row.add_child(tile)
+	link_focus(back, top_row, bottom_row)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
 	var places: Dictionary = {
 		"meadow": [meadow, "res://meadow/meadow.tscn"],
@@ -45,27 +57,20 @@ func _ready() -> void:
 	first_focus.grab_focus_quietly.call_deferred()
 
 
-func fill_row(row: HBoxContainer, tiles: Array[MenuTile]) -> void:
-	for tile in tiles:
-		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(tile)
-
-
-## Left and right read through both rows like a book, so every tile is reachable with them alone.
-## The bottom row is one shorter and sits centred, so each of its tiles is between two above:
-## down goes to the one below and right, up to the one above and right.
-func link_focus(top_row: Array[MenuTile], bottom_row: Array[MenuTile]) -> void:
-	var reading_order: Array[MenuTile] = top_row + bottom_row
-	for tile_index in reading_order.size():
-		var tile: MenuTile = reading_order[tile_index]
-		tile.focus_neighbor_left = reading_order[maxi(tile_index - 1, 0)].get_path()
-		tile.focus_neighbor_right = reading_order[mini(tile_index + 1, reading_order.size() - 1)].get_path()
-	for tile_index in top_row.size():
-		top_row[tile_index].focus_neighbor_top = top_row[tile_index].get_path()
-		top_row[tile_index].focus_neighbor_bottom = bottom_row[mini(tile_index, bottom_row.size() - 1)].get_path()
-	for tile_index in bottom_row.size():
-		bottom_row[tile_index].focus_neighbor_bottom = bottom_row[tile_index].get_path()
-		bottom_row[tile_index].focus_neighbor_top = top_row[mini(tile_index + 1, top_row.size() - 1)].get_path()
+## Up, down, left and right move round the grid and stop at its edges, except
+## left off either row, which goes out to Back. Right from Back goes in at Meadow.
+func link_focus(back: MenuTile, top_row: Array[MenuTile], bottom_row: Array[MenuTile]) -> void:
+	for tiles in [top_row, bottom_row]:
+		for column in tiles.size():
+			var tile: MenuTile = tiles[column]
+			tile.focus_neighbor_left = (back if column == 0 else tiles[column - 1]).get_path()
+			tile.focus_neighbor_right = tiles[mini(column + 1, tiles.size() - 1)].get_path()
+			tile.focus_neighbor_top = top_row[column].get_path()
+			tile.focus_neighbor_bottom = bottom_row[column].get_path()
+	back.focus_neighbor_left = back.get_path()
+	back.focus_neighbor_right = top_row[0].get_path()
+	back.focus_neighbor_top = back.get_path()
+	back.focus_neighbor_bottom = back.get_path()
 
 
 func go_to_place(place_name: String, scene_path: String) -> void:
