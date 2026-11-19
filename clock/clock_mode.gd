@@ -4,9 +4,9 @@ extends Node2D
 ## blob household's house on the right that shows what's happening at that
 ## time of day. One press winds one step of the rung; holding speeds up.
 
-const CLOCK_CENTRE: Vector2 = Vector2(480, 560)
-## The read answers sit under the clock.
-const ANSWER_CARDS_TOP: float = 935.0
+const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
+## The read answers sit under the clock, their bottoms on this line.
+const ANSWER_CARDS_BOTTOM: float = 1066.0
 ## Every visit starts at 7 in the morning.
 const STARTING_MINUTES: int = 7 * 60
 ## Until the rung menu exists, the clock winds like rung 3: half an hour a press.
@@ -56,7 +56,8 @@ func add_hud() -> void:
 	answer_cards = ClockAnswerCards.new()
 	answer_cards.visible = false
 	hud.add_child(answer_cards)
-	answer_cards.position = Vector2(CLOCK_CENTRE.x - answer_cards.size.x / 2.0, ANSWER_CARDS_TOP)
+	answer_cards.bottom_y = ANSWER_CARDS_BOTTOM
+	answer_cards.position = Vector2(CLOCK_CENTRE.x - answer_cards.size.x / 2.0, ANSWER_CARDS_BOTTOM - answer_cards.size.y)
 
 
 ## Until the rung menu exists, deck after deck of the first rung.

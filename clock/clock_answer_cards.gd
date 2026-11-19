@@ -6,6 +6,8 @@ extends Control
 ## fades away, so it can't be picked again.
 
 const CARD_SIZE: Vector2 = Vector2(300, 124)
+## Taller with the digital time on its own line under the rest.
+const CARD_SIZE_WITH_DIGITAL: Vector2 = Vector2(300, 158)
 const GAP: float = 16.0
 const WORDS_FONT_SIZE: int = 40
 const SMALL_FONT_SIZE: int = 26
@@ -16,6 +18,8 @@ var answers: Array[int] = []
 var opacities: Array[float] = []
 var chosen_index: int = 0
 var shows_digital_helper: bool = false
+## Where the bottom of the cards sits, so a taller card grows upwards.
+var bottom_y: float = 1066.0
 
 
 func _ready() -> void:
@@ -29,9 +33,17 @@ func show_answers(new_answers: Array[int], digital_helper: bool) -> void:
 	for answer in answers:
 		opacities.append(1.0)
 	shows_digital_helper = digital_helper
+	size = Vector2(card_size().x * 3 + GAP * 2, card_size().y)
+	position.y = bottom_y - card_size().y
 	chosen_index = 0
 	visible = true
 	queue_redraw()
+
+
+func card_size() -> Vector2:
+	if shows_digital_helper:
+		return CARD_SIZE_WITH_DIGITAL
+	return CARD_SIZE
 
 
 func hide_answers() -> void:
@@ -102,14 +114,14 @@ func draw_answer_card(font: Font, index: int, top_left: Vector2) -> void:
 	if is_chosen:
 		card.set_border_width_all(8)
 		card.border_color = PaintColours.YELLOW
-	draw_style_box(card, Rect2(top_left, CARD_SIZE))
+	draw_style_box(card, Rect2(top_left, card_size()))
 	var ink: Color = Color(PaintColours.INK, opacity)
 	var words: String = ClockTime.time_words(time)
 	var words_size: int = fitting_font_size(font, words, CARD_SIZE.x - 30)
 	draw_centred(font, words, top_left + Vector2(CARD_SIZE.x / 2.0, 50), words_size, ink)
 	var small_line: String = "%s · %s" % [part_of_the_day_words(time), ClockTime.am_or_pm(time)]
 	if shows_digital_helper:
-		small_line += " · " + ClockTime.digital_text(time)
+		draw_centred(font, ClockTime.digital_text(time), top_left + Vector2(CARD_SIZE.x / 2.0, 132), SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6 * opacity))
 	draw_centred(font, small_line, top_left + Vector2(CARD_SIZE.x / 2.0 + 18, 96), SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6 * opacity))
 	var small_width: float = font.get_string_size(small_line, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE).x
 	draw_sun_or_moon(top_left + Vector2(CARD_SIZE.x / 2.0 - small_width / 2.0 - 4, 87), time, opacity)
