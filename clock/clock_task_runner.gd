@@ -149,7 +149,7 @@ func play_read_card() -> void:
 	# moment. (Set cards keep them back until A, so watching the house can't solve those.)
 	mode.house.show_moment(current_card.minutes_of_the_day)
 	var answers: Array[int] = ClockDeck.read_answers(rung, current_card.minutes_of_the_day, random)
-	mode.answer_cards.show_answers(answers, ClockRungs.shows_digital_helper(rung))
+	mode.answer_cards.show_answers(answers)
 	state = State.CHOOSING
 
 

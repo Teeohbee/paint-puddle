@@ -7,8 +7,6 @@ extends Control
 
 ## Three of these and the gaps have to fit between the screen edge and the house.
 const CARD_SIZE: Vector2 = Vector2(276, 124)
-## Taller with the digital time on its own line under the rest.
-const CARD_SIZE_WITH_DIGITAL: Vector2 = Vector2(276, 158)
 const GAP: float = 12.0
 ## Room left and right inside a card for the words, clear of the chosen card's border.
 const CARD_PADDING: float = 36.0
@@ -22,8 +20,7 @@ var answers: Array[int] = []
 ## How see-through each card is, 1 = solid. Faded cards are out.
 var opacities: Array[float] = []
 var chosen_index: int = 0
-var shows_digital_helper: bool = false
-## Where the bottom of the cards sits, so a taller card grows upwards.
+## Where the bottom of the cards sits.
 var bottom_y: float = 1066.0
 
 
@@ -32,23 +29,16 @@ func _ready() -> void:
 	size = Vector2(CARD_SIZE.x * 3 + GAP * 2, CARD_SIZE.y)
 
 
-func show_answers(new_answers: Array[int], digital_helper: bool) -> void:
+func show_answers(new_answers: Array[int]) -> void:
 	answers = new_answers.duplicate()
 	opacities.clear()
 	for answer in answers:
 		opacities.append(1.0)
-	shows_digital_helper = digital_helper
-	size = Vector2(card_size().x * 3 + GAP * 2, card_size().y)
-	position.y = bottom_y - card_size().y
+	size = Vector2(CARD_SIZE.x * 3 + GAP * 2, CARD_SIZE.y)
+	position.y = bottom_y - CARD_SIZE.y
 	chosen_index = 0
 	visible = true
 	queue_redraw()
-
-
-func card_size() -> Vector2:
-	if shows_digital_helper:
-		return CARD_SIZE_WITH_DIGITAL
-	return CARD_SIZE
 
 
 func hide_answers() -> void:
@@ -119,13 +109,11 @@ func draw_answer_card(font: Font, index: int, top_left: Vector2) -> void:
 	if is_chosen:
 		card.set_border_width_all(8)
 		card.border_color = PaintColours.YELLOW
-	draw_style_box(card, Rect2(top_left, card_size()))
+	draw_style_box(card, Rect2(top_left, CARD_SIZE))
 	var ink: Color = Color(PaintColours.INK, opacity)
 	var words: String = ClockTime.time_words(time)
 	var words_size: int = fitting_font_size(font, words, CARD_SIZE.x - CARD_PADDING, WORDS_FONT_SIZE)
 	draw_centred(font, words, top_left + Vector2(CARD_SIZE.x / 2.0, 50), words_size, ink)
-	if shows_digital_helper:
-		draw_centred(font, ClockTime.digital_text(time), top_left + Vector2(CARD_SIZE.x / 2.0, 132), SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6 * opacity))
 	# The sun or moon and the am or pm after it are centred together.
 	var am_or_pm_line: String = small_line(time)
 	var small_width: float = font.get_string_size(am_or_pm_line, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE).x

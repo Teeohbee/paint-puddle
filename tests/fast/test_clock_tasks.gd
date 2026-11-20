@@ -215,6 +215,11 @@ func test_the_answer_cards_stay_clear_of_the_house() -> void:
 	check(cards_right <= ClockMode.HOUSE_BOX.position.x, "the cards end at %d, before the house at %d" % [cards_right, ClockMode.HOUSE_BOX.position.x])
 	check(mode.answer_cards.position.x >= 0.0, "and start on screen: %d" % mode.answer_cards.position.x)
 
+func test_answer_cards_leave_out_the_digital_time_even_on_the_digital_rungs() -> void:
+	var mode: ClockMode = await open_with_deck(4, [read_card(14, 15), set_card(9, 0)])
+	await seconds(1.7)
+	check(mode.answer_cards.size.y == ClockAnswerCards.CARD_SIZE.y, "the cards are the plain height: %d" % mode.answer_cards.size.y)
+
 func test_an_answer_card_says_just_am_or_pm_under_the_time() -> void:
 	check(ClockAnswerCards.small_line(14 * 60 + 15) == "pm", "an afternoon card: '%s'" % ClockAnswerCards.small_line(14 * 60 + 15))
 	check(ClockAnswerCards.small_line(7 * 60) == "am", "a morning card: '%s'" % ClockAnswerCards.small_line(7 * 60))
