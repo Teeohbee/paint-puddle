@@ -215,13 +215,6 @@ func test_the_answer_cards_stay_clear_of_the_house() -> void:
 	check(cards_right <= ClockMode.HOUSE_BOX.position.x, "the cards end at %d, before the house at %d" % [cards_right, ClockMode.HOUSE_BOX.position.x])
 	check(mode.answer_cards.position.x >= 0.0, "and start on screen: %d" % mode.answer_cards.position.x)
 
-func test_the_longest_part_of_the_day_line_fits_inside_a_card() -> void:
-	var cards: ClockAnswerCards = ClockAnswerCards.new()
-	add_child(cards)
-	var font: Font = cards.get_theme_default_font()
-	var longest: String = "in the afternoon · pm"
-	var room: float = ClockAnswerCards.CARD_SIZE.x - ClockAnswerCards.CARD_PADDING - ClockAnswerCards.SUN_OR_MOON_ROOM
-	var font_size: int = cards.fitting_font_size(font, longest, room, ClockAnswerCards.SMALL_FONT_SIZE)
-	check(font.get_string_size(longest, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= room, "'%s' fits at size %d" % [longest, font_size])
-	check(font_size >= 20, "and stays readable: size %d" % font_size)
-	cards.queue_free()
+func test_an_answer_card_says_just_am_or_pm_under_the_time() -> void:
+	check(ClockAnswerCards.small_line(14 * 60 + 15) == "pm", "an afternoon card: '%s'" % ClockAnswerCards.small_line(14 * 60 + 15))
+	check(ClockAnswerCards.small_line(7 * 60) == "am", "a morning card: '%s'" % ClockAnswerCards.small_line(7 * 60))
