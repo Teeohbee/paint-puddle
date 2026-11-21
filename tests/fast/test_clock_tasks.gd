@@ -49,11 +49,11 @@ func test_the_half_of_the_day_counts() -> void:
 	# 7 am is the right number, but the wrong half of the day
 	await tap("act")
 	check(mode.task_runner.card_index == 0, "7 in the morning isn't 7 in the evening")
-	check(mode.task_banner.main_text == "That's wake up time!", "it names the moment that was made: '%s'" % mode.task_banner.main_text)
-	check(mode.task_banner.small_text == "Story - make it 7 in the evening", "and asks again: '%s'" % mode.task_banner.small_text)
-	check(mode.house.moment["name"] == "Wake up", "the house plays the moment that was made")
+	check(mode.task_banner.main_text == "That's banana time!", "it names the moment that was made: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.small_text == "Bedtime story - make it 7 in the evening", "and asks again: '%s'" % mode.task_banner.small_text)
+	check(mode.house.moment["name"] == "A banana", "the house plays the moment that was made")
 	await seconds(3.0)
-	check(mode.task_banner.main_text == "Story - make it 7 in the evening", "then the card comes back: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.main_text == "Bedtime story - make it 7 in the evening", "then the card comes back: '%s'" % mode.task_banner.main_text)
 
 func test_a_second_miss_glows_the_number_to_aim_for() -> void:
 	var mode: ClockMode = await open_with_deck(3, [set_card(9, 30), set_card(9, 0)])
@@ -132,29 +132,29 @@ func test_a_deck_never_opens_on_a_set_card() -> void:
 # ---- the house
 
 func test_a_wrong_time_in_the_same_moment_says_the_time() -> void:
-	var mode: ClockMode = await open_with_deck(3, [set_card(18, 0), set_card(9, 0)])
-	for step in 23:
+	var mode: ClockMode = await open_with_deck(3, [set_card(20, 30), set_card(9, 0)])
+	for step in 25:
 		await tap("move_right")
-	check(mode.minutes_of_the_day() == 18 * 60 + 30, "wound to half past 6: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	check(mode.minutes_of_the_day() == 19 * 60 + 30, "wound to half past 7: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
 	await tap("act")
-	check(mode.task_banner.main_text == "That's half past 6 in the evening!", "same moment, so it says the time: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.main_text == "That's half past 7 in the evening!", "same moment, so it says the time: '%s'" % mode.task_banner.main_text)
 
 func test_the_blobs_only_change_on_confirm_but_the_sky_follows_the_hands() -> void:
-	var mode: ClockMode = await open_with_deck(1, [set_card(18, 0), set_card(9, 0)])
-	check(mode.house.moment["name"] == "Wake up", "the day starts with waking up")
-	for step in 11:
+	var mode: ClockMode = await open_with_deck(1, [set_card(19, 0), set_card(9, 0)])
+	check(mode.house.moment["name"] == "A banana", "the day starts with a banana")
+	for step in 12:
 		await tap("move_right")
 	await seconds(0.5)
-	check(mode.house.moment["name"] == "Wake up", "winding doesn't change the blobs")
+	check(mode.house.moment["name"] == "A banana", "winding doesn't change the blobs")
 	check(mode.house.live_minutes() > 17 * 60, "but the sky has moved on: %d" % mode.house.live_minutes())
 	await tap("act")
-	check(mode.house.moment["name"] == "Bath time", "confirming plays the moment")
+	check(mode.house.moment["name"] == "Bedtime story", "confirming plays the moment")
 
 func test_while_the_hands_are_away_from_the_moment_the_blobs_rest_by_the_sky() -> void:
 	var mode: ClockMode = await open_with_deck(1, [set_card(4, 0), set_card(9, 0)])
-	check(mode.house.acted_out_moment()["doing"] == "wake", "at 7am the blobs act out waking up")
-	check(mode.house.highlighted_room() == "bedroom", "with the bedroom highlighted")
-	check(not mode.house.is_dimmed("bedroom") and mode.house.is_dimmed("kitchen"), "and the other rooms dimmed")
+	check(mode.house.acted_out_moment()["doing"] == "meal", "at 7am the blobs act out eating a banana")
+	check(mode.house.highlighted_room() == "kitchen", "with the kitchen highlighted")
+	check(not mode.house.is_dimmed("kitchen") and mode.house.is_dimmed("bedroom"), "and the other rooms dimmed")
 	for step in 9:
 		await tap("move_left")
 	await seconds(0.5)
@@ -185,18 +185,18 @@ func test_winding_back_to_the_moment_s_own_time_acts_it_out_again() -> void:
 	check(mode.house.acted_out_moment()["doing"] == "sofa", "away at 8am they rest on the sofa, not breakfast: %s" % mode.house.acted_out_moment())
 	await tap("move_left")
 	await seconds(0.5)
-	check(mode.house.acted_out_moment()["doing"] == "wake", "back at 7am, waking up again")
+	check(mode.house.acted_out_moment()["meal"] == "banana", "back at 7am, the banana again")
 
 func test_a_read_card_shows_its_moment_once_the_clock_has_wound() -> void:
-	var mode: ClockMode = await open_with_deck(3, [read_card(18, 0), set_card(9, 0)])
-	check(mode.house.moment["name"] == "Wake up", "still the last moment while the clock winds itself")
+	var mode: ClockMode = await open_with_deck(3, [read_card(18, 30), set_card(9, 0)])
+	check(mode.house.moment["name"] == "A banana", "still the last moment while the clock winds itself")
 	await seconds(1.7)
 	check(mode.house.moment["name"] == "Bath time", "then the blobs play the card's moment, so the house and sky agree: %s" % mode.house.moment["name"])
 
 func test_a_wrong_read_pick_plays_its_moment_then_goes_back_to_the_cards() -> void:
-	var mode: ClockMode = await open_with_deck(3, [read_card(18, 0), set_card(9, 0)])
+	var mode: ClockMode = await open_with_deck(3, [read_card(18, 30), set_card(9, 0)])
 	await seconds(1.7)
-	var wrong_index: int = 0 if mode.answer_cards.answers[0] != 18 * 60 else 1
+	var wrong_index: int = 0 if mode.answer_cards.answers[0] != 18 * 60 + 30 else 1
 	var wrong_time: int = mode.answer_cards.answers[wrong_index]
 	for move in wrong_index:
 		await tap("move_right")
