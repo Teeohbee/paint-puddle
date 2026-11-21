@@ -13,6 +13,8 @@ func fill_everything():
 	settings.record_progress("next_task_index", 12)
 	settings.record_progress("rainbows_painted", 3)
 	settings.set_task_deck(Array([5, 6, 7], TYPE_INT, "", null))
+	settings.record_progress("next_task_index_medium", 4)
+	settings.set_medium_task_deck(Array([1, 2], TYPE_INT, "", null))
 	settings.record_found("words_spelled", "cat")
 	settings.record_found("colours_found", "red")
 	settings.record_found("book_parts_celebrated", "words")
@@ -20,7 +22,8 @@ func fill_everything():
 
 func hills_kept(): return settings.get_progress("hills_levels_completed") == 7
 func write_kept(): return settings.get_progress("letters_traced") == 4
-func meadow_kept(): return settings.get_progress("tasks_completed") == 30 and settings.get_progress("next_task_index") == 12 and settings.get_progress("rainbows_painted") == 3 and settings.get_task_deck().size() == 3
+func meadow_kept(): return settings.get_progress("tasks_completed") == 30 and settings.get_progress("next_task_index") == 12 and settings.get_progress("rainbows_painted") == 3 and settings.get_task_deck().size() == 3 \
+	and settings.get_progress("next_task_index_medium") == 4 and settings.get_medium_task_deck().size() == 2
 func words_kept(): return settings.has_found("words_spelled", "cat") and settings.has_found("book_parts_celebrated", "words")
 func colours_kept(): return settings.has_found("colours_found", "red") and settings.has_found("book_parts_celebrated", "colours")
 
@@ -43,6 +46,7 @@ func test_reset_by_mode() -> void:
 	fill_everything()
 	settings.reset_part("meadow")
 	check(settings.get_progress("tasks_completed") == 0 and settings.get_progress("next_task_index") == 0 and settings.get_progress("rainbows_painted") == 0 and settings.get_task_deck().is_empty(), "Meadow: tasks, rainbows and deck back to the start")
+	check(settings.get_progress("next_task_index_medium") == 0 and settings.get_medium_task_deck().is_empty(), "Meadow: Medium's next card and deck too")
 	check(hills_kept() and words_kept() and colours_kept(), "Meadow: everything else kept, Book words too")
 
 	fill_everything()
@@ -67,7 +71,7 @@ func test_reset_by_mode() -> void:
 
 	fill_everything()
 	settings.reset_part("everything")
-	check(settings.get_progress("hills_levels_completed") == 0 and settings.found_in("words_spelled").is_empty() and settings.found_in("colours_found").is_empty() and settings.get_task_deck().is_empty(), "Everything: all of it")
+	check(settings.get_progress("hills_levels_completed") == 0 and settings.found_in("words_spelled").is_empty() and settings.found_in("colours_found").is_empty() and settings.get_task_deck().is_empty() and settings.get_medium_task_deck().is_empty(), "Everything: all of it")
 
 	fill_everything()
 	settings.reset_part("hills")
