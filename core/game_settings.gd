@@ -113,8 +113,8 @@ const RESET_PARTS: Dictionary = {
 }
 
 
-## Resets one part and leaves the rest. The Meadow is its tasks and
-## rainbows; the words spelled there belong to the Book. The Map is the
+## Resets one part and leaves the rest. The Meadow is its tasks (Easy and
+## Medium) and rainbows; the words spelled there belong to the Book. The Map is the
 ## countries found and its tasks. The Clock is the rungs cleared and the
 ## climbing rung's deck, never the open-all setting. Emptying a Book part lets its
 ## finished-it confetti happen again.
@@ -127,9 +127,10 @@ func reset_part(part: String) -> void:
 			progress["hills_levels_completed"] = 0
 			progress["hills_levels_completed_medium"] = 0
 		"meadow":
-			for progress_name in ["tasks_completed", "next_task_index", "rainbows_painted"]:
+			for progress_name in ["tasks_completed", "next_task_index", "next_task_index_medium", "rainbows_painted"]:
 				progress[progress_name] = 0
 			task_deck.clear()
+			medium_task_deck.clear()
 		"map":
 			collections["countries_found"].clear()
 			collections["book_parts_celebrated"].erase("countries")
