@@ -11,6 +11,8 @@ signal task_started(task: MeadowTask)
 ## A change task done: the thing for the old word turns into the new one.
 signal thing_changed(from_name: String, to_name: String)
 
+const EASY: String = "easy"
+const MEDIUM: String = "medium"
 const TASKS_PATH: String = "res://data/tasks.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
 ## "Drive through the red paint" then "Now wash in the fountain": a new game
@@ -27,6 +29,8 @@ const FREE_SPOTS: Array[Vector2] = [
 	Vector2(1500, 690), Vector2(200, 760), Vector2(1720, 760),
 ]
 
+## EASY or MEDIUM. Set before the runner joins the tree.
+var difficulty: String = EASY
 var tasks: Array[MeadowTask] = []
 var current_task: MeadowTask
 var is_between_tasks: bool = false
@@ -49,6 +53,14 @@ func _ready() -> void:
 	if tasks.is_empty():
 		return
 	start_task(GameSettings.get_progress("next_task_index") % tasks.size())
+
+
+## Medium opens once Easy has dealt every card once, or early if a grown-up
+## has switched "Open Medium" on (it opens the Hills' Medium too).
+static func is_medium_unlocked() -> bool:
+	if GameSettings.get_setting("open_hills_medium") == 1:
+		return true
+	return GameSettings.get_progress("tasks_completed") >= MeadowTask.load_list(TASKS_PATH).size()
 
 
 func start_task(task_index: int) -> void:

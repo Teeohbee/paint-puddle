@@ -8,7 +8,7 @@ func back_tile():
 
 func test_every_menu_has_the_same_back_tile() -> void:
 	var sizes = {}
-	for scene in ["play_menu", "paint_menu", "hills_difficulty_menu", "hills_menu", "clock_menu", "book"]:
+	for scene in ["play_menu", "paint_menu", "hills_difficulty_menu", "meadow_difficulty_menu", "hills_menu", "clock_menu", "book"]:
 		get_tree().change_scene_to_file("res://ui/%s.tscn" % scene)
 		await frames(4)
 		var back = back_tile()

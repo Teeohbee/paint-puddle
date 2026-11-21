@@ -2,7 +2,6 @@ extends GameSuite
 # The Meadow has an Easy / Medium screen, like the Hills. Medium opens once Easy has dealt every card once,
 # or early with "Open Medium" in the grown-up settings.
 
-const MeadowScript = preload("res://meadow/meadow.gd")
 
 func tile(word):
 	for each in get_tree().current_scene.find_children("*", "MenuTile", true, false):

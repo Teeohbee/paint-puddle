@@ -20,7 +20,7 @@ const SETTING_LIMITS: Dictionary = {
 	"sound_volume": {"default": 8, "smallest": 0, "largest": 10},
 	"game_speed_percent": {"default": 100, "smallest": 50, "largest": 100},
 	"coyote_time_milliseconds": {"default": 250, "smallest": 100, "largest": 500},
-	# 1 opens Hills Medium without finishing Easy (for testing, in the grown-up settings)
+	# 1 opens Medium in the Hills and the Meadow without finishing Easy ("Open Medium" in the grown-up settings)
 	"open_hills_medium": {"default": 0, "smallest": 0, "largest": 1},
 	# 1 opens every Clock rung and tricky face, and every Write letter, without changing rungs
 	# cleared or letters traced ("Open everything" in the grown-up settings; the name is from before Write)
