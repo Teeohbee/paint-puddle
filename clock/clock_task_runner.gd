@@ -123,7 +123,7 @@ func show_set_card_text() -> void:
 	mode.task_banner.show_text(set_card_words(current_card.minutes_of_the_day), small_line(current_card.minutes_of_the_day))
 
 
-## "Bath time - make it 6 in the evening": the moment, then the time.
+## "Bath time - make it half past 6 in the evening": the moment, then the time.
 static func set_card_words(time: int) -> String:
 	return "%s - make it %s" % [DayMoments.moment_at(time)["name"], ClockTime.time_in_the_day_words(time)]
 
