@@ -33,6 +33,8 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"rainbows_painted": 0,
 	"tasks_completed": 0,
 	"next_task_index": 0,
+	# Meadow Medium's own next card. Missing from older saves, so it starts at 0.
+	"next_task_index_medium": 0,
 	# How far up the Clock mode ladder, 0 to 8. Rungs and tricky faces open from it.
 	"clock_rungs_cleared": 0,
 	# How many letters traced, 0 to 26, in TracingLetters order. The next one is open.
@@ -51,6 +53,8 @@ var progress: Dictionary = {}
 var collections: Dictionary = {}
 ## Meadow tasks still to come this round, dealt from the end. See TaskRunner.
 var task_deck: Array[int] = []
+## The same for Meadow Medium's own cards.
+var medium_task_deck: Array[int] = []
 ## The same for Map mode's tasks. See MapTaskRunner.
 var map_task_deck: Array[int] = []
 ## The Clock mode cards left on the climbing rung, as ClockCard saved numbers.
@@ -90,6 +94,7 @@ func reset_progress() -> void:
 	progress = DEFAULT_PROGRESS.duplicate()
 	collections = empty_collections()
 	task_deck.clear()
+	medium_task_deck.clear()
 	map_task_deck.clear()
 	clock_task_deck.clear()
 	save_to_disk()
@@ -152,6 +157,16 @@ func set_task_deck(new_deck: Array[int]) -> void:
 
 
 ## A copy, so changing it doesn't change the save.
+func get_medium_task_deck() -> Array[int]:
+	return medium_task_deck.duplicate()
+
+
+func set_medium_task_deck(new_deck: Array[int]) -> void:
+	medium_task_deck = new_deck.duplicate()
+	save_to_disk()
+
+
+## A copy, so changing it doesn't change the save.
 func get_map_task_deck() -> Array[int]:
 	return map_task_deck.duplicate()
 
@@ -202,6 +217,7 @@ func load_from_disk() -> void:
 	progress = DEFAULT_PROGRESS.duplicate()
 	collections = empty_collections()
 	task_deck.clear()
+	medium_task_deck.clear()
 	map_task_deck.clear()
 	clock_task_deck.clear()
 	if not FileAccess.file_exists(save_file_path):
@@ -223,6 +239,7 @@ func load_from_disk() -> void:
 		progress[progress_name] = maxi(progress[progress_name], 0)
 	copy_known_collections(saved.get("collections", {}))
 	copy_task_deck(saved.get("task_deck", []), task_deck)
+	copy_task_deck(saved.get("medium_task_deck", []), medium_task_deck)
 	copy_task_deck(saved.get("map_task_deck", []), map_task_deck)
 	copy_task_deck(saved.get("clock_task_deck", []), clock_task_deck)
 	progress.clock_rungs_cleared = mini(progress.clock_rungs_cleared, ClockRungs.RUNG_COUNT)
@@ -278,6 +295,7 @@ func save_to_disk() -> void:
 		"progress": progress,
 		"collections": collections,
 		"task_deck": task_deck,
+		"medium_task_deck": medium_task_deck,
 		"map_task_deck": map_task_deck,
 		"clock_task_deck": clock_task_deck,
 	}, "\t"))
