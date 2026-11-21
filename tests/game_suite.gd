@@ -16,6 +16,7 @@ const MenuScreenScript = preload("res://ui/menu_screen.gd")
 const HillsLevelScript = preload("res://hills/hills_level.gd")
 const PaintStudioScript = preload("res://paint/paint_studio.gd")
 const ClockModeScript = preload("res://clock/clock_mode.gd")
+const TracingModeScript = preload("res://tracing/tracing_mode.gd")
 
 func before_test() -> void:
 	real_path = GameSettings.save_file_path
@@ -52,6 +53,8 @@ func reset_world() -> void:
 	ClockModeScript.rung_to_play = 1
 	ClockModeScript.rung_just_finished = 0
 	ClockModeScript.tricky_replay = false
+	TracingModeScript.letter_to_play = 0
+	TracingModeScript.letter_just_finished = -1
 	HillsLevelScript.difficulty = HillsLevels.EASY
 	HillsLevelScript.level_just_finished = -1
 	PaintStudioScript.colour_set = "paint"

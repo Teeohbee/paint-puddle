@@ -34,6 +34,8 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"next_task_index": 0,
 	# How far up the Clock mode ladder, 0 to 8. Rungs and tricky faces open from it.
 	"clock_rungs_cleared": 0,
+	# How many letters traced, 0 to 26, in TracingLetters order. The next one is open.
+	"letters_traced": 0,
 }
 
 ## Lists of things found, by name, in the order they were found. The last
