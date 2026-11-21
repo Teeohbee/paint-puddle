@@ -54,6 +54,16 @@ out of turn wobbles and stays empty.
 Medium has no magnet: letting go near a puddle, pot or the fountain leaves the
 blob where it stopped (`MeadowBlob.uses_magnet`).
 
+In Medium every letter rides a butterfly, flying a figure of eight round where
+it was put down (`LetterFlight`, speed 0.5). Numbers and paint drops stay put.
+Letters start on `TaskRunner.FLYING_SPOTS`, ten spots found by search
+(`.tmp_test/probe_flying_spots.gd`) where a loop keeps clear of the rainbow's
+arch, its pots and their names, the puddles, the fountain and the bushes. The
+meadow is crowded, so loops are 30 to 75 rather than the prototype's 90; a loop
+is fitted to its spot, lying down or upright, and shrinks rather than cross
+anything. If the layout changes, rerun the probe: a test checks every flying
+spot still has room.
+
 ## Clock mode
 
 Clock mode teaches reading and setting an analogue clock, to five minutes,
