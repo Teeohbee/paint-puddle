@@ -40,7 +40,7 @@ with single minutes as a stretch. The clock is on the left and the blob
 household's doll's house is on the right, and the house shows what's
 happening at that time of a real 24-hour day.
 
-- **Set cards** ("Bath time - make it 6 in the evening"): wind the hands
+- **Set cards** ("Bath time - make it half past 6 in the evening"): wind the hands
   with left and right (hold to speed up), then press A. The half of the day
   counts. A wrong time plays its own moment, then the card asks again.
 - **Read cards** ("What time is it?"): the clock winds itself to a time;

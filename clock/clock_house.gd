@@ -30,6 +30,8 @@ const BLUE: Color = PaintColours.BLUE
 const YELLOW: Color = PaintColours.YELLOW
 const GREEN: Color = Color(0.45, 0.8, 0.4)
 const WOOD: Color = Color(0.72, 0.5, 0.32)
+const BANANA_YELLOW: Color = Color(1.0, 0.86, 0.3)
+const BANANA_EDGE: Color = Color(0.75, 0.6, 0.15)
 const WHITE: Color = Color(1.0, 1.0, 1.0)
 
 const SKY_KEYS: Array = [
@@ -593,6 +595,7 @@ func draw_kitchen(occupied: bool) -> void:
 	night_shade(lights)
 
 
+## What's at each seat for the meal. A banana doesn't steam.
 func draw_meal(meal: String) -> void:
 	for seat in [Vector2(290, 640), Vector2(430, 640), Vector2(560, 640)]:
 		match meal:
@@ -605,6 +608,10 @@ func draw_meal(meal: String) -> void:
 				ThingDrawings.shape(self, seat + Vector2(-10, -22), Vector2(18, 18), Color(0.95, 0.3, 0.3))
 				draw_line(seat + Vector2(-10, -40), seat + Vector2(-6, -52), WOOD, 4)
 				ThingDrawings.rounded_box(self, Rect2(seat + Vector2(16, -40), Vector2(24, 34)), 5, BLUE.lightened(0.4))
+			"banana":
+				draw_arc(seat + Vector2(0, -44), 30, PI * 0.2, PI * 0.8, 12, BANANA_EDGE, 15)
+				draw_arc(seat + Vector2(0, -44), 30, PI * 0.2, PI * 0.8, 12, BANANA_YELLOW, 10)
+				draw_circle(seat + Vector2(-24, -27), 4, WOOD)
 			_:
 				draw_colored_polygon(ThingDrawings.ellipse_points(seat + Vector2(0, -6), Vector2(46, 12)), WHITE)
 				for pea in 5:
@@ -614,6 +621,8 @@ func draw_meal(meal: String) -> void:
 		ThingDrawings.rounded_box(self, Rect2(360, 590, 30, 48), 6, WHITE)
 	if meal == "tea":
 		ThingDrawings.rounded_box(self, Rect2(340, 586, 70, 50), 10, Color(0.95, 0.5, 0.3))
+	if meal == "banana":
+		return
 	for steam in 3:
 		var x := 300.0 + steam * 130 + sin(time * 2.0 + steam) * 6
 		var rise := fposmod(time * 30.0 + steam * 20, 60)

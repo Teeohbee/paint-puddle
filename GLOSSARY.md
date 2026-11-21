@@ -18,7 +18,7 @@ Words the code and the planning use, so they mean one thing each.
 
 **Minute hand** (on screen "big minute hand" on rungs 1-3): the long hand. It isn't drawn on rungs 1-2. Avoid: "big hand" on its own.
 
-**Moment**: what the blobs in the house are doing at a given time, named at anchor times through all 24 hours (breakfast at 8 am, an owl at 9 pm). Avoid: scene, event.
+**Moment**: what the blobs in the house are doing at a given time, named at anchor times through all 24 hours (breakfast at half past 7 in the morning, an owl at 9 pm). A moment can start on the hour or part way through it. Avoid: scene, event.
 
 **Tricky face**: one of eight harder faces (four numbers, kitchen clock, square, puddle, marks only, twin hands, wristwatch, bare). Each rung cleared unlocks the next one. Avoid: tricky clock, tricky level.
 
