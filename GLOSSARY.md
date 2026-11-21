@@ -35,3 +35,13 @@ Words the code and the planning use, so they mean one thing each.
 **Climbing rung**: the lowest rung not yet cleared, the only one whose deck keeps its place between visits.
 
 **Open all rungs**: a grown-up setting that opens every rung and tricky face while it's on, without changing rungs cleared.
+
+## Tracing
+
+**Stroke**: one continuous line of a letter, pen down to pen up, painted dot by dot from its start. Most letters are one stroke; t, i, j, f and x are two.
+
+**Pen lift**: the move between two strokes. Nothing to paint; the next stroke's start dot shows once the last stroke is done.
+
+**Reach**: how close the blob has to come to a dot to paint it.
+
+**Rhyme**: the school phrase that goes with a letter, such as "Maisie, mountain, mountain" for m (Read Write Inc. Set 1).
