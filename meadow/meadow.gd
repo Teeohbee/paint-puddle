@@ -102,6 +102,8 @@ func _ready() -> void:
 	spelled_things.stones_to_keep_clear_of = stones_layer
 	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
 	task_runner.difficulty = difficulty
+	task_runner.letters_fly = difficulty == TaskRunner.MEDIUM
+	task_runner.places_to_keep_clear = places_for_flying_letters_to_keep_clear()
 	task_runner.blob_to_keep_clear_of = blob
 	task_runner.word_came_to_life.connect(bring_word_to_life)
 	task_runner.task_started.connect(on_task_started)
@@ -162,6 +164,25 @@ func on_fountain_entered() -> void:
 	PaintSplash.burst(effects_layer, blob.position, Color(0.85, 0.97, 1.0), 18, 600)
 	Sound.play("wash", 0.0)
 	blob.change_paint("clean")
+
+
+## The same as spelled things, but the rainbow as it really is: the arch (the
+## top half of a circle) and its row of pots. Spelled things keep clear of a
+## whole circle round it, which would leave flying letters no room.
+func places_for_flying_letters_to_keep_clear() -> Array[Dictionary]:
+	var places: Array[Dictionary] = []
+	var room_for_a_stone: float = LetterStone.RADIUS + 16.0
+	places.append({"centre": RAINBOW_CENTRE, "radius": RainbowBoard.OUTER_RADIUS + room_for_a_stone,
+		"only_above_y": RAINBOW_CENTRE.y + 60.0})
+	for pot in rainbow.pots:
+		places.append({"centre": pot.global_position, "radius": PaintPot.RADIUS + room_for_a_stone})
+		# Its name, written underneath
+		places.append({"centre": pot.global_position + Vector2(0, 80), "radius": 60.0 + room_for_a_stone})
+	var rainbow_circle_centre: Vector2 = RAINBOW_CENTRE + Vector2(0, -60)
+	for place in spelled_things.places_to_keep_clear:
+		if place.centre != rainbow_circle_centre:
+			places.append(place)
+	return places
 
 
 func on_pot_entered(pot: PaintPot) -> void:

@@ -30,7 +30,7 @@ func positions(things: Array) -> Array:
 	return things.map(func(thing): return thing.position)
 
 func keep_clear() -> Array[Dictionary]:
-	return meadow.spelled_things.places_to_keep_clear
+	return runner.places_to_keep_clear
 
 func test_on_medium_every_letter_rides_a_butterfly_and_moves() -> void:
 	await open_meadow_on(TaskRunner.MEDIUM, {"type": "spell", "word": "SANDWICH", "text": "Spell SANDWICH."})
@@ -68,22 +68,48 @@ func loop_points(home: Vector2, loop: Dictionary) -> Array[Vector2]:
 		points.append(home + LetterFlight.loop_offset(TAU * step / 200.0, loop.size, loop.upright))
 	return points
 
+# Checked against the things themselves, not the keep-clear list: a stone's edge never touches them
+func crossings(point: Vector2) -> Array[String]:
+	var found: Array[String] = []
+	var stone: float = LetterStone.RADIUS
+	if point.distance_to(MeadowScript.RAINBOW_CENTRE) < RainbowBoard.OUTER_RADIUS + stone and point.y < MeadowScript.RAINBOW_CENTRE.y + stone:
+		found.append("the rainbow")
+	for pot in meadow.rainbow.pots:
+		if point.distance_to(pot.global_position) < PaintPot.RADIUS + stone:
+			found.append("the %s pot" % pot.paint_name)
+	for puddle in meadow.puddles.values():
+		if point.distance_to(puddle.position) < PaintPuddle.RADIUS + stone:
+			found.append("the %s puddle" % puddle.paint_name)
+	if point.distance_to(meadow.fountain.position) < Fountain.POOL_RADIUS + 14 + stone:
+		found.append("the fountain")
+	for bush in MeadowScript.BUSH_LAYOUT:
+		if point.distance_to(bush.position) < bush.radius + stone:
+			found.append("a bush")
+	return found
+
 func test_no_loop_crosses_anything_or_leaves_the_meadow() -> void:
-	await open_meadow_on(TaskRunner.EASY, {"type": "spell", "word": "CAT", "text": "?"})
-	for spot in TaskRunner.FREE_SPOTS:
+	await open_meadow_on(TaskRunner.MEDIUM, {"type": "spell", "word": "CAT", "text": "?"})
+	for spot in TaskRunner.FLYING_SPOTS + TaskRunner.FREE_SPOTS:
 		var loop: Dictionary = LetterFlight.fitted_loop(spot, keep_clear())
+		if loop.size == 0.0:
+			continue  # stays still where Easy's stones sit
 		for point in loop_points(spot, loop):
 			check(LetterFlight.MEADOW_INSIDE.has_point(point), "the loop from %s stays inside the meadow" % spot)
-			for place in keep_clear():
-				check(point.distance_to(place.centre) >= place.radius - 1.0, "the loop from %s keeps clear of %s" % [spot, place.centre])
+			check(crossings(point).is_empty(), "the loop from %s crosses %s" % [spot, crossings(point)])
+
+func test_every_flying_spot_has_room_to_fly() -> void:
+	await open_meadow_on(TaskRunner.MEDIUM, {"type": "spell", "word": "CAT", "text": "?"})
+	for spot in TaskRunner.FLYING_SPOTS:
+		check(LetterFlight.fitted_loop(spot, keep_clear()).size >= LetterFlight.ROOMY_LOOP, "%s has room" % spot)
+	check(TaskRunner.FLYING_SPOTS.size() >= 10, "enough for the longest Medium word, and two spare")
 
 func test_a_loop_that_wont_fit_shrinks() -> void:
 	var fountain := {"centre": Vector2(500, 500), "radius": 150.0}
 	var open_grass: Dictionary = LetterFlight.fitted_loop(Vector2(900, 500), [fountain])
 	check(open_grass.size == LetterFlight.LOOP_SIZE, "in open grass, a full loop: %s" % open_grass.size)
-	var beside: Dictionary = LetterFlight.fitted_loop(Vector2(500, 720), [fountain])
+	var beside: Dictionary = LetterFlight.fitted_loop(Vector2(500, 660), [fountain])
 	check(beside.size > 0.0 and beside.size < LetterFlight.LOOP_SIZE, "beside the fountain, a smaller one: %s" % beside.size)
-	for point in loop_points(Vector2(500, 720), beside):
+	for point in loop_points(Vector2(500, 660), beside):
 		check(point.distance_to(fountain.centre) >= fountain.radius - 1.0, "that doesn't cross it")
 
 func test_letters_get_the_roomiest_spots() -> void:
