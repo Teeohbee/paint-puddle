@@ -166,7 +166,7 @@ func on_fountain_entered() -> void:
 func on_pot_entered(pot: PaintPot) -> void:
 	if pot.is_filled or is_celebrating:
 		return
-	if blob.paint_name != pot.paint_name:
+	if blob.paint_name != pot.paint_name or not task_runner.allows_pot(pot.paint_name, rainbow.next_empty_pot()):
 		pot.wobble()
 		Sound.play("wobble", 0.0)
 		return
