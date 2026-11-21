@@ -17,12 +17,13 @@ func _ready() -> void:
 	var meadow: MenuTile = make_tile("Meadow", "meadow", PaintColours.RED, PLACE_TILE_SIZE)
 	var hills: MenuTile = make_tile("Hills", "hills", PaintColours.BLUE, PLACE_TILE_SIZE)
 	var paint: MenuTile = make_tile("Paint", "paint", PaintColours.GREEN, PLACE_TILE_SIZE)
-	var splat: MenuTile = make_tile("Splat", "splat", PaintColours.YELLOW, PLACE_TILE_SIZE)
+	# Write has Splat's old place. Splat is archived: its code stays, with no tile.
+	var write: MenuTile = make_tile("Write", "text:a", PaintColours.YELLOW, PLACE_TILE_SIZE)
 	var map: MenuTile = make_tile("Map", "map", PaintColours.PURPLE, PLACE_TILE_SIZE)
 	var clock: MenuTile = make_tile("Clock", "clock", PaintColours.CYAN, PLACE_TILE_SIZE)
 	var book: MenuTile = make_tile("Book", "book", PaintColours.ORANGE, PLACE_TILE_SIZE)
 	var players: MenuTile = make_players_tile()
-	var top_row: Array[MenuTile] = [meadow, hills, paint, splat]
+	var top_row: Array[MenuTile] = [meadow, hills, paint, write]
 	var bottom_row: Array[MenuTile] = [map, clock, book, players]
 	# Back on its own on the left, then the places in two rows beside it
 	var row: HBoxContainer = make_tile_row(GRID_TOP, BACK_GAP)
@@ -43,7 +44,7 @@ func _ready() -> void:
 		"meadow": [meadow, "res://meadow/meadow.tscn"],
 		"hills": [hills, "res://ui/hills_difficulty_menu.tscn"],
 		"paint": [paint, "res://ui/paint_menu.tscn"],
-		"splat": [splat, "res://paint/splat_party.tscn"],
+		"write": [write, "res://ui/write_menu.tscn"],
 		"map": [map, "res://map/map_mode.tscn"],
 		"clock": [clock, "res://ui/clock_menu.tscn"],
 		"book": [book, "res://ui/book.tscn"],
@@ -53,7 +54,9 @@ func _ready() -> void:
 		var scene_path: String = places[place_name][1]
 		tile.chosen.connect(go_to_place.bind(place_name, scene_path))
 	# Back on the place played last, so coming out of it is one press from going back in
-	first_focus = places[last_choice("play_menu", "meadow")][0]
+	# A place that's gone (Splat) lands on Meadow
+	var last_place: String = last_choice("play_menu", "meadow")
+	first_focus = places[last_place if places.has(last_place) else "meadow"][0]
 	first_focus.grab_focus_quietly.call_deferred()
 
 
