@@ -64,6 +64,12 @@ is fitted to its spot, lying down or upright, and shrinks rather than cross
 anything. If the layout changes, rerun the probe: a test checks every flying
 spot still has room.
 
+Medium is the Evening Meadow: deeper blue-green grass with a warm glow at the
+edges, pale flowers, hedge and bushes to match (`MeadowTheme.evening()`),
+fireflies instead of cloud shadows, and `meadow_evening`, the Meadow's tune
+slower and sparser on the bell. A test keeps every Meadow paint at least 0.35
+(RGB distance) from both evening grass shades, so no paint hides in the grass.
+
 ## Clock mode
 
 Clock mode teaches reading and setting an analogue clock, to five minutes,

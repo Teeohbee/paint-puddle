@@ -8,6 +8,10 @@ Words the code and the planning use, so they mean one thing each.
 
 **Meadow deck**: the shuffled cards still to come this round, one per difficulty. Every card comes up once before any comes round again.
 
+**Flying letter**: in Medium, a letter stone carried by a butterfly round a figure of eight (its *loop*). Numbers and drops never fly.
+
+**Evening Meadow**: Medium's look and tune. Avoid: night mode.
+
 **Open Medium**: a grown-up setting that opens Medium in both the Hills and the Meadow. Saved as `open_hills_medium`, its name from before the Meadow had a Medium.
 
 ## Clock mode
