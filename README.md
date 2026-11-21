@@ -51,6 +51,9 @@ colour riddles with no recipe ("Make the colour of a frog"), and fewer
 rainbows. A rainbow card with `"in_order": true` is painted red first: a pot
 out of turn wobbles and stays empty.
 
+Medium has no magnet: letting go near a puddle, pot or the fountain leaves the
+blob where it stopped (`MeadowBlob.uses_magnet`).
+
 ## Clock mode
 
 Clock mode teaches reading and setting an analogue clock, to five minutes,
