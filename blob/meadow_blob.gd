@@ -12,6 +12,8 @@ const MAGNET_TOP_SPEED: float = 240.0
 var move_actions: Array[StringName] = PlayerControls.MOVE_ACTIONS.duplicate()
 var mover: TopDownMover = TopDownMover.new()
 var magnet_picker: MagnetPicker = MagnetPicker.new()
+## Off in Meadow Medium: letting go stops where it stops, so steering is all his.
+var uses_magnet: bool = true
 var was_moving: bool = false
 ## Which paint the blob is wearing - see PaintMixing.
 var paint_name: String = "clean"
@@ -38,7 +40,7 @@ func change_paint(new_paint_name: String) -> void:
 
 func _physics_process(delta: float) -> void:
 	var input_direction: Vector2 = Input.get_vector(move_actions[0], move_actions[1], move_actions[2], move_actions[3])
-	var magnets: Array = get_tree().get_nodes_in_group("magnets")
+	var magnets: Array = get_tree().get_nodes_in_group("magnets") if uses_magnet else []
 	var magnet: Node2D = null
 	if input_direction == Vector2.ZERO:
 		magnet = magnet_picker.pick(global_position, magnets)

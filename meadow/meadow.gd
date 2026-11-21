@@ -77,6 +77,7 @@ func _ready() -> void:
 		things_on_the_grass.add_child(bush)
 	blob = BLOB_SCENE.instantiate()
 	blob.position = Vector2(960, 740)
+	blob.uses_magnet = difficulty == TaskRunner.EASY
 	things_on_the_grass.add_child(blob)
 	trail.follow(blob)
 	effects_layer = Node2D.new()
