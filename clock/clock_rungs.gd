@@ -30,7 +30,6 @@ const TRICKY_FACES: Array[String] = [
 const FIRST_RUNG_WITH_THE_MINUTE_HAND: int = 3
 ## From this rung the hands are just "hour hand" and "minute hand".
 const FIRST_RUNG_WITH_SHORT_HAND_NAMES: int = 4
-const DIGITAL_HELPER_RUNGS: Array[int] = [4, 5, 6]
 const SINGLE_MINUTES_RUNG: int = 8
 
 
@@ -82,12 +81,6 @@ static func minute_hand_name(rung: int) -> String:
 	if rung >= FIRST_RUNG_WITH_SHORT_HAND_NAMES:
 		return "minute hand"
 	return "big minute hand"
-
-
-## The small digital time under a card's words, on the rungs where the
-## minutes first get tricky. It fades out again after them.
-static func shows_digital_helper(rung: int) -> bool:
-	return DIGITAL_HELPER_RUNGS.has(rung)
 
 
 ## The rung being climbed: the lowest one not cleared yet. Once all eight

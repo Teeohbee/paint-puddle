@@ -72,11 +72,11 @@ func test_from_rung_4_the_minute_mark_glows_too_and_to_times_glow_the_next_hour(
 	await tap("act")
 	check(mode.clock_face.glowing_number == 10 and mode.clock_face.glowing_minute == 45, "quarter to 10 glows the 10 and the 45 mark: %d, %d" % [mode.clock_face.glowing_number, mode.clock_face.glowing_minute])
 
-func test_the_digital_helper_shows_on_rungs_4_to_6() -> void:
+func test_a_set_card_says_just_am_or_pm_under_its_words_on_every_rung() -> void:
 	var mode: ClockMode = await open_with_deck(4, [set_card(15, 15)])
-	check(mode.task_banner.small_text == "pm · 3:15", "rung 4 shows the digital time: '%s'" % mode.task_banner.small_text)
+	check(mode.task_banner.small_text == "pm", "rung 4 leaves out the digital time: '%s'" % mode.task_banner.small_text)
 	mode = await open_with_deck(7, [set_card(15, 35)])
-	check(mode.task_banner.small_text == "pm", "rung 7 doesn't: '%s'" % mode.task_banner.small_text)
+	check(mode.task_banner.small_text == "pm", "and so does rung 7: '%s'" % mode.task_banner.small_text)
 
 
 # ---- read cards
