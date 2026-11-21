@@ -1,9 +1,8 @@
 class_name ClockTaskBanner
 extends Control
 ## The task card across the top of Clock mode, in the Meadow banner's style:
-## a little clock, the sentence, and a small line under it for the part of
-## the day, am/pm and (on rungs 4-6) the digital time. It also says the
-## gentle "try again" messages, then goes back to the task.
+## a little clock, the sentence, and a small line under it for am/pm. It
+## also says the gentle "try again" messages, then goes back to the task.
 
 const CARD_HEIGHT: float = 140.0
 const MOST_WIDTH: float = 1300.0

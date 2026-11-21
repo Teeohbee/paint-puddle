@@ -30,8 +30,6 @@ Words the code and the planning use, so they mean one thing each.
 
 **Part of the day**: morning (6 am to 12), afternoon (12-5), evening (5-8) or night (8 pm to 6 am). It's how a card says which half of the day it means, with am/pm shown small alongside, never instead.
 
-**Digital helper**: the small digital time under a card's words on rungs 4-6. It supports the words and never replaces them, and it fades out again on rungs 7-8.
-
 **Rungs cleared**: how far the player has climbed the ladder, as a count. It decides which rungs and tricky faces are open. Avoid: level, progress.
 
 **Climbing rung**: the lowest rung not yet cleared, the only one whose deck keeps its place between visits.

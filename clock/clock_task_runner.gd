@@ -120,20 +120,12 @@ func play_set_card() -> void:
 
 
 func show_set_card_text() -> void:
-	mode.task_banner.show_text(set_card_words(current_card.minutes_of_the_day), small_line(current_card.minutes_of_the_day))
+	mode.task_banner.show_text(set_card_words(current_card.minutes_of_the_day), ClockTime.am_or_pm(current_card.minutes_of_the_day))
 
 
 ## "Bath time - make it 6 in the evening": the moment, then the time.
 static func set_card_words(time: int) -> String:
 	return "%s - make it %s" % [DayMoments.moment_at(time)["name"], ClockTime.time_in_the_day_words(time)]
-
-
-## am/pm, and the digital time on the rungs that show it.
-func small_line(time: int) -> String:
-	var line: String = ClockTime.am_or_pm(time)
-	if ClockRungs.shows_digital_helper(rung):
-		line += " · " + ClockTime.digital_text(time)
-	return line
 
 
 func play_read_card() -> void:
@@ -149,7 +141,7 @@ func play_read_card() -> void:
 	# moment. (Set cards keep them back until A, so watching the house can't solve those.)
 	mode.house.show_moment(current_card.minutes_of_the_day)
 	var answers: Array[int] = ClockDeck.read_answers(rung, current_card.minutes_of_the_day, random)
-	mode.answer_cards.show_answers(answers, ClockRungs.shows_digital_helper(rung))
+	mode.answer_cards.show_answers(answers)
 	state = State.CHOOSING
 
 

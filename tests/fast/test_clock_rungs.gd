@@ -46,10 +46,6 @@ func test_hand_names_drop_little_and_big_from_rung_4() -> void:
 	assert_str(ClockRungs.hour_hand_name(4)).is_equal("hour hand")
 	assert_str(ClockRungs.minute_hand_name(8)).is_equal("minute hand")
 
-func test_the_digital_helper_shows_on_rungs_4_to_6_only() -> void:
-	for rung in EVERY_RUNG:
-		assert_bool(ClockRungs.shows_digital_helper(rung)).override_failure_message("rung %d" % rung).is_equal(rung >= 4 and rung <= 6)
-
 func test_each_rung_cleared_unlocks_the_next_tricky_face() -> void:
 	assert_array(ClockRungs.tricky_faces_unlocked(0)).is_empty()
 	assert_array(ClockRungs.tricky_faces_unlocked(1)).contains_exactly(["four numbers"])
