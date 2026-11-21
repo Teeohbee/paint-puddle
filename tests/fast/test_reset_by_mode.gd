@@ -8,6 +8,7 @@ var settings
 func fill_everything():
 	settings.reset_progress()
 	settings.record_progress("hills_levels_completed", 7)
+	settings.record_progress("letters_traced", 4)
 	settings.record_progress("tasks_completed", 30)
 	settings.record_progress("next_task_index", 12)
 	settings.record_progress("rainbows_painted", 3)
@@ -18,6 +19,7 @@ func fill_everything():
 	settings.record_found("book_parts_celebrated", "colours")
 
 func hills_kept(): return settings.get_progress("hills_levels_completed") == 7
+func write_kept(): return settings.get_progress("letters_traced") == 4
 func meadow_kept(): return settings.get_progress("tasks_completed") == 30 and settings.get_progress("next_task_index") == 12 and settings.get_progress("rainbows_painted") == 3 and settings.get_task_deck().size() == 3
 func words_kept(): return settings.has_found("words_spelled", "cat") and settings.has_found("book_parts_celebrated", "words")
 func colours_kept(): return settings.has_found("colours_found", "red") and settings.has_found("book_parts_celebrated", "colours")
@@ -52,6 +54,16 @@ func test_reset_by_mode() -> void:
 	settings.reset_part("colours")
 	check(not settings.has_found("colours_found", "red") and not settings.has_found("book_parts_celebrated", "colours"), "Book colours: friends gone, and the cheer can happen again")
 	check(hills_kept() and meadow_kept() and words_kept(), "Book colours: everything else kept")
+
+	fill_everything()
+	settings.reset_part("write")
+	check(settings.get_progress("letters_traced") == 0, "Write: back to the first letter")
+	check(hills_kept() and meadow_kept() and words_kept() and colours_kept(), "Write: everything else kept")
+	check(GameSettings.RESET_PARTS["write"] == "Write", "it's called Write in the options")
+
+	fill_everything()
+	settings.reset_part("hills")
+	check(write_kept(), "resetting another part keeps the letters traced")
 
 	fill_everything()
 	settings.reset_part("everything")

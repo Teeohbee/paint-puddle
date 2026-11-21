@@ -1,5 +1,6 @@
 extends GameSuite
-# The play menu: the places in a two-row grid, Back on its own to the left.
+# The play menu: the places in a two-row grid, Back on its own to the left. Write has Splat's old place;
+# Splat is archived, so it has no tile.
 
 func press(action):
 	var event = InputEventAction.new()
@@ -32,7 +33,7 @@ func centre(word):
 
 func test_the_places_sit_in_a_grid_with_back_on_its_own_to_the_left() -> void:
 	await open_play_menu()
-	var top_row = ["Meadow", "Hills", "Paint", "Splat"]
+	var top_row = ["Meadow", "Hills", "Paint", "Write"]
 	var bottom_row = ["Map", "Clock", "Book", "1 Player"]
 	var top_y = centre("Meadow").y
 	var bottom_y = centre("Map").y
@@ -50,11 +51,11 @@ func test_the_places_sit_in_a_grid_with_back_on_its_own_to_the_left() -> void:
 func test_the_d_pad_moves_around_the_grid_and_out_to_back() -> void:
 	await open_play_menu()
 	check(focused_word() == "Meadow", "starts on Meadow: " + focused_word())
-	for word in ["Hills", "Paint", "Splat", "Splat"]:
+	for word in ["Hills", "Paint", "Write", "Write"]:
 		await press("ui_right")
 		check(focused_word() == word, "right along the top row reaches %s: %s" % [word, focused_word()])
 	await press("ui_down")
-	check(focused_word() == "1 Player", "down from Splat is the tile below it: " + focused_word())
+	check(focused_word() == "1 Player", "down from Write is the tile below it: " + focused_word())
 	await press("ui_down")
 	check(focused_word() == "1 Player", "down on the bottom row stays put: " + focused_word())
 	for word in ["Book", "Clock", "Map", "Back", "Back"]:
@@ -68,3 +69,21 @@ func test_the_d_pad_moves_around_the_grid_and_out_to_back() -> void:
 	check(focused_word() == "Map", "down from Meadow is Map: " + focused_word())
 	await press("ui_up")
 	check(focused_word() == "Meadow", "and up again is Meadow: " + focused_word())
+
+func test_splat_is_archived_and_write_has_its_place() -> void:
+	await open_play_menu()
+	check(tile("Splat") == null, "no Splat tile")
+	check(tile("Write") != null, "a Write tile")
+
+func test_coming_back_from_splat_lands_on_meadow() -> void:
+	MenuScreen.remember_choice("play_menu", "splat")
+	get_tree().change_scene_to_file("res://ui/play_menu.tscn")
+	await frames(4)
+	check(focused_word() == "Meadow", "a remembered Splat falls back to Meadow: " + focused_word())
+
+func test_write_opens_the_letter_picker() -> void:
+	await open_play_menu()
+	tile("Write").chosen.emit()
+	await frames(2)
+	check(SceneManager.is_changing_scene, "picking Write goes somewhere")
+	check(MenuScreen.last_choice("play_menu", "") == "write", "and it's remembered")

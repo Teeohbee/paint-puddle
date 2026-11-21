@@ -10,7 +10,7 @@ const REACH: float = 60.0
 const SECONDS_TO_CHEER: float = 3.5
 ## The paint for each letter in turn. Not green: it hides on the grass.
 const LETTER_PAINTS: Array[String] = ["red", "orange", "blue", "purple", "yellow"]
-const PLAY_MENU: String = "res://ui/play_menu.tscn"
+const WRITE_MENU: String = "res://ui/write_menu.tscn"
 ## The blob starts in whichever corner is furthest from the start dot, off the letter.
 const STARTING_SPOTS: Array[Vector2] = [Vector2(220, 300), Vector2(1700, 300), Vector2(220, 900), Vector2(1700, 900)]
 
@@ -18,6 +18,12 @@ const STARTING_SPOTS: Array[Vector2] = [Vector2(220, 300), Vector2(1700, 300), V
 static var letter_to_play: int = 0
 ## The letter just finished, so a menu can start on the one after (-1 for none).
 static var letter_just_finished: int = -1
+
+
+## Each letter opens once the one before it is traced, or all of them with
+## "Open everything" in the grown-up settings.
+static func is_letter_open(index: int) -> bool:
+	return index <= GameSettings.get_progress("letters_traced") or GameSettings.get_setting("open_all_clock_rungs") == 1
 
 var letter_index: int = 0
 var letter: String = ""
@@ -109,6 +115,6 @@ func finish_letter() -> void:
 	if not is_inside_tree():
 		return
 	if letter_index + 1 >= TracingLetters.ORDER.length():
-		SceneManager.go_to(PLAY_MENU)
+		SceneManager.go_to(WRITE_MENU)
 		return
 	start_letter(letter_index + 1)

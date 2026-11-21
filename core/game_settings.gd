@@ -22,7 +22,8 @@ const SETTING_LIMITS: Dictionary = {
 	"coyote_time_milliseconds": {"default": 250, "smallest": 100, "largest": 500},
 	# 1 opens Hills Medium without finishing Easy (for testing, in the grown-up settings)
 	"open_hills_medium": {"default": 0, "smallest": 0, "largest": 1},
-	# 1 opens every Clock rung and tricky face, without changing rungs cleared (grown-up settings)
+	# 1 opens every Clock rung and tricky face, and every Write letter, without changing rungs
+	# cleared or letters traced ("Open everything" in the grown-up settings; the name is from before Write)
 	"open_all_clock_rungs": {"default": 0, "smallest": 0, "largest": 1},
 }
 
@@ -103,6 +104,7 @@ const RESET_PARTS: Dictionary = {
 	"clock": "Clock",
 	"words": "Book words",
 	"colours": "Book colours",
+	"write": "Write",
 }
 
 
@@ -130,6 +132,8 @@ func reset_part(part: String) -> void:
 		"clock":
 			progress["clock_rungs_cleared"] = 0
 			clock_task_deck.clear()
+		"write":
+			progress["letters_traced"] = 0
 		"words", "colours":
 			var collection_name: String = "words_spelled" if part == "words" else "colours_found"
 			collections[collection_name].clear()

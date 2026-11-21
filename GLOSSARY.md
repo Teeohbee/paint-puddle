@@ -34,9 +34,11 @@ Words the code and the planning use, so they mean one thing each.
 
 **Climbing rung**: the lowest rung not yet cleared, the only one whose deck keeps its place between visits.
 
-**Open all rungs**: a grown-up setting that opens every rung and tricky face while it's on, without changing rungs cleared.
+**Open everything**: a grown-up setting that opens every Clock rung and tricky face, and every Write letter, while it's on, without changing rungs cleared or letters traced. Saved as `open_all_clock_rungs`, its name from before Write.
 
-## Tracing
+## Write (tracing)
+
+Write is the mode's name on the menus; the code calls it tracing.
 
 **Stroke**: one continuous line of a letter, pen down to pen up, painted dot by dot from its start. Most letters are one stroke; t, i, j, f and x are two.
 

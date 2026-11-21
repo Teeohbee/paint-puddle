@@ -1,6 +1,6 @@
 extends MenuScreen
 ## Pick a Clock mode rung. Each one opens when the one before it is cleared
-## (or all of them, with "Open all rungs" in the grown-up settings). Starts on
+## (or all of them, with "Open everything" in the grown-up settings). Starts on
 ## the rung after the one just cleared, or the one being climbed.
 ##
 ## Back stands on its own left of the rungs. Once a rung is cleared, a Tricky

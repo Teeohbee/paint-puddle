@@ -52,10 +52,28 @@ happening at that time of a real 24-hour day.
 - **Tricky clocks**: once a rung is cleared, the Tricky tile on the Clock
   menu replays cleared rungs with a random unlocked face on every card.
 
-"Open all rungs" in the grown-up settings opens every rung and face without
+"Open everything" in the grown-up settings opens every rung and face without
 changing how far the player has climbed. The Clock part of Reset clears the
 climb and never the setting. Moments of the day live in
 `data/clock_moments.json`; the words for Clock mode are in `GLOSSARY.md`.
+
+## Write
+
+Write teaches letter formation the way school does (Read Write Inc. Set 1):
+one big dotted lowercase letter on the meadow grass, with its rhyme on a card
+("Maisie, mountain, mountain"). Drive the blob along the dots to paint them,
+in order, from the green start dot. t, i, j, f and x have a pen lift: the
+next stroke's start dot shows once the first is done. Steering round curves
+is the point - good practice for the stick - but every letter can be done on
+the D-pad (a slow test proves it).
+
+- Letters come in school order: m a s d t i n p g o c k u b f e l h r j v y w z x q.
+  Each opens once the one before it is traced, or all of them with "Open
+  everything" in the grown-up settings.
+- Reset has a Write part. Letters live in `tracing/tracing_letters.gd`.
+
+Splat is archived: it has no tile, but its code and tests stay, to be
+reworked.
 
 ## Tests
 
