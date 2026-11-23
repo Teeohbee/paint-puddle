@@ -75,6 +75,21 @@ the D-pad (a slow test proves it).
 Splat is archived: it has no tile, but its code and tests stay, to be
 reworked.
 
+## Birthdays
+
+The title screen throws a party on a birthday. The name and date of birth
+live in `user://birthday.json` on the machine that plays the game (on Linux,
+`~/.local/share/godot/app_userdata/Paint Puddle/birthday.json`), never in
+this repo:
+
+```json
+{"name": "Sam", "born": "2021-03-14"}
+```
+
+On the day: "Happy 6th birthday, Sam!", party hats, bunting, balloons with
+the age on and confetti. For the six days after: "Sam's birthday week!", with
+hats, bunting and the odd balloon. No file means no party.
+
 ## Tests
 
 Tests use [gdUnit4](https://github.com/godot-gdunit-labs/gdUnit4), installed by
