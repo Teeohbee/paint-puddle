@@ -92,5 +92,14 @@ func test_when_the_intro_ends_it_is_his_turn_until_he_winds() -> void:
 
 func test_the_number_line_has_no_0() -> void:
 	var mode: ClockMode = await open_free_play(false)
-	check(mode.intro.spot_on_the_line(1).x == -ClockNumberLineIntro.LINE_HALF_WIDTH, "1 starts the line")
-	check(mode.intro.spot_on_the_line(12).x == ClockNumberLineIntro.LINE_HALF_WIDTH, "12 ends it")
+	check(mode.intro.spot_on_the_line(1).x < mode.intro.spot_on_the_line(2).x, "1 starts the line")
+	check(is_equal_approx(mode.intro.spot_on_the_line(12).x, ClockNumberLineIntro.LINE_CENTRE_X + ClockNumberLineIntro.LINE_HALF_WIDTH), "12 ends it")
+
+func test_the_12_on_the_line_stays_clear_of_the_house() -> void:
+	var mode: ClockMode = await open_free_play(false)
+	var font: Font = mode.clock_face.game_font()
+	var twelve_width: float = font.get_string_size("12", HORIZONTAL_ALIGNMENT_LEFT, -1, ClockNumberLineIntro.LINE_NUMBER_FONT_SIZE).x
+	var twelve_right: float = ClockMode.CLOCK_CENTRE.x + mode.intro.spot_on_the_line(12).x + twelve_width / 2.0
+	check(twelve_right < ClockMode.HOUSE_BOX.position.x - 10.0, "the 12 ends at %.0f, the house starts at %.0f" % [twelve_right, ClockMode.HOUSE_BOX.position.x])
+	var one_width: float = font.get_string_size("1", HORIZONTAL_ALIGNMENT_LEFT, -1, ClockNumberLineIntro.LINE_NUMBER_FONT_SIZE).x
+	check(ClockMode.CLOCK_CENTRE.x + mode.intro.spot_on_the_line(1).x - one_width / 2.0 > 20.0, "and the 1 is on the screen")

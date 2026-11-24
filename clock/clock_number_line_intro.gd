@@ -19,7 +19,12 @@ const SECONDS_TO_HOLD_THE_LINE: float = 0.8
 const SECONDS_TO_CURL: float = 4.5
 const SECONDS_PER_TICK: float = 0.18
 const LINE_Y: float = 250.0
-const LINE_HALF_WIDTH: float = 420.0
+const LINE_HALF_WIDTH: float = 395.0
+## Nudged left of the clock's centre so the 12 stays clear of the house.
+const LINE_CENTRE_X: float = -25.0
+## Numbers sit a little smaller on the line, so 10, 11 and 12 don't crowd,
+## and grow to the face's size as they hop.
+const LINE_NUMBER_FONT_SIZE: int = 46
 ## Each number's hop, as a share of the whole curl; the next one sets off this much later.
 const HOP_SHARE: float = 0.3
 const HOP_GAP: float = (1.0 - HOP_SHARE) / 11.0
@@ -100,7 +105,7 @@ func hop_progress(number: int) -> float:
 
 
 func spot_on_the_line(number: int) -> Vector2:
-	return Vector2(-LINE_HALF_WIDTH + LINE_HALF_WIDTH * 2.0 * (number - 1) / 11.0, LINE_Y)
+	return Vector2(LINE_CENTRE_X - LINE_HALF_WIDTH + LINE_HALF_WIDTH * 2.0 * (number - 1) / 11.0, LINE_Y)
 
 
 ## Where the number goes on the face.
@@ -129,7 +134,8 @@ func _draw() -> void:
 		var label: String = str(number)
 		var opacity: float = line_opacity
 		var colour: Color = ClockFace.number_colour(number).darkened(0.15)
-		var size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, ClockFace.NUMBER_FONT_SIZE)
+		var font_size: int = roundi(lerpf(LINE_NUMBER_FONT_SIZE, ClockFace.NUMBER_FONT_SIZE, hop_progress(number)))
+		var size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 		# Above its dot on the line, centred on its place on the face
 		var centre: Vector2 = number_spot(number) + Vector2(0, -50).lerp(Vector2.ZERO, hop_progress(number))
-		draw_string(font, centre + Vector2(-size.x / 2.0, ClockFace.NUMBER_FONT_SIZE * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, ClockFace.NUMBER_FONT_SIZE, Color(colour, opacity))
+		draw_string(font, centre + Vector2(-size.x / 2.0, font_size * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(colour, opacity))
