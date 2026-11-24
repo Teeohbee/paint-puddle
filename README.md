@@ -33,6 +33,18 @@ A level can set an optional `word_medium` in `hills/hills_levels.gd`, for
 example `"word": "SUN", "word_medium": "SUNSHINE"`. Without one, Medium spells
 the Easy word. Pots and paint are shared.
 
+## Meadow difficulty
+
+The Meadow asks Easy or Medium first, like the Hills. Medium opens once Easy
+has dealt every card once (`tasks_completed` reaches the Easy pack's size), or
+early with "Open Medium", which opens both places' Medium.
+
+Medium has its own cards in `data/tasks_medium.json`, not the Easy ones made
+harder. Each difficulty keeps its own shuffled deck and next card in the save
+(`task_deck` and `next_task_index`, `medium_task_deck` and
+`next_task_index_medium`). The red paint then wash lesson is Easy's first two
+cards only. Resetting the Meadow resets both.
+
 ## Clock mode
 
 Clock mode teaches reading and setting an analogue clock the way UK Year 1

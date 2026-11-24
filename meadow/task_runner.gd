@@ -11,10 +11,15 @@ signal task_started(task: MeadowTask)
 ## A change task done: the thing for the old word turns into the new one.
 signal thing_changed(from_name: String, to_name: String)
 
+const EASY: String = "easy"
+const MEDIUM: String = "medium"
 const TASKS_PATH: String = "res://data/tasks.json"
+## Medium's own cards, not the Easy ones made harder.
+const MEDIUM_TASKS_PATH: String = "res://data/tasks_medium.json"
 const SECONDS_BETWEEN_TASKS: float = 2.6
 ## "Drive through the red paint" then "Now wash in the fountain": a new game
 ## starts with these two, and the wash only ever follows the red paint.
+## Easy only: Medium's first two cards are ordinary cards.
 const RED_PAINT_TASK_INDEX: int = 0
 const WASH_TASK_INDEX: int = 1
 ## Nothing new appears this close to the blob, or it would be picked for free.
@@ -27,6 +32,8 @@ const FREE_SPOTS: Array[Vector2] = [
 	Vector2(1500, 690), Vector2(200, 760), Vector2(1720, 760),
 ]
 
+## EASY or MEDIUM. Set before the runner joins the tree.
+var difficulty: String = EASY
 var tasks: Array[MeadowTask] = []
 var current_task: MeadowTask
 var is_between_tasks: bool = false
@@ -45,10 +52,43 @@ func _init(layer_for_stones: Node2D, layer_for_effects: Node2D, task_banner: Tas
 
 
 func _ready() -> void:
-	tasks = MeadowTask.load_list(TASKS_PATH)
+	tasks = MeadowTask.load_list(MEDIUM_TASKS_PATH if is_medium() else TASKS_PATH)
 	if tasks.is_empty():
 		return
-	start_task(GameSettings.get_progress("next_task_index") % tasks.size())
+	start_task(GameSettings.get_progress(next_task_progress_name()) % tasks.size())
+
+
+func is_medium() -> bool:
+	return difficulty == MEDIUM
+
+
+## Each difficulty keeps its own next card and deck.
+func next_task_progress_name() -> String:
+	return "next_task_index_medium" if is_medium() else "next_task_index"
+
+
+func saved_deck() -> Array[int]:
+	return GameSettings.get_medium_task_deck() if is_medium() else GameSettings.get_task_deck()
+
+
+func save_deck(deck: Array[int]) -> void:
+	if is_medium():
+		GameSettings.set_medium_task_deck(deck)
+	else:
+		GameSettings.set_task_deck(deck)
+
+
+## Easy teaches the game with the red paint then the wash. Medium doesn't.
+func has_wash_lesson() -> bool:
+	return not is_medium()
+
+
+## Medium opens once Easy has dealt every card once, or early if a grown-up
+## has switched "Open Medium" on (it opens the Hills' Medium too).
+static func is_medium_unlocked() -> bool:
+	if GameSettings.get_setting("open_hills_medium") == 1:
+		return true
+	return GameSettings.get_progress("tasks_completed") >= MeadowTask.load_list(TASKS_PATH).size()
 
 
 func start_task(task_index: int) -> void:
@@ -63,19 +103,23 @@ func start_task(task_index: int) -> void:
 ## so every task comes up once before any comes round again. The deck is
 ## saved. A new deck never starts with the task just played. The first two
 ## tasks teach the game (red paint, then wash it off), so the wash always
-## comes straight after the red paint and is never dealt on its own.
+## comes straight after the red paint and is never dealt on its own (Easy only).
 func deal_next_task_index(current_task_index: int) -> int:
 	if tasks.size() <= 1:
 		return 0
-	if current_task_index == RED_PAINT_TASK_INDEX:
+	if has_wash_lesson() and current_task_index == RED_PAINT_TASK_INDEX:
 		return WASH_TASK_INDEX
-	var deck: Array[int] = GameSettings.get_task_deck().filter(
-		func(task_index: int) -> bool: return task_index < tasks.size() and task_index != current_task_index and task_index != WASH_TASK_INDEX)
+	var deck: Array[int] = saved_deck().filter(
+		func(task_index: int) -> bool: return task_index < tasks.size() and task_index != current_task_index and not is_the_wash(task_index))
 	if deck.is_empty():
 		deck = new_shuffled_deck(current_task_index)
 	var next_task_index: int = deck.pop_back()
-	GameSettings.set_task_deck(deck)
+	save_deck(deck)
 	return next_task_index
+
+
+func is_the_wash(task_index: int) -> bool:
+	return has_wash_lesson() and task_index == WASH_TASK_INDEX
 
 
 ## Leaves out the task just played and the wash. Straight after the wash it
@@ -84,8 +128,8 @@ func new_shuffled_deck(task_index_just_played: int) -> Array[int]:
 	var deck: Array[int] = []
 	for task_index in tasks.size():
 		var was_just_played: bool = task_index == task_index_just_played
-		var is_the_wash_pair_just_played: bool = task_index_just_played == WASH_TASK_INDEX and task_index == RED_PAINT_TASK_INDEX
-		if not was_just_played and task_index != WASH_TASK_INDEX and not is_the_wash_pair_just_played:
+		var is_the_wash_pair_just_played: bool = is_the_wash(task_index_just_played) and task_index == RED_PAINT_TASK_INDEX
+		if not was_just_played and not is_the_wash(task_index) and not is_the_wash_pair_just_played:
 			deck.append(task_index)
 	deck.shuffle()
 	return deck
@@ -184,8 +228,8 @@ func finish_task() -> void:
 	var confetti: Confetti = Confetti.new()
 	effects_layer.add_child(confetti)
 	GameSettings.record_progress("tasks_completed", GameSettings.get_progress("tasks_completed") + 1)
-	var next_index: int = deal_next_task_index(GameSettings.get_progress("next_task_index"))
-	GameSettings.record_progress("next_task_index", next_index)
+	var next_index: int = deal_next_task_index(GameSettings.get_progress(next_task_progress_name()))
+	GameSettings.record_progress(next_task_progress_name(), next_index)
 	task_finished.emit()
 	clear_the_grass()
 	await get_tree().create_timer(SECONDS_BETWEEN_TASKS, false).timeout

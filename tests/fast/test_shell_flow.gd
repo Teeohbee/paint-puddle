@@ -1,6 +1,6 @@
 extends GameSuite
 # Walks the whole shell on "controller" presses only: splash, title, play,
-# meadow, pause, restart, home, options, back, and the unplugged notice.
+# Easy or Medium, meadow, pause, restart, home, options, back, and the unplugged notice.
 
 func press(action):
 	var event = InputEventAction.new()
@@ -65,7 +65,10 @@ func test_shell_flow() -> void:
 	check(focused_word() == "Hills", "back on Hills, the place just visited: " + focused_word())
 	await press("ui_left")
 	await press("ui_accept")
-	check(await wait_for_scene("Meadow"), "Meadow starts the meadow")
+	check(await wait_for_scene("MeadowDifficultyMenu"), "Meadow opens its Easy or Medium menu")
+	check(focused_word() == "Easy", "it starts on Easy: " + focused_word())
+	await press("ui_accept")
+	check(await wait_for_scene("Meadow"), "Easy starts the meadow")
 	check(Music.wanted_track == "meadow", "the meadow has its own music")
 
 	await press("pause")
@@ -108,6 +111,8 @@ func test_shell_flow() -> void:
 	await press("ui_accept")
 	await wait_for_scene("PlayMenu")
 	check(focused_word() == "Meadow", "the play menu is on Meadow, the place played last: " + focused_word())
+	await press("ui_accept")
+	await wait_for_scene("MeadowDifficultyMenu")
 	await press("ui_accept")
 	await wait_for_scene("Meadow")
 	get_tree().current_scene.get_node("PauseMenu").on_joy_connection_changed(0, false)

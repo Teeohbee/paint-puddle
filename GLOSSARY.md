@@ -2,6 +2,14 @@
 
 Words the code and the planning use, so they mean one thing each.
 
+## Meadow
+
+**Card**: one Meadow task, such as "Spell CAT" or "Make orange". Easy's are in `data/tasks.json`, Medium's in `data/tasks_medium.json`. Avoid: level.
+
+**Meadow deck**: the shuffled cards still to come this round, one per difficulty. Every card comes up once before any comes round again.
+
+**Open Medium**: a grown-up setting that opens Medium in both the Hills and the Meadow. Saved as `open_hills_medium`, its name from before the Meadow had a Medium.
+
 ## Clock mode
 
 **Rung**: one step of the Clock mode ladder, such as "quarter past". It has its own deck of tasks and its own step size. Not to be confused with a Hills *level*.

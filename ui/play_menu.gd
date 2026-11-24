@@ -41,7 +41,7 @@ func _ready() -> void:
 	link_focus(back, top_row, bottom_row)
 	back.chosen.connect(func(): SceneManager.go_to("res://ui/title_screen.tscn"))
 	var places: Dictionary = {
-		"meadow": [meadow, "res://meadow/meadow.tscn"],
+		"meadow": [meadow, "res://ui/meadow_difficulty_menu.tscn"],
 		"hills": [hills, "res://ui/hills_difficulty_menu.tscn"],
 		"paint": [paint, "res://ui/paint_menu.tscn"],
 		"write": [write, "res://ui/write_menu.tscn"],

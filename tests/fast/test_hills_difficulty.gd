@@ -1,8 +1,7 @@
 extends GameSuite
 
-func _init():
-	await get_tree().process_frame
-	await get_tree().process_frame
+# Hills Medium: its own words and progress, locked until Easy is done.
+func test_hills_difficulty() -> void:
 	var settings = GameSettings
 	settings.reset_progress()
 	var levels = load("res://hills/hills_levels.gd")

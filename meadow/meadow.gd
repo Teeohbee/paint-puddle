@@ -18,6 +18,9 @@ const PUDDLE_LAYOUT: Dictionary = {
 const FOUNTAIN_POSITION: Vector2 = Vector2(240, 600)
 const RAINBOW_CENTRE: Vector2 = Vector2(960, 500)
 
+## TaskRunner.EASY or TaskRunner.MEDIUM, picked on the Easy / Medium screen.
+static var difficulty: String = TaskRunner.EASY
+
 var blob: MeadowBlob
 var rainbow: RainbowBoard
 var puddles: Dictionary = {}
@@ -97,6 +100,7 @@ func _ready() -> void:
 	move_child(stones_layer, things_on_the_grass.get_index())
 	spelled_things.stones_to_keep_clear_of = stones_layer
 	task_runner = TaskRunner.new(stones_layer, effects_layer, task_banner)
+	task_runner.difficulty = difficulty
 	task_runner.blob_to_keep_clear_of = blob
 	task_runner.word_came_to_life.connect(bring_word_to_life)
 	task_runner.task_started.connect(on_task_started)

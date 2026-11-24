@@ -1,0 +1,8 @@
+[
+	{"type": "spell", "word": "GRASS", "text": "Spell GRASS."},
+	{"type": "sum", "question": "8 + 7", "answer": 15, "choices": [14, 15, 16], "text": "What is 8 + 7?"},
+	{"type": "make", "paint": "purple", "text": "Make the colour of a plum."},
+	{"type": "collect", "paint": "blue", "count": 9, "text": "Collect 9 blue drops."},
+	{"type": "spell", "word": "CLOUD", "text": "Spell CLOUD."},
+	{"type": "visit", "target": "puddle:yellow", "text": "Find the colour of a lemon."}
+]

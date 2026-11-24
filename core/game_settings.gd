@@ -21,7 +21,7 @@ const SETTING_LIMITS: Dictionary = {
 	"sound_volume": {"default": 8, "smallest": 0, "largest": 10},
 	"game_speed_percent": {"default": 100, "smallest": 50, "largest": 100},
 	"coyote_time_milliseconds": {"default": 250, "smallest": 100, "largest": 500},
-	# 1 opens Hills Medium without finishing Easy (for testing, in the grown-up settings)
+	# 1 opens Medium in the Hills and the Meadow without finishing Easy ("Open Medium" in the grown-up settings)
 	"open_hills_medium": {"default": 0, "smallest": 0, "largest": 1},
 	# 1 opens every Clock rung and tricky face, and every Write letter, without changing rungs
 	# cleared or letters traced ("Open everything" in the grown-up settings; the name is from before Write)
@@ -34,6 +34,8 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"rainbows_painted": 0,
 	"tasks_completed": 0,
 	"next_task_index": 0,
+	# Meadow Medium's own next card. Missing from older saves, so it starts at 0.
+	"next_task_index_medium": 0,
 	# How far up the Clock mode ladder, 0 to 8. Rungs and tricky faces open from it.
 	"clock_rungs_cleared": 0,
 	# Climbing rung: cards right first time in a row, and the day (yyyymmdd) of the first run of 5. See ClockMastery.
@@ -60,6 +62,8 @@ var progress: Dictionary = {}
 var collections: Dictionary = {}
 ## Meadow tasks still to come this round, dealt from the end. See TaskRunner.
 var task_deck: Array[int] = []
+## The same for Meadow Medium's own cards.
+var medium_task_deck: Array[int] = []
 ## The same for Map mode's tasks. See MapTaskRunner.
 var map_task_deck: Array[int] = []
 ## The Clock mode cards left on the climbing rung, as ClockCard saved numbers.
@@ -99,6 +103,7 @@ func reset_progress() -> void:
 	progress = DEFAULT_PROGRESS.duplicate()
 	collections = empty_collections()
 	task_deck.clear()
+	medium_task_deck.clear()
 	map_task_deck.clear()
 	clock_task_deck.clear()
 	save_to_disk()
@@ -117,8 +122,8 @@ const RESET_PARTS: Dictionary = {
 }
 
 
-## Resets one part and leaves the rest. The Meadow is its tasks and
-## rainbows; the words spelled there belong to the Book. The Map is the
+## Resets one part and leaves the rest. The Meadow is its tasks (Easy and
+## Medium) and rainbows; the words spelled there belong to the Book. The Map is the
 ## countries found and its tasks. The Clock is the rungs cleared, the
 ## first-try run, intros seen and the climbing rung's deck, never the open-all setting. Emptying a Book part lets its
 ## finished-it confetti happen again.
@@ -131,9 +136,10 @@ func reset_part(part: String) -> void:
 			progress["hills_levels_completed"] = 0
 			progress["hills_levels_completed_medium"] = 0
 		"meadow":
-			for progress_name in ["tasks_completed", "next_task_index", "rainbows_painted"]:
+			for progress_name in ["tasks_completed", "next_task_index", "next_task_index_medium", "rainbows_painted"]:
 				progress[progress_name] = 0
 			task_deck.clear()
+			medium_task_deck.clear()
 		"map":
 			collections["countries_found"].clear()
 			collections["book_parts_celebrated"].erase("countries")
@@ -158,6 +164,16 @@ func get_task_deck() -> Array[int]:
 
 func set_task_deck(new_deck: Array[int]) -> void:
 	task_deck = new_deck.duplicate()
+	save_to_disk()
+
+
+## A copy, so changing it doesn't change the save.
+func get_medium_task_deck() -> Array[int]:
+	return medium_task_deck.duplicate()
+
+
+func set_medium_task_deck(new_deck: Array[int]) -> void:
+	medium_task_deck = new_deck.duplicate()
 	save_to_disk()
 
 
@@ -212,6 +228,7 @@ func load_from_disk() -> void:
 	progress = DEFAULT_PROGRESS.duplicate()
 	collections = empty_collections()
 	task_deck.clear()
+	medium_task_deck.clear()
 	map_task_deck.clear()
 	clock_task_deck.clear()
 	if not FileAccess.file_exists(save_file_path):
@@ -233,6 +250,7 @@ func load_from_disk() -> void:
 		progress[progress_name] = maxi(progress[progress_name], 0)
 	copy_known_collections(saved.get("collections", {}))
 	copy_task_deck(saved.get("task_deck", []), task_deck)
+	copy_task_deck(saved.get("medium_task_deck", []), medium_task_deck)
 	copy_task_deck(saved.get("map_task_deck", []), map_task_deck)
 	copy_task_deck(saved.get("clock_task_deck", []), clock_task_deck)
 	progress.clock_rungs_cleared = mini(progress.clock_rungs_cleared, ClockRungs.RUNG_COUNT)
@@ -294,6 +312,7 @@ func save_to_disk() -> void:
 		"progress": progress,
 		"collections": collections,
 		"task_deck": task_deck,
+		"medium_task_deck": medium_task_deck,
 		"map_task_deck": map_task_deck,
 		"clock_task_deck": clock_task_deck,
 	}, "\t"))
