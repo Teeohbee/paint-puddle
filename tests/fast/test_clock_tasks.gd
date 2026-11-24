@@ -32,8 +32,8 @@ func read_card(hour_of_the_day: int, minute: int) -> ClockCard:
 
 func test_a_set_card_asks_for_a_time_with_its_moment_and_no_am_or_pm() -> void:
 	var mode: ClockMode = await open_with_deck(3, [set_card(8, 30), set_card(9, 0)])
-	check(mode.task_banner.main_text == "Breakfast - make it half past 8", "the card names the moment and the time: '%s'" % mode.task_banner.main_text)
-	check(mode.task_banner.small_text == "", "nothing small underneath: '%s'" % mode.task_banner.small_text)
+	check(mode.task_banner.main_text == "Wind it to half past 8" and mode.task_banner.small_text == "Breakfast", "the card names the job and time, the moment underneath: '%s' / '%s'" % [mode.task_banner.main_text, mode.task_banner.small_text])
+	check(not mode.task_banner.small_text.contains(" am") and not mode.task_banner.small_text.contains(" pm"), "no am or pm: '%s'" % mode.task_banner.small_text)
 
 func test_setting_the_right_time_and_pressing_a_moves_on() -> void:
 	var mode: ClockMode = await open_with_deck(3, [set_card(8, 0), set_card(9, 0)])
@@ -43,14 +43,14 @@ func test_setting_the_right_time_and_pressing_a_moves_on() -> void:
 	await tap("act")
 	check(mode.task_banner.main_text.begins_with("Yes!"), "a cheer: '%s'" % mode.task_banner.main_text)
 	await seconds(2.0)
-	check(mode.task_runner.card_index == 1 and mode.task_banner.main_text == "Off to the park - make it 9 o'clock", "on to the next card: '%s'" % mode.task_banner.main_text)
+	check(mode.task_runner.card_index == 1 and mode.task_banner.main_text == "Wind it to 9 o'clock" and mode.task_banner.small_text == "Off to the park", "on to the next card: '%s'" % mode.task_banner.main_text)
 	check(mode.minutes_of_the_day() == 8 * 60, "the day carries on from where the last card ended")
 
 func test_a_set_card_asks_for_the_next_time_round() -> void:
 	# The day starts at 7am, so "7 o'clock" is the next one: the evening's, a whole lap on
 	var mode: ClockMode = await open_with_deck(1, [set_card(7, 0), set_card(9, 0)])
 	check(mode.task_runner.target_minutes == 19 * 60, "the target is 7 in the evening: %d" % mode.task_runner.target_minutes)
-	check(mode.task_banner.main_text == "Bedtime story - make it 7 o'clock", "named by the evening's moment: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.small_text == "Bedtime story", "named by the evening's moment: '%s'" % mode.task_banner.small_text)
 	await tap("act")
 	check(mode.task_runner.card_index == 0, "pressing A without winding isn't it")
 	for step in 12:
@@ -78,7 +78,7 @@ func test_help_comes_one_step_per_miss() -> void:
 	await tap("act")
 	check(mode.clock_face.ghost_minutes == 9 * 60 + 30, "after two, ghost hands show half past 9: %d" % mode.clock_face.ghost_minutes)
 	await seconds(3.0)
-	check(mode.task_banner.small_text == "", "no words yet: '%s'" % mode.task_banner.small_text)
+	check(mode.task_banner.small_text == DayMoments.moment_at(9 * 60 + 30)["name"], "no help words yet, just the moment: '%s'" % mode.task_banner.small_text)
 	await tap("act")
 	await seconds(3.0)
 	check(mode.task_banner.small_text == "The minute hand is on 6 and the hour hand is halfway from 9 to 10. It's half past 9!", "after three, the words: '%s'" % mode.task_banner.small_text)
@@ -97,7 +97,7 @@ func test_from_rung_4_the_minute_mark_glows_too_and_to_times_glow_the_next_hour(
 
 func test_a_read_card_winds_the_clock_itself_then_offers_three_answers() -> void:
 	var mode: ClockMode = await open_with_deck(3, [read_card(15, 30), set_card(9, 0)])
-	check(mode.task_banner.main_text == "What time is it?", "the card asks: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.main_text == ClockTaskRunner.READ_CARD_WORDS, "the card asks: '%s'" % mode.task_banner.main_text)
 	check(not mode.answer_cards.visible, "no answers while the clock winds")
 	await tap("move_right")
 	await seconds(1.7)
@@ -133,7 +133,7 @@ func test_a_wrong_pick_greys_out_where_it_is_and_nothing_moves() -> void:
 	mode.answer_cards.move_choice(-1)
 	mode.answer_cards.move_choice(1)
 	check(mode.answer_cards.chosen_index != wrong_index, "it can't be picked again")
-	check(mode.task_banner.main_text == "What time is it?", "the card still asks: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.main_text == ClockTaskRunner.READ_CARD_WORDS, "the card still asks: '%s'" % mode.task_banner.main_text)
 	check(mode.clock_face.ghost_minutes == -1, "no ghost hands on a read card - the real ones are already there")
 
 func test_a_deck_never_opens_on_a_set_card() -> void:

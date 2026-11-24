@@ -52,8 +52,8 @@ nothing.
 - **Rungs**: o'clock, half past, then both hands. Only rung 1 is built so
   far; the rest say "Coming soon". The first time a rung opens, the blob
   shows its idea and then he copies it with ghost hands showing.
-- **Set cards** ("Breakfast - make it 8 o'clock") ask for the next time the
-  face shows that time. **Read cards** ("What time is it?") wind the clock
+- **Set cards** ("Wind it to 8 o'clock", with the moment - "Breakfast" - underneath; orange ring and arrow round the clock) ask for the next time the
+  face shows that time. **Read cards** ("Look! What time is it?", blue ring) wind the clock
   on by themselves and offer three answers.
 - **Wrong is gentle but clear**: a soft boing, the clock's blob shakes its
   head, a wrong answer greys out where it is, and the house stays put. Help
