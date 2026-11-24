@@ -20,6 +20,11 @@ var wears_bow: bool = false:
 	set(new_wears_bow):
 		wears_bow = new_wears_bow
 		queue_redraw()
+## A striped party hat on top of the head, for birthdays. Its stripes are this colour.
+var party_hat_colour: Color = Color.TRANSPARENT:
+	set(new_colour):
+		party_hat_colour = new_colour
+		queue_redraw()
 ## Which way the eyes look, and which way the squash-stretch points.
 var look_direction: Vector2 = Vector2.DOWN
 ## Off for things that hop, which squash up and down whichever way they look.
@@ -60,6 +65,8 @@ func _draw() -> void:
 	draw_face()
 	if wears_bow:
 		draw_bow()
+	if party_hat_colour.a > 0.0:
+		draw_party_hat()
 
 
 func draw_shadow() -> void:
@@ -120,3 +127,24 @@ func draw_bow() -> void:
 		draw_polyline(outline, PaintColours.INK, 3.0, true)
 	draw_circle(knot_centre, 7.0, PaintColours.INK)
 	draw_circle(knot_centre, 4.0, Color.WHITE)
+
+
+## A cone tipped a little to one side, white with stripes, a pom-pom on top and an ink outline.
+func draw_party_hat() -> void:
+	var brim_centre: Vector2 = Vector2(6.0, -BODY_RADIUS + 8.0)
+	draw_set_transform(brim_centre, 0.18, Vector2.ONE)
+	var cone: PackedVector2Array = PackedVector2Array([Vector2(-20, 0), Vector2(0, -52), Vector2(20, 0)])
+	draw_colored_polygon(cone, Color.WHITE)
+	for stripe_height in [-12.0, -30.0]:
+		var half_width_low: float = 20.0 * (1.0 - (-stripe_height) / 52.0)
+		var half_width_high: float = 20.0 * (1.0 - (-stripe_height + 9.0) / 52.0)
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(-half_width_low, stripe_height), Vector2(-half_width_high, stripe_height - 9.0),
+			Vector2(half_width_high, stripe_height - 9.0), Vector2(half_width_low, stripe_height),
+		]), party_hat_colour)
+	var outline: PackedVector2Array = cone.duplicate()
+	outline.append(cone[0])
+	draw_polyline(outline, PaintColours.INK, 3.0, true)
+	draw_circle(Vector2(0, -52), 8.0, PaintColours.INK)
+	draw_circle(Vector2(0, -52), 5.5, party_hat_colour.lightened(0.3))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

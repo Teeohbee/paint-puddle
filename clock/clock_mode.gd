@@ -1,64 +1,96 @@
 class_name ClockMode
 extends Node2D
-## Clock mode: a big clock on the left to wind with left and right, and the
-## blob household's house on the right that shows what's happening at that
-## time of day. One press winds one step of the rung; holding speeds up.
+## Clock mode: a big clock on the left to wind on with right, and the blob
+## household's house on the right that shows what's happening at that time of
+## day. Time only goes forward (clockwise), so left does nothing. One press
+## winds one step of the rung; holding speeds up. A word under the clock says
+## the part of the day.
+##
+## Play with the clock (free_play) has no cards: right or A winds the day on
+## and the house acts it out, on the climbing rung's hands and step. It opens
+## with ClockNumberLineIntro every time.
 
 const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
 ## The house fills the space right of the clock, under the banner.
 const HOUSE_BOX: Rect2 = Rect2(895, 175, 1000, 890)
 ## The read answers sit under the clock, their bottoms on this line.
-const ANSWER_CARDS_BOTTOM: float = 1066.0
+const ANSWER_CARDS_BOTTOM: float = 1072.0
 ## The answer cards stay this far clear of the house and the screen's left edge.
 const ANSWER_CARDS_MARGIN: float = 20.0
 ## Every visit starts at 7 in the morning.
 const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
 const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
+## The part-of-the-day word sits under the clock, above the read answers.
+const DAY_LABEL_POSITION: Vector2 = Vector2(480, 918)
 
 ## The rung picked on the Clock menu.
 static var rung_to_play: int = 1
-## The rung just finished, so the Clock menu can start on the next one (0 for none).
+## The rung just cleared, so the Clock menu can start on the next one (0 for none).
 static var rung_just_finished: int = 0
 ## Tricky replay, chosen on the Clock menu: each card deals a random unlocked
 ## tricky face. Kept for the session, so the menu comes back in tricky mode.
 static var tricky_replay: bool = false
+## Play with the clock, chosen on the Clock menu: no cards, just winding.
+static var free_play: bool = false
 
 var rung: int = 1
 ## Whether this is the rung being climbed: only its deck is saved, and only
-## finishing it clears a rung. Replays (and rungs opened by a grown-up) aren't.
+## its cards count towards clearing it. Replays (and rungs opened by a grown-up) aren't.
 var is_climbing: bool = false
+## The climbing rung's first-try run. See ClockMastery.
+var mastery: ClockMastery
 var clock_face: ClockFace
+var day_label: ClockDayLabel
 var house: ClockHouse
 var winder: ClockWinder = ClockWinder.new()
 var controls_hint: ControlsHint
+var job_ring: ClockJob
 var effects_layer: Node2D
 var task_banner: ClockTaskBanner
 var answer_cards: ClockAnswerCards
 var task_runner: ClockTaskRunner
+var intro: ClockNumberLineIntro
+## After the intro is skipped with a wind button, that press mustn't also wind.
+var waiting_for_wind_release: bool = false
 ## Minutes wound since midnight on the first day. Not wrapped, so the hands
 ## sweep forwards across midnight; minutes_of_the_day() wraps it.
 var wound_minutes: int = STARTING_MINUTES
-## Whether left and right wind the hands. Off while the clock winds itself.
+## Whether right winds the hands. Off while the clock winds itself.
 var player_can_wind: bool = true
 
 
 func _ready() -> void:
 	Music.play_track("clock")
 	add_to_group("gameplay")
+	job_ring = ClockJob.new()
+	job_ring.name = "JobRing"
+	job_ring.position = CLOCK_CENTRE
+	add_child(job_ring)
 	clock_face = ClockFace.new()
 	clock_face.name = "ClockFace"
 	clock_face.position = CLOCK_CENTRE
 	add_child(clock_face)
+	day_label = ClockDayLabel.new()
+	day_label.name = "DayLabel"
+	day_label.position = DAY_LABEL_POSITION
+	add_child(day_label)
 	house = ClockHouse.new()
 	house.name = "House"
 	house.fit_into(HOUSE_BOX)
 	add_child(house)
 	rung = rung_to_play
 	is_climbing = not tricky_replay and rung == ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
+	mastery = ClockMastery.load_saved()
 	effects_layer = Node2D.new()
 	effects_layer.name = "Effects"
 	add_hud()
+	var pause_menu: PauseMenu = PauseMenu.new()
+	pause_menu.name = "PauseMenu"
+	if free_play:
+		start_free_play()
+		add_child(pause_menu)
+		return
 	task_runner = ClockTaskRunner.new(self)
 	task_runner.name = "TaskRunner"
 	add_child(task_runner)
@@ -66,9 +98,31 @@ func _ready() -> void:
 	task_runner.card_started.connect(on_card_started)
 	task_runner.deck_finished.connect(on_deck_finished)
 	task_runner.start_deck(rung, first_deck(), true)
-	var pause_menu: PauseMenu = PauseMenu.new()
-	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
+
+
+## The climbing rung's hands and step (the top built rung once it's past them),
+## from 7 in the morning, after the intro.
+func start_free_play() -> void:
+	is_climbing = false
+	var climbing: int = ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
+	rung = mini(climbing if climbing > 0 else ClockRungs.RUNG_COUNT, ClockRungs.RUNGS_BUILT)
+	show_rung(rung)
+	controls_hint.caption = ""
+	start_the_day()
+	player_can_wind = false
+	intro = ClockNumberLineIntro.new(clock_face)
+	intro.name = "Intro"
+	intro.position = CLOCK_CENTRE
+	add_child(intro)
+	intro.finished.connect(on_intro_finished)
+	intro.play()
+
+
+func on_intro_finished() -> void:
+	start_the_day()
+	player_can_wind = true
+	waiting_for_wind_release = is_wind_held()
 
 
 func add_hud() -> void:
@@ -76,6 +130,7 @@ func add_hud() -> void:
 	hud.layer = 10
 	add_child(hud)
 	controls_hint = ControlsHint.new()
+	controls_hint.shows_left = false
 	hud.add_child(controls_hint)
 	hud.add_child(effects_layer)
 	task_banner = ClockTaskBanner.new()
@@ -135,32 +190,45 @@ func on_card_started(_card: ClockCard) -> void:
 	clock_face.show_face(faces[task_runner.random.randi() % faces.size()])
 
 
-## On the climbing rung, the cards still to come are saved after each one.
-func on_card_finished(_card: ClockCard) -> void:
-	if is_climbing:
-		save_deck(task_runner.deck.slice(task_runner.card_index + 1))
+## On the climbing rung, the cards still to come are saved after each one,
+## and each card counts towards the first-try run. A run that clears the rung
+## cheers straight away; the session carries on as a replay.
+func on_card_finished(_card: ClockCard, first_try: bool) -> void:
+	if not is_climbing:
+		return
+	save_deck(task_runner.deck.slice(task_runner.card_index + 1))
+	var cleared: bool = mastery.record_answer(first_try, ClockMastery.today())
+	mastery.save()
+	if cleared:
+		clear_the_rung()
 
 
-## Finishing the climbing rung's deck clears it: the next rung (and a tricky
-## face) opens. Then back to the Clock menu, on the next rung.
-func on_deck_finished() -> void:
-	var cheer: String = "Well done!"
-	var new_face: String = ""
-	if is_climbing:
-		GameSettings.record_progress("clock_rungs_cleared", rung)
-		GameSettings.set_clock_task_deck([])
-		cheer = "You cleared %s!" % ClockRungs.title(rung)
-		new_face = ClockRungs.TRICKY_FACES[rung - 1]
-		effects_layer.add_child(Confetti.new())
-	Sound.play("chime", 0.0, 1.25)
-	task_banner.celebrate()
-	if new_face == "":
-		task_banner.show_text(cheer)
-	else:
-		# The new tricky clock shows itself off
-		task_banner.show_text(cheer, "A new tricky clock!")
-		clock_face.show_face(new_face)
+func clear_the_rung() -> void:
+	GameSettings.record_progress("clock_rungs_cleared", rung)
+	GameSettings.set_clock_task_deck([])
+	is_climbing = false
 	rung_just_finished = rung
+	effects_layer.add_child(Confetti.new())
+	Sound.play("chime", 0.0, 1.25)
+	show_job(ClockJob.Job.NONE)
+	task_banner.celebrate()
+	task_banner.show_text("You know %s now!" % ClockRungs.title(rung))
+
+
+## Wind or look: the ring round the clock, the banner, and whether left
+## shows on the controls (it only picks an answer).
+func show_job(job: ClockJob.Job) -> void:
+	job_ring.job = job
+	task_banner.job = job
+	controls_hint.shows_left = job == ClockJob.Job.LOOK
+
+
+## The end of a session: a cheer, then back to the Clock menu.
+func on_deck_finished() -> void:
+	Sound.play("chime", 0.0, 1.25)
+	show_job(ClockJob.Job.NONE)
+	task_banner.celebrate()
+	task_banner.show_text("Well done!")
 	await get_tree().create_timer(SECONDS_TO_CHEER).timeout
 	SceneManager.go_to("res://ui/clock_menu.tscn")
 
@@ -175,6 +243,14 @@ func show_rung(new_rung: int) -> void:
 
 func _process(delta: float) -> void:
 	house.live_minutes_of_the_day = clock_face.shown_minutes
+	day_label.show_time(ClockTime.wound(int(clock_face.shown_minutes), 0))
+	if intro != null and intro.is_playing():
+		if any_button_just_pressed():
+			intro.skip()
+		return
+	if waiting_for_wind_release:
+		waiting_for_wind_release = is_wind_held()
+		return
 	var direction: int = 0
 	if player_can_wind:
 		direction = held_direction()
@@ -187,19 +263,29 @@ func _process(delta: float) -> void:
 		wind_by_steps(steps)
 
 
+## Only forward: right winds on (and A, in free play), and nothing winds back.
 func held_direction() -> int:
-	var direction: int = 0
-	if Input.is_action_pressed("move_right"):
-		direction += 1
-	if Input.is_action_pressed("move_left"):
-		direction -= 1
-	return direction
+	return 1 if is_wind_held() else 0
+
+
+func is_wind_held() -> bool:
+	return Input.is_action_pressed("move_right") or (free_play and Input.is_action_pressed("act"))
+
+
+func any_button_just_pressed() -> bool:
+	for action in ["act", "move_right", "move_left", "move_up", "move_down"]:
+		if Input.is_action_just_pressed(action):
+			return true
+	return false
 
 
 func wind_by_steps(steps: int) -> void:
 	wound_minutes += steps * ClockRungs.step_minutes(rung)
 	clock_face.wind_to(wound_minutes)
 	Sound.play("tick", 0.02, 1.0 + 0.12 * signi(steps))
+	if free_play:
+		# Nothing to work out in free play, so the blobs get on with the day straight away
+		house.show_moment(minutes_of_the_day())
 
 
 func start_the_day() -> void:
