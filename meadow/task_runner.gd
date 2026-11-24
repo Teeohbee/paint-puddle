@@ -263,11 +263,27 @@ func on_stone_entered(stone: LetterStone) -> void:
 		Sound.play("pop", 0.0, 1.0 + current_task.letters_done * 0.07)
 		PaintSplash.burst(effects_layer, stone.position, stone.paint_colour, 12, 420)
 		stone.leave()
+		if result == "progress":
+			pick_the_next_letter_under_the_blob.call_deferred()
 	if result == "done" and current_task.type == "spell" and current_task.thing != "":
 		word_came_to_life.emit(current_task.thing, stone.position)
 	if result == "done" and current_task.type == "change":
 		thing_changed.emit(current_task.from_word.to_lower(), current_task.thing)
 	banner.queue_redraw()
+
+
+## A stone only notices the blob driving on. If the next letter is already
+## under it (turned away a moment ago, or a flying letter that looped in),
+## it's picked now, without driving off and back on.
+func pick_the_next_letter_under_the_blob() -> void:
+	if blob_to_keep_clear_of == null or current_task.type != "spell" or is_between_tasks:
+		return
+	var wanted: String = current_task.word[current_task.letters_done]
+	for thing in things_in_the_grass:
+		if is_instance_valid(thing) and thing is LetterStone and not thing.is_leaving \
+				and thing.value == wanted and thing.overlaps_body(blob_to_keep_clear_of):
+			on_stone_entered(thing)
+			return
 
 
 func on_drop_entered(drop: PaintDrop) -> void:
