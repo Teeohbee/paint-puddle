@@ -192,6 +192,7 @@ func minutes_to_the_target() -> int:
 func play_set_card() -> void:
 	state = State.SETTING
 	mode.player_can_wind = true
+	mode.controls_hint.shows_left = false
 	show_set_card_text()
 
 
@@ -232,6 +233,7 @@ static func set_card_words(time: int) -> String:
 func play_read_card() -> void:
 	state = State.BETWEEN_CARDS
 	mode.player_can_wind = false
+	mode.controls_hint.shows_left = true
 	mode.task_banner.show_text("What time is it?")
 	var this_card: ClockCard = current_card
 	await mode.wind_itself_by(minutes_to_the_target(), SECONDS_TO_WIND_TO_A_READ_TIME)
