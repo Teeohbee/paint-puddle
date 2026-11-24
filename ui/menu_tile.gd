@@ -38,6 +38,9 @@ const CORNER_RADIUS: int = 48
 @export var icon_scale: float = 0.42
 ## How far down the tile the icon sits. A tile with no word can centre it.
 @export var icon_height: float = 0.42
+## The word's size, when a menu wants all its tiles to match. 0 picks a size
+## that fits this tile alone.
+@export var word_font_size: int = 0
 
 var bounce_time: float = 0.0
 var scale_tween: Tween
@@ -144,13 +147,7 @@ func _draw() -> void:
 
 func draw_word(card: Rect2) -> void:
 	var font: Font = get_theme_default_font()
-	# Menu-sized tiles all share one size; only extra-big tiles (a close-up) grow it,
-	# and a long word shrinks to fit
-	var font_size: int = 48 if size.y <= 400.0 else int(size.y * 0.16)
-	if size.y < 160.0:
-		font_size = 30
-	while font_size > 24 and font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x > size.x - 36:
-		font_size -= 2
+	var font_size: int = word_font_size if word_font_size > 0 else word_size_to_fit(size)
 	var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var word_height: float = 0.76 if subtitle != "" else 0.86
 	var baseline: Vector2 = card.position + Vector2((size.x - word_width) / 2.0, size.y * word_height)
@@ -161,6 +158,18 @@ func draw_word(card: Rect2) -> void:
 		var subtitle_width: float = font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_CENTER, -1, subtitle_size).x
 		draw_string(font, card.position + Vector2((size.x - subtitle_width) / 2.0, size.y * 0.9), subtitle,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, subtitle_size, paint_colour.darkened(0.55))
+
+
+## Menu-sized tiles all share one size; only extra-big tiles (a close-up) grow it,
+## and a long word shrinks to fit.
+func word_size_to_fit(tile_size: Vector2) -> int:
+	var font: Font = get_theme_default_font()
+	var font_size: int = 48 if tile_size.y <= 400.0 else int(tile_size.y * 0.16)
+	if tile_size.y < 160.0:
+		font_size = 30
+	while font_size > 24 and font.get_string_size(word, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x > tile_size.x - 36:
+		font_size -= 2
+	return font_size
 
 
 ## A strip of yellow builders' tape, tilted across the icon, with black

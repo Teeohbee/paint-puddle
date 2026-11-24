@@ -64,3 +64,12 @@ func test_picking_a_rung_turns_free_play_off() -> void:
 	await frames(40)
 	var mode = get_tree().current_scene
 	check(mode is ClockMode and not ClockMode.free_play and mode.task_runner != null, "rung 1 plays its cards")
+
+func test_every_ladder_word_is_the_same_size() -> void:
+	var menu = await open_menu()
+	var tiles: Array = [menu.free_play] + menu.rung_tiles + menu.coming_soon_tiles
+	var sizes: Dictionary = {}
+	for tile: MenuTile in tiles:
+		sizes[tile.word_font_size] = true
+		check(tile.word_size_to_fit(tile.custom_minimum_size) >= tile.word_font_size, "%s fits at the shared size" % tile.word)
+	check(sizes.size() == 1 and not sizes.has(0), "one shared word size: %s" % [sizes.keys()])

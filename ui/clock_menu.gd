@@ -64,6 +64,7 @@ func _ready() -> void:
 		show_as_coming_soon(tile)
 		coming_soon_row.add_child(tile)
 		coming_soon_tiles.append(tile)
+	share_one_word_size([free_play] + rung_tiles + coming_soon_tiles)
 	first_focus = tile_to_start_on()
 	first_focus.grab_focus_quietly.call_deferred()
 
@@ -73,6 +74,16 @@ func make_ladder_row(ladder: VBoxContainer) -> HBoxContainer:
 	ladder_row.add_theme_constant_override("separation", TILE_GAP)
 	ladder.add_child(ladder_row)
 	return ladder_row
+
+
+## Every word the size the longest one fits at, so no tile shouts louder than
+## its neighbours (and the "Coming soon" lines match too).
+func share_one_word_size(tiles: Array) -> void:
+	var shared_size: int = 48
+	for tile: MenuTile in tiles:
+		shared_size = mini(shared_size, tile.word_size_to_fit(tile.custom_minimum_size))
+	for tile: MenuTile in tiles:
+		tile.word_font_size = shared_size
 
 
 ## Locked, faded, no padlock: not shut, just not ready.
