@@ -40,16 +40,19 @@ func test_holding_winds_many_steps_and_the_hands_catch_up() -> void:
 	await frames(60)
 	check(not mode.clock_face.is_sweeping() and is_equal_approx(mode.clock_face.shown_minutes, mode.wound_minutes), "the hands settle where they're wound")
 
-func test_the_play_menu_has_a_clock_tile_that_opens_the_clock_menu() -> void:
+# Clock mode is under construction: its tile is taped off and says it'll be back soon
+func test_the_play_menu_clock_tile_is_under_construction() -> void:
 	get_tree().change_scene_to_file("res://ui/play_menu.tscn")
 	await frames(4)
 	var clock_tile = null
 	for tile in get_tree().current_scene.find_children("*", "MenuTile", true, false):
 		if tile.word == "Clock": clock_tile = tile
 	check(clock_tile != null, "there's a Clock tile")
-	clock_tile.chosen.emit()
+	check(clock_tile.is_under_construction and clock_tile.is_locked and not clock_tile.shows_padlock, "taped off, locked, no padlock")
+	check(clock_tile.subtitle == "Be back soon!", "says it'll be back: " + clock_tile.subtitle)
+	clock_tile.pressed.emit()
 	await frames(40)
-	check(get_tree().current_scene.scene_file_path == "res://ui/clock_menu.tscn", "it opens the Clock menu")
+	check(get_tree().current_scene.scene_file_path == "res://ui/play_menu.tscn", "pressing it stays on the play menu")
 
 func test_rung_8_taps_count_minutes_and_a_hold_goes_in_fives() -> void:
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")

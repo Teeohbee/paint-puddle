@@ -21,6 +21,9 @@ func _ready() -> void:
 	var write: MenuTile = make_tile("Write", "text:a", PaintColours.YELLOW, PLACE_TILE_SIZE)
 	var map: MenuTile = make_tile("Map", "map", PaintColours.PURPLE, PLACE_TILE_SIZE)
 	var clock: MenuTile = make_tile("Clock", "clock", PaintColours.CYAN, PLACE_TILE_SIZE)
+	# Clock mode is being reworked: its tile stays, taped off, and never opens
+	clock.is_under_construction = true
+	clock.subtitle = "Be back soon!"
 	var book: MenuTile = make_tile("Book", "book", PaintColours.ORANGE, PLACE_TILE_SIZE)
 	var players: MenuTile = make_players_tile()
 	var top_row: Array[MenuTile] = [meadow, hills, paint, write]
