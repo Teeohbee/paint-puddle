@@ -38,16 +38,14 @@ static func early_minutes_first(times: Array[int]) -> Array[int]:
 
 
 ## The three answers on a read card, in a shuffled order: the right time and
-## two classic mistakes. At most one is the right time in the wrong half of
-## the day.
+## two classic mistakes. Answers are just words, so no two may read the same
+## on the face (9 in the morning and 9 at night would both say "9 o'clock").
 static func read_answers(rung: int, time: int, random: RandomNumberGenerator) -> Array[int]:
 	var answers: Array[int] = [time]
 	for mistake in likely_mistakes(rung, time, random):
 		if answers.size() == 3:
 			break
-		if answers.has(mistake):
-			continue
-		if is_wrong_half(mistake, time) and answers.any(func(answer: int) -> bool: return is_wrong_half(answer, time)):
+		if answers.any(func(answer: int) -> bool: return ClockTime.faces_match(answer, mistake)):
 			continue
 		answers.append(mistake)
 	shuffle(answers, random)
@@ -59,13 +57,11 @@ static func read_answers(rung: int, time: int, random: RandomNumberGenerator) ->
 static func likely_mistakes(rung: int, time: int, random: RandomNumberGenerator) -> Array[int]:
 	var mistakes: Array[int] = [hour_hand_mistake(time, random)]
 	var hands_swapped: int = hands_swapped_mistake(rung, time)
-	var wrong_half: int = ClockTime.wound(time, ClockTime.MINUTES_IN_HALF_A_DAY)
 	if rung == ClockRungs.SINGLE_MINUTES_RUNG:
 		# counting the minutes from the wrong side of a five
 		mistakes.append(ClockTime.wound(time, 5 if random.randi() % 2 == 0 else -5))
 	elif hands_swapped != time and random.randi() % 3 != 0:
 		mistakes.append(hands_swapped)
-	mistakes.append(wrong_half)
 	mistakes.append(hands_swapped)
 	mistakes.append(ClockTime.wound(time, ClockTime.MINUTES_IN_AN_HOUR * 2))
 	mistakes.append(ClockTime.wound(time, -ClockTime.MINUTES_IN_AN_HOUR * 2))
@@ -99,10 +95,6 @@ static func hands_swapped_mistake(rung: int, time: int) -> int:
 	var swapped_minute: int = roundi(hour_hand_as_minutes / step) * step % ClockTime.MINUTES_IN_AN_HOUR
 	var start_of_this_half: int = time - time % ClockTime.MINUTES_IN_HALF_A_DAY
 	return start_of_this_half + (minute_hand_number % 12) * ClockTime.MINUTES_IN_AN_HOUR + swapped_minute
-
-
-static func is_wrong_half(answer: int, time: int) -> bool:
-	return answer != time and answer % ClockTime.MINUTES_IN_HALF_A_DAY == time % ClockTime.MINUTES_IN_HALF_A_DAY
 
 
 ## Fisher-Yates with the given generator, so a seed always gives the same order.
