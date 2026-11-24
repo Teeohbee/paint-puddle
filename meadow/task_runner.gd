@@ -181,6 +181,10 @@ func clear_the_grass() -> void:
 	things_in_the_grass.clear()
 
 
+func allows_pot(paint_name: String, next_empty_pot: String) -> bool:
+	return current_task == null or is_between_tasks or current_task.allows_pot(paint_name, next_empty_pot)
+
+
 ## Everything the meadow tells the task goes through here.
 func handle(event: Dictionary) -> String:
 	if current_task == null or is_between_tasks:

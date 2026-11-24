@@ -135,9 +135,11 @@ func test_book() -> void:
 	tiles[tiles.size() - 1].grab_focus()
 	await press("ui_right")
 	check(focused() == tiles[tiles.size() - 1], "right from the last tile does nothing when Next page is greyed")
-	tiles[5].grab_focus()
+	# The last row is short, so the tile in the row above, just past its end, has nothing under it
+	var above_the_gap = tiles[tiles.size() - 8]
+	above_the_gap.grab_focus()
 	await press("ui_down")
-	check(focused() == tiles[5], "on a short page, down from a tile with nothing under it does nothing")
+	check(focused() == above_the_gap, "on a short page, down from a tile with nothing under it does nothing")
 	tiles[8].grab_focus()
 	await press("ui_left")
 	check(focused() == book.previous_page_tile, "left from column 1 lands on Back a page")
@@ -207,4 +209,4 @@ func test_book() -> void:
 	book.back_tile.grab_focus()
 	await press("ui_accept")
 	check(book.section == "" and focused().word == "Words", "Back goes straight to the parts, on Words")
-	check(focused().subtitle == "2 of 42", "Words says how many are found: " + focused().subtitle)
+	check(focused().subtitle == "2 of %d" % words.size(), "Words says how many are found: " + focused().subtitle)

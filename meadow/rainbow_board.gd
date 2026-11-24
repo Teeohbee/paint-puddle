@@ -54,6 +54,14 @@ func set_stripe_paint(amount: float, stripe_index: int) -> void:
 	stripe_paint[stripe_index] = amount
 
 
+## The first empty pot, red first, or "" when they're all filled.
+func next_empty_pot() -> String:
+	for pot in pots:
+		if not pot.is_filled:
+			return pot.paint_name
+	return ""
+
+
 func all_pots_filled() -> bool:
 	for pot in pots:
 		if not pot.is_filled:

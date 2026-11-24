@@ -45,6 +45,12 @@ harder. Each difficulty keeps its own shuffled deck and next card in the save
 `next_task_index_medium`). The red paint then wash lesson is Easy's first two
 cards only. Resetting the Meadow resets both.
 
+Medium's pack: harder words, mostly without a picture (a few new pictures as
+treats, which join the Book after Easy's), bigger sums with close choices,
+colour riddles with no recipe ("Make the colour of a frog"), and fewer
+rainbows. A rainbow card with `"in_order": true` is painted red first: a pot
+out of turn wobbles and stays empty.
+
 ## Clock mode
 
 Clock mode teaches reading and setting an analogue clock the way UK Year 1

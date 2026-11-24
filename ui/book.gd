@@ -64,12 +64,14 @@ func _ready() -> void:
 	celebrate_newly_finished_parts()
 
 
-## Every thing a Meadow task can bring to life, in the order the tasks come.
+## Every thing a Meadow task can bring to life, in the order the tasks come:
+## Easy's, then Medium's.
 static func words_in_the_book() -> Array[String]:
 	var words: Array[String] = []
-	for task in MeadowTask.load_list(TaskRunner.TASKS_PATH):
-		if task.thing != "" and not words.has(task.thing):
-			words.append(task.thing)
+	for path in [TaskRunner.TASKS_PATH, TaskRunner.MEDIUM_TASKS_PATH]:
+		for task in MeadowTask.load_list(path):
+			if task.thing != "" and not words.has(task.thing):
+				words.append(task.thing)
 	return words
 
 

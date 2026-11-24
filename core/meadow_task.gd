@@ -29,6 +29,8 @@ var thing: String = ""
 var is_clue: bool = false
 ## A change task starts from this word and changes one letter: DOG into LOG.
 var from_word: String = ""
+## A rainbow task painted in order, red first: a pot out of turn wobbles.
+var in_order: bool = false
 
 var letters_done: int = 0
 var collected: int = 0
@@ -53,6 +55,7 @@ static func from_dictionary(details: Dictionary) -> MeadowTask:
 	task.thing = str(details.get("thing", ""))
 	task.is_clue = details.get("clue", false) == true
 	task.from_word = str(details.get("from", "")).to_upper()
+	task.in_order = details.get("in_order", false) == true
 	var problem: String = task.problem()
 	if problem != "":
 		push_warning("Skipping task %s: %s" % [JSON.stringify(details), problem])
@@ -96,6 +99,8 @@ func problem() -> String:
 		"visit":
 			if target != "fountain" and not target.begins_with("puddle:"):
 				return "target must be fountain or puddle:<colour>"
+	if in_order and type != "rainbow":
+		return "only a rainbow can be painted in order"
 	return ""
 
 
@@ -150,6 +155,12 @@ func changed_letter_index() -> int:
 				return -1
 			changed_index = letter_index
 	return changed_index
+
+
+## Can this pot be filled now? Only an in-order rainbow says no, to any pot
+## but the next one still empty.
+func allows_pot(paint_name: String, next_empty_pot: String) -> bool:
+	return not in_order or paint_name == next_empty_pot
 
 
 func handle(event: Dictionary) -> String:
