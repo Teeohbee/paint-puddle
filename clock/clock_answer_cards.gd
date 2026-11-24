@@ -1,7 +1,7 @@
 class_name ClockAnswerCards
 extends Control
 ## The three answers under the clock on a read card. Each says a time in
-## words, with am/pm and a sun or moon under it. Left and right
+## words, nothing else - the word under the clock says the part of the day. Left and right
 ## move between them; the runner asks which one is picked. A wrong pick
 ## fades away, so it can't be picked again.
 
@@ -10,10 +10,7 @@ const CARD_SIZE: Vector2 = Vector2(276, 124)
 const GAP: float = 12.0
 ## Room left and right inside a card for the words, clear of the chosen card's border.
 const CARD_PADDING: float = 36.0
-## The sun or moon's width plus the space before the words.
-const SUN_OR_MOON_ROOM: float = 33.0
-const WORDS_FONT_SIZE: int = 40
-const SMALL_FONT_SIZE: int = 26
+const WORDS_FONT_SIZE: int = 44
 
 ## The times on the cards, left to right.
 var answers: Array[int] = []
@@ -113,29 +110,7 @@ func draw_answer_card(font: Font, index: int, top_left: Vector2) -> void:
 	var ink: Color = Color(PaintColours.INK, opacity)
 	var words: String = ClockTime.time_words(time)
 	var words_size: int = fitting_font_size(font, words, CARD_SIZE.x - CARD_PADDING, WORDS_FONT_SIZE)
-	draw_centred(font, words, top_left + Vector2(CARD_SIZE.x / 2.0, 50), words_size, ink)
-	# The sun or moon and the am or pm after it are centred together.
-	var am_or_pm_line: String = small_line(time)
-	var small_width: float = font.get_string_size(am_or_pm_line, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE).x
-	var line_left: float = top_left.x + (CARD_SIZE.x - SUN_OR_MOON_ROOM - small_width) / 2.0
-	draw_sun_or_moon(Vector2(line_left + 12, top_left.y + 87), time, opacity)
-	draw_string(font, Vector2(line_left + SUN_OR_MOON_ROOM, top_left.y + 96 + SMALL_FONT_SIZE * 0.35), am_or_pm_line, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6 * opacity))
-
-
-## Just "am" or "pm": the sun or moon beside it does the rest.
-static func small_line(time: int) -> String:
-	return ClockTime.am_or_pm(time)
-
-
-func draw_sun_or_moon(centre: Vector2, time: int, opacity: float) -> void:
-	if ClockTime.part_of_the_day(time) == "night":
-		draw_circle(centre, 13, Color(PaintColours.YELLOW.lightened(0.3), opacity))
-		draw_circle(centre + Vector2(6, -4), 11, Color(1, 1, 1, opacity))
-		return
-	for ray in 8:
-		var direction: Vector2 = Vector2.from_angle(TAU * ray / 8.0)
-		draw_line(centre + direction * 13, centre + direction * 18, Color(PaintColours.ORANGE, opacity), 3.0)
-	draw_circle(centre, 10, Color(PaintColours.YELLOW, opacity))
+	draw_centred(font, words, top_left + CARD_SIZE / 2.0, words_size, ink)
 
 
 ## The biggest size up to largest_size, in steps of two, that fits the room.

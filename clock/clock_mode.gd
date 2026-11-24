@@ -1,8 +1,10 @@
 class_name ClockMode
 extends Node2D
-## Clock mode: a big clock on the left to wind with left and right, and the
-## blob household's house on the right that shows what's happening at that
-## time of day. One press winds one step of the rung; holding speeds up.
+## Clock mode: a big clock on the left to wind on with right, and the blob
+## household's house on the right that shows what's happening at that time of
+## day. Time only goes forward (clockwise), so left does nothing. One press
+## winds one step of the rung; holding speeds up. A word under the clock says
+## the part of the day.
 
 const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
 ## The house fills the space right of the clock, under the banner.
@@ -15,6 +17,9 @@ const ANSWER_CARDS_MARGIN: float = 20.0
 const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
 const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
+const CONTROLS: String = "Right: wind on"
+## The part-of-the-day word sits under the clock, above the read answers.
+const DAY_LABEL_POSITION: Vector2 = Vector2(480, 906)
 
 ## The rung picked on the Clock menu.
 static var rung_to_play: int = 1
@@ -31,6 +36,7 @@ var is_climbing: bool = false
 ## The climbing rung's first-try run. See ClockMastery.
 var mastery: ClockMastery
 var clock_face: ClockFace
+var day_label: ClockDayLabel
 var house: ClockHouse
 var winder: ClockWinder = ClockWinder.new()
 var controls_hint: ControlsHint
@@ -41,7 +47,7 @@ var task_runner: ClockTaskRunner
 ## Minutes wound since midnight on the first day. Not wrapped, so the hands
 ## sweep forwards across midnight; minutes_of_the_day() wraps it.
 var wound_minutes: int = STARTING_MINUTES
-## Whether left and right wind the hands. Off while the clock winds itself.
+## Whether right winds the hands. Off while the clock winds itself.
 var player_can_wind: bool = true
 
 
@@ -52,6 +58,10 @@ func _ready() -> void:
 	clock_face.name = "ClockFace"
 	clock_face.position = CLOCK_CENTRE
 	add_child(clock_face)
+	day_label = ClockDayLabel.new()
+	day_label.name = "DayLabel"
+	day_label.position = DAY_LABEL_POSITION
+	add_child(day_label)
 	house = ClockHouse.new()
 	house.name = "House"
 	house.fit_into(HOUSE_BOX)
@@ -175,12 +185,13 @@ func show_rung(new_rung: int) -> void:
 	rung = new_rung
 	clock_face.shows_minute_hand = ClockRungs.shows_minute_hand(rung)
 	clock_face.minute_hand_reach = 1.0
-	controls_hint.caption = RUNG_8_CONTROLS if rung == ClockRungs.SINGLE_MINUTES_RUNG else ""
+	controls_hint.caption = RUNG_8_CONTROLS if rung == ClockRungs.SINGLE_MINUTES_RUNG else CONTROLS
 	clock_face.queue_redraw()
 
 
 func _process(delta: float) -> void:
 	house.live_minutes_of_the_day = clock_face.shown_minutes
+	day_label.show_time(ClockTime.wound(int(clock_face.shown_minutes), 0))
 	var direction: int = 0
 	if player_can_wind:
 		direction = held_direction()
@@ -193,13 +204,9 @@ func _process(delta: float) -> void:
 		wind_by_steps(steps)
 
 
+## Only forward: right winds on, and nothing winds back.
 func held_direction() -> int:
-	var direction: int = 0
-	if Input.is_action_pressed("move_right"):
-		direction += 1
-	if Input.is_action_pressed("move_left"):
-		direction -= 1
-	return direction
+	return 1 if Input.is_action_pressed("move_right") else 0
 
 
 func wind_by_steps(steps: int) -> void:

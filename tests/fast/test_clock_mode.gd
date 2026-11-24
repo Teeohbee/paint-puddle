@@ -1,8 +1,9 @@
 extends GameSuite
-# Clock mode's scene: the clock starts at 7 am, left and right wind it a rung's step at a time,
-# holding winds quicker, and the hands sweep to where they're wound.
+# Clock mode's scene: the clock starts at 7 am, right winds it on a rung's step at a time (time only
+# goes forward, so left does nothing), holding winds quicker, the hands sweep to where they're wound,
+# and the word under the clock says the part of the day.
 
-## Opens Clock mode on a set card for 9 in the morning, so left and right wind the hands.
+## Opens Clock mode on a set card for 9 in the morning, so right winds the hands.
 func open_clock_mode() -> ClockMode:
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
 	await frames(4)
@@ -24,13 +25,30 @@ func test_the_clock_starts_at_7_in_the_morning() -> void:
 	check(mode.clock_face.shown_minutes < 7 * 60 + 60, "the day starts at 7 am: the hands are at %s" % ClockTime.digital_text(int(mode.clock_face.shown_minutes)))
 	check(mode.wound_minutes >= 7 * 60, "and the first read card winds forwards from it")
 
-func test_a_tap_winds_one_step_each_way() -> void:
+func test_right_winds_on_and_left_does_nothing() -> void:
 	var mode: ClockMode = await open_clock_mode()
 	await hold("move_right", 2)
 	check(mode.minutes_of_the_day() == 7 * 60 + 30, "right winds on half an hour: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
 	await hold("move_left", 2)
-	await hold("move_left", 2)
-	check(mode.minutes_of_the_day() == 6 * 60 + 30, "left winds back: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	await hold("move_left", 30)
+	check(mode.minutes_of_the_day() == 7 * 60 + 30, "left doesn't wind back: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+
+func test_the_word_under_the_clock_follows_the_hands() -> void:
+	var mode: ClockMode = await open_clock_mode()
+	await frames(2)
+	check(mode.day_label.word == "morning", "7am is the morning: '%s'" % mode.day_label.word)
+	for step in 12:
+		await hold("move_right", 2)
+	await frames(60)
+	check(mode.day_label.word == "afternoon", "1pm is the afternoon: '%s'" % mode.day_label.word)
+	for step in 12:
+		await hold("move_right", 2)
+	await frames(60)
+	check(mode.day_label.word == "evening", "7pm is the evening: '%s'" % mode.day_label.word)
+	for step in 4:
+		await hold("move_right", 2)
+	await frames(60)
+	check(mode.day_label.word == "night", "9pm is night: '%s'" % mode.day_label.word)
 
 func test_holding_winds_many_steps_and_the_hands_catch_up() -> void:
 	var mode: ClockMode = await open_clock_mode()
@@ -67,5 +85,6 @@ func test_rung_8_taps_count_minutes_and_a_hold_goes_in_fives() -> void:
 	await hold("move_right", 60)
 	var minute: int = mode.minutes_of_the_day() % 60
 	check(minute % 5 == 0 and minute >= 5, "a hold snaps to the fives: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	var before_left: int = mode.minutes_of_the_day()
 	await hold("move_left", 2)
-	check(mode.minutes_of_the_day() % 5 == 4, "and a tap counts a single minute back: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	check(mode.minutes_of_the_day() == before_left, "and left does nothing here either")

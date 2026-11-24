@@ -2,11 +2,15 @@ class_name ClockTaskRunner
 extends Node
 ## Plays a deck of Clock mode cards, one at a time.
 ##
-## A set card gives a time; the player winds the hands and presses A. A
-## wrong time isn't wrong: the card says what time he made, then asks again,
-## and after a second miss the number to aim for glows.
+## Time only goes forward, and the face can't tell morning from evening, so
+## a card's time is the next time the face shows it (its target), and its
+## moment is whatever the house is doing then.
 ##
-## A read card winds the clock itself to a time, then offers three answers
+## A set card gives a time; the player winds the hands on and presses A.
+## A wrong time says what time he made, then asks again, and after a second
+## miss the number to aim for glows.
+##
+## A read card winds the clock itself on to a time, then offers three answers
 ## under the clock. A wrong pick winds the hands to the time he picked, shows
 ## it, winds back, and that card fades away so he can't go round in circles.
 
@@ -33,6 +37,8 @@ var rung: int = 1
 var deck: Array[ClockCard] = []
 var card_index: int = 0
 var current_card: ClockCard
+## The current card's time, as the next time the face shows it.
+var target_minutes: int = 0
 var misses: int = 0
 var state: State = State.BETWEEN_CARDS
 var random: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -106,12 +112,17 @@ func play_single_minutes_intro() -> void:
 
 func play_card() -> void:
 	current_card = deck[card_index]
+	target_minutes = ClockTime.wound(mode.minutes_of_the_day(), minutes_to_the_target())
 	misses = 0
 	card_started.emit(current_card)
 	if current_card.is_read:
 		play_read_card()
 	else:
 		play_set_card()
+
+
+func minutes_to_the_target() -> int:
+	return ClockTime.minutes_until_the_face_shows(mode.minutes_of_the_day(), current_card.minutes_of_the_day)
 
 
 func play_set_card() -> void:
@@ -121,12 +132,12 @@ func play_set_card() -> void:
 
 
 func show_set_card_text() -> void:
-	mode.task_banner.show_text(set_card_words(current_card.minutes_of_the_day), ClockTime.am_or_pm(current_card.minutes_of_the_day))
+	mode.task_banner.show_text(set_card_words(target_minutes))
 
 
-## "Bath time - make it half past 6 in the evening": the moment, then the time.
+## "Bath time - make it half past 6": the moment, then the time.
 static func set_card_words(time: int) -> String:
-	return "%s - make it %s" % [DayMoments.moment_at(time)["name"], ClockTime.time_in_the_day_words(time)]
+	return "%s - make it %s" % [DayMoments.moment_at(time)["name"], ClockTime.time_words(time)]
 
 
 func play_read_card() -> void:
@@ -134,14 +145,13 @@ func play_read_card() -> void:
 	mode.player_can_wind = false
 	mode.task_banner.show_text("What time is it?")
 	var this_card: ClockCard = current_card
-	var minutes_forward: int = posmod(current_card.minutes_of_the_day - mode.minutes_of_the_day(), ClockTime.MINUTES_IN_A_DAY)
-	await mode.wind_itself_by(minutes_forward, SECONDS_TO_WIND_TO_A_READ_TIME)
+	await mode.wind_itself_by(minutes_to_the_target(), SECONDS_TO_WIND_TO_A_READ_TIME)
 	if this_card != current_card:
 		return
-	# The house is the am/pm clue, so once the clock has wound the blobs play this card's
-	# moment. (Set cards keep them back until A, so watching the house can't solve those.)
-	mode.house.show_moment(current_card.minutes_of_the_day)
-	var answers: Array[int] = ClockDeck.read_answers(rung, current_card.minutes_of_the_day, random)
+	# Once the clock has wound the blobs play this card's moment. (Set cards keep
+	# them back until A, so watching the house can't solve those.)
+	mode.house.show_moment(target_minutes)
+	var answers: Array[int] = ClockDeck.read_answers(rung, target_minutes, random)
 	mode.answer_cards.show_answers(answers)
 	state = State.CHOOSING
 
@@ -163,22 +173,22 @@ func _process(_delta: float) -> void:
 func confirm_set_time() -> void:
 	var made: int = mode.minutes_of_the_day()
 	mode.house.show_moment(made)
-	if made == current_card.minutes_of_the_day:
+	if ClockTime.faces_match(made, target_minutes):
 		finish_card()
 		return
 	misses += 1
 	Sound.play("plop", 0.02, 0.8)
-	show_message_then_the_card(what_was_made(made, current_card.minutes_of_the_day), set_card_words(current_card.minutes_of_the_day))
+	show_message_then_the_card(what_was_made(made, target_minutes), set_card_words(target_minutes))
 	if misses >= MISSES_BEFORE_THE_GLOW:
 		glow_the_target()
 
 
 ## "That's bath time!" - or, when it's the same moment as the one wanted,
-## the time itself: "That's half past 6 in the evening!"
+## the time itself: "That's half past 6!"
 static func what_was_made(made: int, wanted: int) -> String:
 	var made_moment: Dictionary = DayMoments.moment_at(made)
 	if made_moment["name"] == DayMoments.moment_at(wanted)["name"]:
-		return "That's %s!" % ClockTime.time_in_the_day_words(made)
+		return "That's %s!" % ClockTime.time_words(made)
 	return made_moment["that_is"]
 
 
@@ -195,7 +205,7 @@ func show_message_then_the_card(main_text: String, small_text: String) -> void:
 ## The number the time is named by ("quarter to 4" glows the 4) and, from
 ## rung 4, the minute mark the minute hand should reach.
 func glow_the_target() -> void:
-	var time: int = current_card.minutes_of_the_day
+	var time: int = target_minutes
 	var minute: int = time % ClockTime.MINUTES_IN_AN_HOUR
 	var named_hour: int = ClockTime.hour_on_the_face(time)
 	if minute > 30:
@@ -209,7 +219,7 @@ func glow_the_target() -> void:
 func choose_answer() -> void:
 	var picked: int = mode.answer_cards.chosen_answer()
 	mode.house.show_moment(picked)
-	if picked == current_card.minutes_of_the_day:
+	if picked == target_minutes:
 		mode.answer_cards.hide_answers()
 		finish_card()
 		return
@@ -217,18 +227,18 @@ func choose_answer() -> void:
 	misses += 1
 	mode.answer_cards.fade_chosen()
 	var this_card: ClockCard = current_card
-	var minutes_to_the_picked_time: int = shortest_way_round(current_card.minutes_of_the_day, picked)
+	var minutes_to_the_picked_time: int = shortest_way_round(target_minutes, picked)
 	await mode.wind_itself_by(minutes_to_the_picked_time, SECONDS_TO_WIND_TO_A_PICKED_TIME)
 	if this_card != current_card:
 		return
-	mode.task_banner.show_text("That's %s." % ClockTime.time_in_the_day_words(picked))
+	mode.task_banner.show_text("That's %s." % ClockTime.time_words(picked))
 	await get_tree().create_timer(SECONDS_ON_A_PICKED_TIME).timeout
 	if this_card != current_card:
 		return
 	await mode.wind_itself_by(-minutes_to_the_picked_time, SECONDS_TO_WIND_TO_A_PICKED_TIME)
 	if this_card != current_card:
 		return
-	mode.house.show_moment(current_card.minutes_of_the_day)
+	mode.house.show_moment(target_minutes)
 	mode.task_banner.show_text("What time is it?")
 	state = State.CHOOSING
 
@@ -244,7 +254,7 @@ func finish_card() -> void:
 	mode.player_can_wind = false
 	Sound.play("chime")
 	mode.task_banner.celebrate()
-	mode.task_banner.show_text("Yes! It's %s" % ClockTime.time_in_the_day_words(current_card.minutes_of_the_day))
+	mode.task_banner.show_text("Yes! It's %s" % ClockTime.time_words(target_minutes))
 	var finished: ClockCard = current_card
 	card_finished.emit(finished, misses == 0)
 	await get_tree().create_timer(SECONDS_TO_CELEBRATE).timeout

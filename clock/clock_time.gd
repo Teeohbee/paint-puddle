@@ -76,7 +76,7 @@ static func hour_of_the_day(minutes_of_the_day: int) -> int:
 
 
 ## Morning (6 am to 12), afternoon (12 to 5), evening (5 to 8) or night
-## (8 pm to 6 am). It's how a card says which half of the day it means.
+## (8 pm to 6 am). The word under the clock; no card asks about it.
 static func part_of_the_day(minutes_of_the_day: int) -> String:
 	var hour: int = hour_of_the_day(minutes_of_the_day)
 	if hour >= 6 and hour < 12:
@@ -88,23 +88,21 @@ static func part_of_the_day(minutes_of_the_day: int) -> String:
 	return "night"
 
 
-## "am" before noon, "pm" from noon. Shown small beside the part of the day.
-static func am_or_pm(minutes_of_the_day: int) -> String:
-	if minutes_of_the_day < MINUTES_IN_HALF_A_DAY:
-		return "am"
-	return "pm"
-
-
 ## The time as a digital clock shows it, on the 12-hour clock: "3:05".
 static func digital_text(minutes_of_the_day: int) -> String:
 	return "%d:%02d" % [hour_on_the_face(minutes_of_the_day), minutes_of_the_day % MINUTES_IN_AN_HOUR]
 
 
-## The time with its part of the day, as a card says it: "6 in the evening",
-## "20 to 4 in the afternoon", "2 at night".
-static func time_in_the_day_words(minutes_of_the_day: int) -> String:
-	var words: String = time_words(minutes_of_the_day).trim_suffix(" o'clock")
-	var part: String = part_of_the_day(minutes_of_the_day)
-	if part == "night":
-		return "%s at night" % words
-	return "%s in the %s" % [words, part]
+## How far forward until the face next shows this time: a time half a day
+## on reads the same, so it's never more than half a day, and never 0 -
+## the time it shows now comes round again in a whole lap.
+static func minutes_until_the_face_shows(from_time: int, face_time: int) -> int:
+	var minutes: int = posmod(face_time - from_time, MINUTES_IN_HALF_A_DAY)
+	if minutes == 0:
+		return MINUTES_IN_HALF_A_DAY
+	return minutes
+
+
+## Whether two times look the same on the face (9 in the morning and 9 at night do).
+static func faces_match(first_time: int, second_time: int) -> bool:
+	return posmod(first_time - second_time, MINUTES_IN_HALF_A_DAY) == 0
