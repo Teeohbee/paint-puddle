@@ -6,7 +6,8 @@ extends Node
 signal setting_changed(setting_name: String, new_value: Variant)
 
 ## Version 2 added collections, and the second round of Meadow tasks.
-const SAVE_FORMAT_VERSION: int = 2
+## Version 3 is the Clock mode rework: older Clock progress starts again.
+const SAVE_FORMAT_VERSION: int = 3
 ## The first round of Meadow tasks, as it was in version 1 saves. A version 1
 ## save that has done them all moves on to the first task of the second round
 ## (spelling CAT) instead of going round again.
@@ -37,6 +38,11 @@ const DEFAULT_PROGRESS: Dictionary = {
 	"next_task_index_medium": 0,
 	# How far up the Clock mode ladder, 0 to 8. Rungs and tricky faces open from it.
 	"clock_rungs_cleared": 0,
+	# Climbing rung: cards right first time in a row, and the day (yyyymmdd) of the first run of 5. See ClockMastery.
+	"clock_first_try_run": 0,
+	"clock_run_day": 0,
+	# How many Clock rungs have had their first-time intro
+	"clock_rung_intros_seen": 0,
 	# How many letters traced, 0 to 26, in TracingLetters order. The next one is open.
 	"letters_traced": 0,
 }
@@ -45,6 +51,9 @@ const DEFAULT_PROGRESS: Dictionary = {
 ## one is the Book parts already cheered for being finished ("words",
 ## "colours"), so the confetti only happens once. Countries found in Map mode
 ## are by id ("france").
+## Everything the Clock reset part (and the version 3 rework) clears.
+const CLOCK_PROGRESS_NAMES: Array[String] = ["clock_rungs_cleared", "clock_first_try_run", "clock_run_day", "clock_rung_intros_seen"]
+
 const COLLECTION_NAMES: Array[String] = ["words_spelled", "colours_found", "book_parts_celebrated", "countries_found"]
 
 var save_file_path: String = "user://save.json"
@@ -115,8 +124,8 @@ const RESET_PARTS: Dictionary = {
 
 ## Resets one part and leaves the rest. The Meadow is its tasks (Easy and
 ## Medium) and rainbows; the words spelled there belong to the Book. The Map is the
-## countries found and its tasks. The Clock is the rungs cleared and the
-## climbing rung's deck, never the open-all setting. Emptying a Book part lets its
+## countries found and its tasks. The Clock is the rungs cleared, the
+## first-try run, intros seen and the climbing rung's deck, never the open-all setting. Emptying a Book part lets its
 ## finished-it confetti happen again.
 func reset_part(part: String) -> void:
 	match part:
@@ -136,7 +145,8 @@ func reset_part(part: String) -> void:
 			collections["book_parts_celebrated"].erase("countries")
 			map_task_deck.clear()
 		"clock":
-			progress["clock_rungs_cleared"] = 0
+			for progress_name in CLOCK_PROGRESS_NAMES:
+				progress[progress_name] = 0
 			clock_task_deck.clear()
 		"write":
 			progress["letters_traced"] = 0
@@ -248,6 +258,12 @@ func load_from_disk() -> void:
 	var is_from_before_collections: bool = not (saved_version is float or saved_version is int) or saved_version < 2
 	if is_from_before_collections and progress.tasks_completed >= TASKS_IN_THE_FIRST_ROUND:
 		progress.next_task_index = FIRST_TASK_OF_THE_SECOND_ROUND
+	# Rungs cleared before the rework were passed without being taught, so the Clock starts again
+	var is_from_before_the_clock_rework: bool = not (saved_version is float or saved_version is int) or saved_version < 3
+	if is_from_before_the_clock_rework:
+		for progress_name in CLOCK_PROGRESS_NAMES:
+			progress[progress_name] = 0
+		clock_task_deck.clear()
 
 
 ## Only names we know about are copied, and only whole numbers.

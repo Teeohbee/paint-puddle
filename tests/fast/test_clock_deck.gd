@@ -78,14 +78,11 @@ func assert_good_answers(rung: int, time: int, seed_value: int) -> void:
 	var label: String = "rung %d at %s" % [rung, ClockTime.digital_text(time)]
 	assert_int(answers.size()).override_failure_message(label).is_equal(3)
 	assert_bool(answers.has(time)).override_failure_message("%s: the right answer is there" % label).is_true()
-	var unique: Dictionary = {}
-	var wrong_halves: int = 0
+	# Answers are just words now, no am/pm, so no two may read the same on the face
+	var face_readings: Dictionary = {}
 	for answer in answers:
-		unique[answer] = true
-		if answer != time and answer % ClockTime.MINUTES_IN_HALF_A_DAY == time % ClockTime.MINUTES_IN_HALF_A_DAY:
-			wrong_halves += 1
-	assert_int(unique.size()).override_failure_message("%s: three different answers %s" % [label, answers]).is_equal(3)
-	assert_int(wrong_halves).override_failure_message("%s: at most one wrong half" % label).is_less_equal(1)
+		face_readings[answer % ClockTime.MINUTES_IN_HALF_A_DAY] = true
+	assert_int(face_readings.size()).override_failure_message("%s: three different face readings %s" % [label, answers]).is_equal(3)
 
 func test_every_read_card_has_three_different_answers_one_right() -> void:
 	for rung in EVERY_RUNG:

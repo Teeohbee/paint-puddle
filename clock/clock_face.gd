@@ -39,6 +39,16 @@ var lit_minutes: Array[int] = []
 ## How much of the minute hand is drawn, 0 to 1, so it can slide on in the
 ## rung 3 intro.
 var minute_hand_reach: float = 1.0
+## See-through hands showing where the real ones should go, as help after a
+## second miss (-1 for none).
+var ghost_minutes: int = -1
+## Seconds left of the middle blob shaking its head (a miss) or bouncing (right).
+var head_shake: float = 0.0
+var cheer: float = 0.0
+
+const HEAD_SHAKE_SECONDS: float = 0.7
+const CHEER_SECONDS: float = 0.9
+const GHOST_COLOUR: Color = Color(0.3, 0.55, 1.0, 0.35)
 
 
 func wind_to(new_wound_minutes: int) -> void:
@@ -109,12 +119,38 @@ func jump_to(new_wound_minutes: int) -> void:
 	queue_redraw()
 
 
+func show_ghost_hand(minutes: int) -> void:
+	ghost_minutes = minutes
+	queue_redraw()
+
+
+func clear_ghost_hand() -> void:
+	ghost_minutes = -1
+	queue_redraw()
+
+
+## "Not quite": the middle blob shakes its head, with a little frown.
+func shake_blob() -> void:
+	head_shake = HEAD_SHAKE_SECONDS
+	cheer = 0.0
+
+
+## "Yes!": the middle blob bounces with a big smile.
+func cheer_blob() -> void:
+	cheer = CHEER_SECONDS
+	head_shake = 0.0
+
+
 func is_sweeping() -> bool:
 	return absf(wound_minutes - shown_minutes) > SETTLED_MINUTES
 
 
 func _process(delta: float) -> void:
 	if glow > 0.0:
+		queue_redraw()
+	if head_shake > 0.0 or cheer > 0.0:
+		head_shake = maxf(head_shake - delta, 0.0)
+		cheer = maxf(cheer - delta, 0.0)
 		queue_redraw()
 	if face_name != "":
 		var whole_seconds_before: int = int(seconds)
@@ -144,6 +180,7 @@ func _draw() -> void:
 		return
 	draw_face()
 	draw_glow()
+	draw_ghost_hands()
 	draw_hands()
 	draw_puddle_blob()
 
@@ -185,13 +222,21 @@ func draw_hands() -> void:
 		draw_hand(angle_of_turns(ClockTime.minute_hand_turns(shown_minutes)), RADIUS * 0.8 * minute_hand_reach, 15.0)
 
 
+func draw_ghost_hands() -> void:
+	if ghost_minutes < 0:
+		return
+	draw_hand(angle_of_turns(ClockTime.hour_hand_turns(ghost_minutes)), RADIUS * 0.5, 28.0, GHOST_COLOUR)
+	if shows_minute_hand:
+		draw_hand(angle_of_turns(ClockTime.minute_hand_turns(ghost_minutes)), RADIUS * 0.8, 15.0, GHOST_COLOUR)
+
+
 ## A rounded ink hand with a short tail behind the middle.
-func draw_hand(angle: float, length: float, width: float) -> void:
+func draw_hand(angle: float, length: float, width: float, colour: Color = PaintColours.INK) -> void:
 	var tip: Vector2 = point_at(angle, length)
 	var tail: Vector2 = point_at(angle + PI, length * 0.12)
-	draw_line(tail, tip, PaintColours.INK, width)
-	draw_circle(tip, width / 2.0, PaintColours.INK)
-	draw_circle(tail, width / 2.0, PaintColours.INK)
+	draw_line(tail, tip, colour, width)
+	draw_circle(tip, width / 2.0, colour)
+	draw_circle(tail, width / 2.0, colour)
 
 
 ## The blob in the middle holds the hands and watches the minute hand, or the
@@ -201,6 +246,14 @@ func draw_puddle_blob() -> void:
 	if shows_minute_hand:
 		watched_turns = ClockTime.minute_hand_turns(shown_minutes)
 	var looking: Vector2 = Vector2.from_angle(angle_of_turns(watched_turns))
+	# A head shake wobbles side to side and dies away; a cheer hops up and stretches
+	var shake_amount: float = head_shake / HEAD_SHAKE_SECONDS
+	var cheer_amount: float = cheer / CHEER_SECONDS
+	var offset: Vector2 = Vector2(sin(head_shake * 40.0) * 10.0 * shake_amount, -absf(sin(cheer * 10.0)) * 16.0 * cheer_amount)
+	var stretch: Vector2 = Vector2(1.0 - 0.08 * cheer_amount, 1.0 + 0.1 * cheer_amount)
+	draw_set_transform(offset, 0.0, stretch)
+	if head_shake > 0.0:
+		looking = Vector2(signf(sin(head_shake * 40.0)), 0.3)
 	draw_colored_polygon(wobbly_circle(48.0), blob_colour.darkened(0.35))
 	draw_colored_polygon(wobbly_circle(43.0), blob_colour)
 	draw_circle(Vector2(-17, -19), 7, Color(1, 1, 1, 0.55))
@@ -208,7 +261,13 @@ func draw_puddle_blob() -> void:
 		var eye: Vector2 = Vector2(eye_side * 14, -6)
 		draw_circle(eye, 11, Color.WHITE)
 		draw_circle(eye + looking * 4, 6, PaintColours.INK)
-	draw_arc(Vector2(0, 12), 10, 0.3, PI - 0.3, 12, PaintColours.INK, 3.0)
+	if head_shake > 0.0:
+		draw_arc(Vector2(0, 20), 8, PI + 0.5, TAU - 0.5, 10, PaintColours.INK, 3.0)
+	elif cheer > 0.0:
+		draw_arc(Vector2(0, 10), 13, 0.1, PI - 0.1, 14, PaintColours.INK, 4.0)
+	else:
+		draw_arc(Vector2(0, 12), 10, 0.3, PI - 0.3, 12, PaintColours.INK, 3.0)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## The game's chunky font, or Godot's own when there's no theme (in a bare test).
