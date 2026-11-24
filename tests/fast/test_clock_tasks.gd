@@ -137,6 +137,7 @@ func test_a_wrong_pick_greys_out_where_it_is_and_nothing_moves() -> void:
 	check(mode.clock_face.ghost_minutes == -1, "no ghost hands on a read card - the real ones are already there")
 
 func test_a_deck_never_opens_on_a_set_card() -> void:
+	GameSettings.record_progress("clock_rung_intros_seen", 1)
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
 	await frames(4)
 	var mode: ClockMode = get_tree().current_scene
