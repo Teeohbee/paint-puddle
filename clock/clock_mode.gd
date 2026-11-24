@@ -45,6 +45,7 @@ var day_label: ClockDayLabel
 var house: ClockHouse
 var winder: ClockWinder = ClockWinder.new()
 var controls_hint: ControlsHint
+var job_ring: ClockJob
 var effects_layer: Node2D
 var task_banner: ClockTaskBanner
 var answer_cards: ClockAnswerCards
@@ -62,6 +63,10 @@ var player_can_wind: bool = true
 func _ready() -> void:
 	Music.play_track("clock")
 	add_to_group("gameplay")
+	job_ring = ClockJob.new()
+	job_ring.name = "JobRing"
+	job_ring.position = CLOCK_CENTRE
+	add_child(job_ring)
 	clock_face = ClockFace.new()
 	clock_face.name = "ClockFace"
 	clock_face.position = CLOCK_CENTRE
@@ -205,13 +210,23 @@ func clear_the_rung() -> void:
 	rung_just_finished = rung
 	effects_layer.add_child(Confetti.new())
 	Sound.play("chime", 0.0, 1.25)
+	show_job(ClockJob.Job.NONE)
 	task_banner.celebrate()
 	task_banner.show_text("You know %s now!" % ClockRungs.title(rung))
+
+
+## Wind or look: the ring round the clock, the banner, and whether left
+## shows on the controls (it only picks an answer).
+func show_job(job: ClockJob.Job) -> void:
+	job_ring.job = job
+	task_banner.job = job
+	controls_hint.shows_left = job == ClockJob.Job.LOOK
 
 
 ## The end of a session: a cheer, then back to the Clock menu.
 func on_deck_finished() -> void:
 	Sound.play("chime", 0.0, 1.25)
+	show_job(ClockJob.Job.NONE)
 	task_banner.celebrate()
 	task_banner.show_text("Well done!")
 	await get_tree().create_timer(SECONDS_TO_CHEER).timeout

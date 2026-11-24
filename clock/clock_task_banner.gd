@@ -3,6 +3,8 @@ extends Control
 ## The task card across the top of Clock mode, in the Meadow banner's style:
 ## a little clock, the sentence, a small line under it for help, and a row of
 ## stars on the right - one for each card right first time this session.
+## While a card is up it wears its job: an orange rim and a winding clock
+## for set cards, a blue rim and two eyes for read cards (see ClockJob).
 
 const CARD_HEIGHT: float = 140.0
 const MOST_WIDTH: float = 1300.0
@@ -28,6 +30,10 @@ var stars_earned: int = 0
 var stars_total: int = 0
 var slide_tween: Tween
 var flash: float = 0.0
+var job: ClockJob.Job = ClockJob.Job.NONE:
+	set(new_job):
+		job = new_job
+		queue_redraw()
 
 
 func _ready() -> void:
@@ -91,10 +97,12 @@ func _draw() -> void:
 	card.shadow_size = 12
 	card.shadow_offset = Vector2(0, 6)
 	card.anti_aliasing = true
+	if job != ClockJob.Job.NONE:
+		card.border_color = ClockJob.colour_for(job)
+		card.set_border_width_all(8)
 	draw_style_box(card, Rect2(Vector2.ZERO, size))
 	var picture_centre: Vector2 = Vector2(75, CARD_HEIGHT / 2.0)
-	draw_circle(picture_centre, 50, PaintColours.CYAN.lightened(0.6))
-	MenuIcons.draw_icon(self, "clock", picture_centre, 78, PaintColours.CYAN.darkened(0.1))
+	draw_job_picture(picture_centre)
 	var font: Font = get_theme_default_font()
 	var room_for_text: float = card_width - TEXT_LEFT - TEXT_RIGHT_MARGIN - stars_room()
 	draw_stars()
@@ -108,6 +116,30 @@ func _draw() -> void:
 		while small_size > 20 and font.get_string_size(small_text, HORIZONTAL_ALIGNMENT_LEFT, -1, small_size).x > room_for_text:
 			small_size -= 2
 		draw_string(font, Vector2(TEXT_LEFT, main_baseline + 46), small_text, HORIZONTAL_ALIGNMENT_LEFT, -1, small_size, Color(PaintColours.INK, 0.75))
+
+
+## A plain clock between cards; a clock with a winding arrow for set cards;
+## two big eyes for read cards.
+func draw_job_picture(centre: Vector2) -> void:
+	if job == ClockJob.Job.NONE:
+		draw_circle(centre, 50, PaintColours.CYAN.lightened(0.6))
+		MenuIcons.draw_icon(self, "clock", centre, 78, PaintColours.CYAN.darkened(0.1))
+		return
+	var colour: Color = ClockJob.colour_for(job)
+	draw_circle(centre, 50, colour.lightened(0.6))
+	if job == ClockJob.Job.WIND:
+		MenuIcons.draw_icon(self, "clock", centre, 66, colour.darkened(0.1))
+		draw_arc(centre, 40, deg_to_rad(-80), deg_to_rad(10), 16, colour.darkened(0.25), 7, true)
+		var tip_base: Vector2 = centre + Vector2.from_angle(deg_to_rad(10)) * 40
+		draw_colored_polygon(PackedVector2Array([tip_base + Vector2(-10, 0), tip_base + Vector2(10, 0), tip_base + Vector2(-6, 14)]), colour.darkened(0.25))
+		return
+	for side in [-1.0, 1.0]:
+		var eye: Vector2 = centre + Vector2(side * 18.0, 0)
+		draw_set_transform(eye, 0.0, Vector2(1.0, 1.35))
+		draw_circle(Vector2.ZERO, 15, Color.WHITE)
+		draw_arc(Vector2.ZERO, 15, 0, TAU, 32, PaintColours.INK, 3, true)
+		draw_circle(Vector2(2, 2), 7, PaintColours.INK)
+		draw_set_transform(Vector2.ZERO)
 
 
 ## One star per card, in a row on the right, filled in as they're earned.

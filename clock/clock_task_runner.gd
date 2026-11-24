@@ -26,6 +26,7 @@ signal copied
 
 enum State { BETWEEN_CARDS, SETTING, CHOOSING, COPYING }
 
+const READ_CARD_WORDS: String = "Look! What time is it?"
 const SECONDS_TO_WIND_TO_A_READ_TIME: float = 1.5
 const SECONDS_TO_CELEBRATE: float = 1.6
 const SECONDS_TO_SHOW_A_MESSAGE: float = 2.6
@@ -109,6 +110,7 @@ func play_intro(this_deck: Array[ClockCard]) -> void:
 ## never counts towards moving up.
 func show_then_copy(this_deck: Array[ClockCard]) -> void:
 	var times: Array = INTRO_TIMES.get(rung, [ClockRungs.example_minutes(rung), ClockTime.wound(ClockRungs.example_minutes(rung), 120)])
+	mode.show_job(ClockJob.Job.NONE)
 	mode.task_banner.show_text("Watch!", explanation_for(times[0], rung))
 	await mode.wind_itself_by(ClockTime.minutes_until_the_face_shows(mode.minutes_of_the_day(), times[0]), SECONDS_TO_WIND_IN_THE_INTRO)
 	if deck != this_deck:
@@ -118,7 +120,8 @@ func show_then_copy(this_deck: Array[ClockCard]) -> void:
 		return
 	copy_target = ClockTime.wound(mode.minutes_of_the_day(), ClockTime.minutes_until_the_face_shows(mode.minutes_of_the_day(), times[1]))
 	mode.clock_face.show_ghost_hand(copy_target)
-	mode.task_banner.show_text("Your turn - make it %s" % ClockTime.time_words(times[1]))
+	mode.show_job(ClockJob.Job.WIND)
+	mode.task_banner.show_text("Your turn - wind it to %s" % ClockTime.time_words(times[1]))
 	state = State.COPYING
 	mode.player_can_wind = true
 	await copied
@@ -192,12 +195,12 @@ func minutes_to_the_target() -> int:
 func play_set_card() -> void:
 	state = State.SETTING
 	mode.player_can_wind = true
-	mode.controls_hint.shows_left = false
+	mode.show_job(ClockJob.Job.WIND)
 	show_set_card_text()
 
 
 func show_set_card_text() -> void:
-	mode.task_banner.show_text(set_card_words(target_minutes), help_line())
+	mode.task_banner.show_text(set_card_words(target_minutes), set_card_small_line())
 
 
 ## The explanation, once he's missed twice already; nothing before that.
@@ -225,16 +228,23 @@ static func explanation_for(time: int, for_rung: int) -> String:
 	return "It's %s!" % ClockTime.time_words(time)
 
 
-## "Bath time - make it half past 6": the moment, then the time.
+## "Wind it to half past 6": the job first, so it reads differently from a
+## read card at a glance.
 static func set_card_words(time: int) -> String:
-	return "%s - make it %s" % [DayMoments.moment_at(time)["name"], ClockTime.time_words(time)]
+	return "Wind it to %s" % ClockTime.time_words(time)
+
+
+## The moment the time is for ("Bath time"), until help is needed: then the help.
+func set_card_small_line() -> String:
+	var help: String = help_line()
+	return help if help != "" else DayMoments.moment_at(target_minutes)["name"]
 
 
 func play_read_card() -> void:
 	state = State.BETWEEN_CARDS
 	mode.player_can_wind = false
-	mode.controls_hint.shows_left = true
-	mode.task_banner.show_text("What time is it?")
+	mode.show_job(ClockJob.Job.LOOK)
+	mode.task_banner.show_text(READ_CARD_WORDS)
 	var this_card: ClockCard = current_card
 	await mode.wind_itself_by(minutes_to_the_target(), SECONDS_TO_WIND_TO_A_READ_TIME)
 	if this_card != current_card:
@@ -316,7 +326,7 @@ func choose_answer() -> void:
 	misses += 1
 	mode.answer_cards.grey_out_chosen()
 	react_to_a_miss()
-	mode.task_banner.show_text("What time is it?", help_line())
+	mode.task_banner.show_text(READ_CARD_WORDS, help_line())
 
 
 func finish_card() -> void:

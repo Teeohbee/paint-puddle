@@ -27,7 +27,7 @@ func test_rung_1_shows_then_lets_him_copy_then_deals_the_cards() -> void:
 	check(not mode.player_can_wind, "hands off while it shows")
 	await seconds(ClockTaskRunner.SECONDS_TO_WIND_IN_THE_INTRO + ClockTaskRunner.SECONDS_TO_WATCH + 0.5)
 	check(ClockTime.faces_match(mode.minutes_of_the_day(), 3 * 60), "the clock wound to 3: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
-	check(mode.task_banner.main_text == "Your turn - make it 5 o'clock", "then his turn: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.main_text == "Your turn - wind it to 5 o'clock", "then his turn: '%s'" % mode.task_banner.main_text)
 	check(ClockTime.faces_match(mode.clock_face.ghost_minutes, 5 * 60), "with ghost hands on the 5")
 	check(mode.player_can_wind, "and he can wind")
 	await tap("act")
@@ -47,8 +47,10 @@ func test_the_second_time_goes_straight_to_the_cards() -> void:
 	check(mode.task_runner.current_card != null, "straight into the first card")
 	check(mode.controls_hint.caption == "", "no words under the controls: '%s'" % mode.controls_hint.caption)
 	check(mode.task_runner.current_card.is_read and mode.controls_hint.glow.has("left"), "a read card shows left, to pick an answer")
+	check(mode.job_ring.job == ClockJob.Job.LOOK and mode.task_banner.job == ClockJob.Job.LOOK, "a read card wears the look job")
 	mode.task_runner.play_set_card()
 	check(not mode.controls_hint.glow.has("left"), "a set card hides it again: only right winds")
+	check(mode.job_ring.job == ClockJob.Job.WIND and mode.task_banner.job == ClockJob.Job.WIND, "a set card wears the wind job")
 
 func test_rung_3_brings_the_minute_hand_on_first() -> void:
 	GameSettings.record_progress("clock_rung_intros_seen", 2)
