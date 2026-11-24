@@ -45,7 +45,7 @@ func test_the_second_time_goes_straight_to_the_cards() -> void:
 	GameSettings.record_progress("clock_rung_intros_seen", 1)
 	var mode: ClockMode = await open_rung(1)
 	check(mode.task_runner.current_card != null, "straight into the first card")
-	check(mode.controls_hint.caption == ClockMode.CONTROLS, "the wind-on caption: '%s'" % mode.controls_hint.caption)
+	check(mode.controls_hint.caption == "", "no words under the controls: '%s'" % mode.controls_hint.caption)
 
 func test_rung_3_brings_the_minute_hand_on_first() -> void:
 	GameSettings.record_progress("clock_rung_intros_seen", 2)

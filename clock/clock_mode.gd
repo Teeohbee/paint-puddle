@@ -21,8 +21,6 @@ const ANSWER_CARDS_MARGIN: float = 20.0
 const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
 const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
-const CONTROLS: String = "Right: wind on"
-const FREE_PLAY_CONTROLS: String = "Right or A: wind on"
 ## The part-of-the-day word sits under the clock, above the read answers.
 const DAY_LABEL_POSITION: Vector2 = Vector2(480, 906)
 
@@ -105,7 +103,7 @@ func start_free_play() -> void:
 	var climbing: int = ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
 	rung = mini(climbing if climbing > 0 else ClockRungs.RUNG_COUNT, ClockRungs.RUNGS_BUILT)
 	show_rung(rung)
-	controls_hint.caption = FREE_PLAY_CONTROLS
+	controls_hint.caption = ""
 	start_the_day()
 	player_can_wind = false
 	intro = ClockNumberLineIntro.new(clock_face)
@@ -127,6 +125,7 @@ func add_hud() -> void:
 	hud.layer = 10
 	add_child(hud)
 	controls_hint = ControlsHint.new()
+	controls_hint.shows_left = false
 	hud.add_child(controls_hint)
 	hud.add_child(effects_layer)
 	task_banner = ClockTaskBanner.new()
@@ -223,7 +222,7 @@ func show_rung(new_rung: int) -> void:
 	rung = new_rung
 	clock_face.shows_minute_hand = ClockRungs.shows_minute_hand(rung)
 	clock_face.minute_hand_reach = 1.0
-	controls_hint.caption = RUNG_8_CONTROLS if rung == ClockRungs.SINGLE_MINUTES_RUNG else CONTROLS
+	controls_hint.caption = RUNG_8_CONTROLS if rung == ClockRungs.SINGLE_MINUTES_RUNG else ""
 	clock_face.queue_redraw()
 
 

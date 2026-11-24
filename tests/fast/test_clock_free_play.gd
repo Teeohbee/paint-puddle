@@ -73,3 +73,9 @@ func test_the_intro_plays_every_time() -> void:
 	var mode: ClockMode = await open_free_play()
 	mode = await open_free_play(false)
 	check(mode.intro.is_playing(), "the second visit plays it too")
+
+func test_the_controls_hint_shows_no_left_and_no_words() -> void:
+	var mode: ClockMode = await open_free_play()
+	check(mode.controls_hint.caption == "", "no caption: '%s'" % mode.controls_hint.caption)
+	check(not mode.controls_hint.glow.has("left"), "no left arrow, so left never lights")
+	check(mode.controls_hint.glow.has("right") and mode.controls_hint.glow.has("jump"), "right and A still show")
