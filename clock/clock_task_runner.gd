@@ -11,7 +11,8 @@ extends Node
 ## it, winds back, and that card fades away so he can't go round in circles.
 
 signal card_started(card: ClockCard)
-signal card_finished(card: ClockCard)
+## first_try: answered right with no miss before it (so no help either).
+signal card_finished(card: ClockCard, first_try: bool)
 signal deck_finished
 
 enum State { BETWEEN_CARDS, SETTING, CHOOSING, SHOWING_A_MISTAKE }
@@ -245,7 +246,7 @@ func finish_card() -> void:
 	mode.task_banner.celebrate()
 	mode.task_banner.show_text("Yes! It's %s" % ClockTime.time_in_the_day_words(current_card.minutes_of_the_day))
 	var finished: ClockCard = current_card
-	card_finished.emit(finished)
+	card_finished.emit(finished, misses == 0)
 	await get_tree().create_timer(SECONDS_TO_CELEBRATE).timeout
 	if finished != current_card:
 		return
