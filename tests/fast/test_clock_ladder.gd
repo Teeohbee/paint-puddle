@@ -76,12 +76,22 @@ func test_the_climbing_rung_saves_its_deck_and_picks_up_where_it_left_off() -> v
 	check(mode.is_climbing, "rung 1 is being climbed")
 	var saved: Array[int] = GameSettings.get_clock_task_deck()
 	check(saved.size() == 8, "a fresh deck of 8 is saved: %d" % saved.size())
-	mode.on_card_finished(mode.task_runner.current_card)
+	mode.on_card_finished(mode.task_runner.current_card, true)
 	check(GameSettings.get_clock_task_deck() == saved.slice(1), "after a card, the 7 still to come are saved")
 	mode = await open_rung(1)
 	check(mode.task_runner.deck.size() == 7 and mode.task_runner.current_card.saved_number() == saved[1], "coming back carries on from the second card")
 
+func test_finishing_a_deck_without_the_run_clears_nothing() -> void:
+	var mode: ClockMode = await open_rung(1)
+	await finish_a_one_card_deck(mode)
+	check(GameSettings.get_progress("clock_rungs_cleared") == 0, "a finished deck alone clears nothing")
+	check(GameSettings.get_progress("clock_first_try_run") == 1, "but the first try counts: %d" % GameSettings.get_progress("clock_first_try_run"))
+	check(get_tree().current_scene.scene_file_path == "res://ui/clock_menu.tscn", "back on the Clock menu")
+
+# Day one's run of 5 was another day, and 4 of today's are in: one more first try clears the rung
 func test_clearing_the_climbing_rung_opens_the_next_and_goes_back_to_the_menu_on_it() -> void:
+	GameSettings.record_progress("clock_run_day", 20000101)
+	GameSettings.record_progress("clock_first_try_run", 4)
 	var mode: ClockMode = await open_rung(1)
 	await finish_a_one_card_deck(mode)
 	check(GameSettings.get_progress("clock_rungs_cleared") == 1, "one rung cleared: %d" % GameSettings.get_progress("clock_rungs_cleared"))
@@ -91,11 +101,14 @@ func test_clearing_the_climbing_rung_opens_the_next_and_goes_back_to_the_menu_on
 
 func test_a_replay_saves_nothing_and_counts_nothing() -> void:
 	GameSettings.record_progress("clock_rungs_cleared", 2)
+	GameSettings.record_progress("clock_run_day", 20000101)
+	GameSettings.record_progress("clock_first_try_run", 4)
 	var mode: ClockMode = await open_rung(1)
 	check(not mode.is_climbing, "rung 1 is a replay")
 	check(GameSettings.get_clock_task_deck().is_empty(), "no deck saved")
 	await finish_a_one_card_deck(mode)
 	check(GameSettings.get_progress("clock_rungs_cleared") == 2, "still 2 cleared")
+	check(GameSettings.get_progress("clock_first_try_run") == 4, "and the run is the climbing rung's, untouched")
 
 func test_a_rung_opened_by_a_grown_up_isnt_climbed() -> void:
 	GameSettings.set_setting("open_all_clock_rungs", 1)
