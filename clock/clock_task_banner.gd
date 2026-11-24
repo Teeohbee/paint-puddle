@@ -1,8 +1,8 @@
 class_name ClockTaskBanner
 extends Control
 ## The task card across the top of Clock mode, in the Meadow banner's style:
-## a little clock, the sentence, and a small line under it for am/pm. It
-## also says the gentle "try again" messages, then goes back to the task.
+## a little clock, the sentence, a small line under it for help, and a row of
+## stars on the right - one for each card right first time this session.
 
 const CARD_HEIGHT: float = 140.0
 const MOST_WIDTH: float = 1300.0
@@ -16,11 +16,16 @@ const TEXT_LEFT: float = 150.0
 const TEXT_RIGHT_MARGIN: float = 50.0
 const MAIN_FONT_SIZE: int = 50
 const SMALL_FONT_SIZE: int = 32
+const STAR_SPACING: float = 34.0
+const STAR_RADIUS: float = 16.0
 
 ## The big line, and the small line under it ("" for none).
 var main_text: String = ""
 var small_text: String = ""
 var card_width: float = MOST_WIDTH
+## Stars: how many earned, out of how many cards this session (0 hides the row).
+var stars_earned: int = 0
+var stars_total: int = 0
 var slide_tween: Tween
 var flash: float = 0.0
 
@@ -38,11 +43,21 @@ func show_text(new_main_text: String, new_small_text: String = "") -> void:
 	var main_width: float = font.get_string_size(main_text, HORIZONTAL_ALIGNMENT_LEFT, -1, MAIN_FONT_SIZE).x
 	var small_width: float = font.get_string_size(small_text, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE).x
 	var text_width: float = maxf(main_width, small_width)
-	card_width = clampf(text_width + TEXT_LEFT + TEXT_RIGHT_MARGIN, LEAST_WIDTH, MOST_WIDTH)
+	card_width = clampf(text_width + TEXT_LEFT + TEXT_RIGHT_MARGIN + stars_room(), LEAST_WIDTH, MOST_WIDTH)
 	size = Vector2(card_width, CARD_HEIGHT)
 	position.x = AREA_LEFT + (AREA_WIDTH - card_width) / 2.0
 	queue_redraw()
 	slide_to(SHOWN_Y)
+
+
+func set_stars(earned: int, total: int) -> void:
+	stars_earned = earned
+	stars_total = total
+	show_text(main_text, small_text)
+
+
+func stars_room() -> float:
+	return STAR_SPACING * stars_total + 20.0 if stars_total > 0 else 0.0
 
 
 func hide_card() -> void:
@@ -81,14 +96,33 @@ func _draw() -> void:
 	draw_circle(picture_centre, 50, PaintColours.CYAN.lightened(0.6))
 	MenuIcons.draw_icon(self, "clock", picture_centre, 78, PaintColours.CYAN.darkened(0.1))
 	var font: Font = get_theme_default_font()
-	var room_for_text: float = card_width - TEXT_LEFT - TEXT_RIGHT_MARGIN
+	var room_for_text: float = card_width - TEXT_LEFT - TEXT_RIGHT_MARGIN - stars_room()
+	draw_stars()
 	var main_baseline: float = CARD_HEIGHT / 2.0 + MAIN_FONT_SIZE * 0.35
 	if small_text != "":
 		main_baseline -= 20.0
 	var font_size: int = fitting_font_size(font, main_text, room_for_text)
 	draw_string(font, Vector2(TEXT_LEFT, main_baseline), main_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, PaintColours.INK)
 	if small_text != "":
-		draw_string(font, Vector2(TEXT_LEFT, main_baseline + 46), small_text, HORIZONTAL_ALIGNMENT_LEFT, -1, SMALL_FONT_SIZE, Color(PaintColours.INK, 0.6))
+		var small_size: int = SMALL_FONT_SIZE
+		while small_size > 20 and font.get_string_size(small_text, HORIZONTAL_ALIGNMENT_LEFT, -1, small_size).x > room_for_text:
+			small_size -= 2
+		draw_string(font, Vector2(TEXT_LEFT, main_baseline + 46), small_text, HORIZONTAL_ALIGNMENT_LEFT, -1, small_size, Color(PaintColours.INK, 0.75))
+
+
+## One star per card, in a row on the right, filled in as they're earned.
+func draw_stars() -> void:
+	for star_index in stars_total:
+		var centre: Vector2 = Vector2(card_width - TEXT_RIGHT_MARGIN / 2.0 - STAR_SPACING * (stars_total - star_index) + STAR_SPACING / 2.0, CARD_HEIGHT / 2.0)
+		var earned: bool = star_index < stars_earned
+		var points: PackedVector2Array = PackedVector2Array()
+		for point_index in 10:
+			var radius: float = STAR_RADIUS if point_index % 2 == 0 else STAR_RADIUS * 0.45
+			points.append(centre + Vector2.from_angle(-PI / 2.0 + TAU * point_index / 10.0) * radius)
+		draw_colored_polygon(points, PaintColours.YELLOW if earned else Color(PaintColours.INK, 0.22))
+		if earned:
+			points.append(points[0])
+			draw_polyline(points, PaintColours.ORANGE.darkened(0.2), 2.0, true)
 
 
 func fitting_font_size(font: Font, text: String, room: float) -> int:

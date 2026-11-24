@@ -3,7 +3,7 @@ extends Control
 ## The three answers under the clock on a read card. Each says a time in
 ## words, nothing else - the word under the clock says the part of the day. Left and right
 ## move between them; the runner asks which one is picked. A wrong pick
-## fades away, so it can't be picked again.
+## wobbles and greys out where it is, so it can't be picked again.
 
 ## Three of these and the gaps have to fit between the screen edge and the house.
 const CARD_SIZE: Vector2 = Vector2(276, 124)
@@ -11,14 +11,19 @@ const GAP: float = 12.0
 ## Room left and right inside a card for the words, clear of the chosen card's border.
 const CARD_PADDING: float = 36.0
 const WORDS_FONT_SIZE: int = 44
+## How solid a greyed-out wrong answer stays.
+const GREYED_OUT_OPACITY: float = 0.35
+const WOBBLE_SECONDS: float = 0.5
 
 ## The times on the cards, left to right.
 var answers: Array[int] = []
-## How see-through each card is, 1 = solid. Faded cards are out.
+## How see-through each card is, 1 = solid. Greyed-out cards are out.
 var opacities: Array[float] = []
 var chosen_index: int = 0
 ## Where the bottom of the cards sits.
 var bottom_y: float = 1066.0
+var wobbling_index: int = -1
+var wobble_left: float = 0.0
 
 
 func _ready() -> void:
@@ -65,12 +70,15 @@ func is_still_in(index: int) -> bool:
 	return opacities[index] > 0.99
 
 
-## Fades the chosen card out and moves the choice to one still in.
-func fade_chosen() -> void:
+## Wobbles the chosen card, greys it out where it is, and moves the choice
+## to one still in.
+func grey_out_chosen() -> void:
 	var faded_index: int = chosen_index
 	var fade: Tween = create_tween()
-	fade.tween_method(func(opacity: float) -> void: set_opacity(faded_index, opacity), 1.0, 0.0, 0.6)
+	fade.tween_method(func(opacity: float) -> void: set_opacity(faded_index, opacity), 1.0, GREYED_OUT_OPACITY, 0.6)
 	opacities[faded_index] = 0.98
+	wobbling_index = faded_index
+	wobble_left = WOBBLE_SECONDS
 	for index in answers.size():
 		if is_still_in(index):
 			chosen_index = index
@@ -84,12 +92,19 @@ func set_opacity(index: int, opacity: float) -> void:
 		queue_redraw()
 
 
+func _process(delta: float) -> void:
+	if wobble_left > 0.0:
+		wobble_left = maxf(wobble_left - delta, 0.0)
+		queue_redraw()
+
+
 func _draw() -> void:
 	var font: Font = get_theme_default_font()
 	for index in answers.size():
-		if opacities[index] <= 0.0:
-			continue
-		draw_answer_card(font, index, Vector2(index * (CARD_SIZE.x + GAP), 0))
+		var top_left: Vector2 = Vector2(index * (CARD_SIZE.x + GAP), 0)
+		if index == wobbling_index and wobble_left > 0.0:
+			top_left.x += sin(wobble_left * 45.0) * 12.0 * (wobble_left / WOBBLE_SECONDS)
+		draw_answer_card(font, index, top_left)
 
 
 func draw_answer_card(font: Font, index: int, top_left: Vector2) -> void:
