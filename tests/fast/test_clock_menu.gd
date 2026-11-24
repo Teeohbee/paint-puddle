@@ -1,53 +1,75 @@
 extends GameSuite
-# The Clock menu's layout: Back on its own on the left of the rungs, Tricky on its own on the right.
-
-func press(action):
-	var event = InputEventAction.new()
-	event.action = action
-	event.pressed = true
-	Input.parse_input_event(event)
-	await get_tree().process_frame
-	event = InputEventAction.new()
-	event.action = action
-	event.pressed = false
-	Input.parse_input_event(event)
-	await frames(2)
-
-func focused_word():
-	var owner = get_tree().root.gui_get_focus_owner()
-	return owner.word if owner != null and "word" in owner else "(nothing)"
+# The Clock menu: Back, then a big Play with the clock tile (where the cursor starts), then the
+# ladder - the built rungs, and faded "Coming soon" tiles for the rest. No Tricky tile while the
+# tricky faces are parked.
 
 func open_menu() -> Control:
 	get_tree().change_scene_to_file("res://ui/clock_menu.tscn")
 	await frames(4)
 	return get_tree().current_scene
 
+func focused_word():
+	var owner = get_tree().root.gui_get_focus_owner()
+	return owner.word if owner != null and "word" in owner else "(nothing)"
+
 func rect_of(tile) -> Rect2:
 	return tile.get_global_rect()
 
-func test_back_and_tricky_stand_either_side_of_the_rungs() -> void:
-	GameSettings.record_progress("clock_rungs_cleared", 2)
+func test_back_then_free_play_then_the_ladder_all_on_screen() -> void:
 	var menu = await open_menu()
-	var first_rung = rect_of(menu.rung_tiles[0])
-	var last_rung = rect_of(menu.rung_tiles[-1])
-	var grid_middle_y = (first_rung.position.y + last_rung.end.y) / 2.0
-	check(rect_of(menu.back).end.x < first_rung.position.x, "Back is left of the rungs")
-	check(absf(rect_of(menu.back).get_center().y - grid_middle_y) < 1.0, "Back is halfway down the rungs: %s vs %s" % [rect_of(menu.back).get_center().y, grid_middle_y])
-	check(rect_of(menu.tricky).position.x > last_rung.end.x, "Tricky is right of the rungs")
-	check(absf(rect_of(menu.tricky).get_center().y - grid_middle_y) < 1.0, "Tricky is halfway down the rungs: %s vs %s" % [rect_of(menu.tricky).get_center().y, grid_middle_y])
+	check(rect_of(menu.back).end.x < rect_of(menu.free_play).position.x, "Back is left of Play with the clock")
+	check(rect_of(menu.free_play).end.x < rect_of(menu.rung_tiles[0]).position.x, "and that's left of the rungs")
+	check(rect_of(menu.free_play).size.y > rect_of(menu.rung_tiles[0]).size.y, "Play with the clock is the big tile")
 	var screen = Rect2(Vector2.ZERO, Vector2(1920, 1080))
-	for tile in [menu.back, menu.tricky] + menu.rung_tiles:
+	for tile in [menu.back, menu.free_play] + menu.rung_tiles + menu.coming_soon_tiles:
 		check(screen.encloses(rect_of(tile)), "%s is on the screen" % tile.word)
 
-func test_left_and_right_reach_back_and_tricky_from_either_row() -> void:
-	GameSettings.record_progress("clock_rungs_cleared", 7)
+func test_the_cursor_starts_on_free_play() -> void:
 	var menu = await open_menu()
-	for start in [0, 4]:
-		menu.rung_tiles[start].grab_focus()
-		await frames(1)
-		for step in 4: await press("ui_left")
-		check(focused_word() == "Back", "left from rung %d reaches Back: %s" % [start + 1, focused_word()])
-		menu.rung_tiles[start].grab_focus()
-		await frames(1)
-		for step in 5: await press("ui_right")
-		check(focused_word() == "Tricky", "right from rung %d reaches Tricky: %s" % [start + 1, focused_word()])
+	check(focused_word() == menu.free_play.word, "on Play with the clock: %s" % focused_word())
+
+func test_free_play_opens_free_play() -> void:
+	var menu = await open_menu()
+	menu.free_play.chosen.emit()
+	await frames(40)
+	var mode = get_tree().current_scene
+	check(mode is ClockMode and ClockMode.free_play and mode.task_runner == null, "free play opens")
+
+func test_three_rungs_then_coming_soon() -> void:
+	var menu = await open_menu()
+	check(menu.rung_tiles.size() == 3, "rungs 1-3: %d" % menu.rung_tiles.size())
+	check(menu.coming_soon_tiles.size() == 3, "three coming soon")
+	for tile in menu.coming_soon_tiles:
+		check(tile.is_locked and not tile.shows_padlock and tile.subtitle == "Coming soon", "%s is coming soon" % tile.word)
+	for rung in range(ClockRungs.RUNGS_BUILT + 1, 4):
+		var tile = menu.rung_tiles[rung - 1]
+		check(tile.is_locked and tile.subtitle == "Coming soon", "rung %d isn't built yet" % rung)
+
+func test_open_everything_stops_at_the_built_rungs() -> void:
+	GameSettings.set_setting("open_all_clock_rungs", 1)
+	var menu = await open_menu()
+	for rung in 3:
+		check(menu.rung_tiles[rung].is_locked == (rung + 1 > ClockRungs.RUNGS_BUILT), "rung %d open only if built" % (rung + 1))
+
+func test_there_is_no_tricky_tile_and_tricky_replays_are_off() -> void:
+	ClockMode.tricky_replay = true
+	var menu = await open_menu()
+	check(not "tricky" in menu, "no Tricky tile")
+	check(not ClockMode.tricky_replay, "tricky replays are off")
+
+func test_picking_a_rung_turns_free_play_off() -> void:
+	ClockMode.free_play = true
+	var menu = await open_menu()
+	menu.rung_tiles[0].chosen.emit()
+	await frames(40)
+	var mode = get_tree().current_scene
+	check(mode is ClockMode and not ClockMode.free_play and mode.task_runner != null, "rung 1 plays its cards")
+
+func test_every_ladder_word_is_the_same_size() -> void:
+	var menu = await open_menu()
+	var tiles: Array = [menu.free_play] + menu.rung_tiles + menu.coming_soon_tiles
+	var sizes: Dictionary = {}
+	for tile: MenuTile in tiles:
+		sizes[tile.word_font_size] = true
+		check(tile.word_size_to_fit(tile.custom_minimum_size) >= tile.word_font_size, "%s fits at the shared size" % tile.word)
+	check(sizes.size() == 1 and not sizes.has(0), "one shared word size: %s" % [sizes.keys()])

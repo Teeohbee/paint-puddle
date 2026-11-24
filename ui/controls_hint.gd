@@ -19,6 +19,18 @@ const FADE_SPEED: float = 3.0
 var shows_jump: bool = true
 ## With shows_jump off: all four arrows and the A button, for places where A does something else.
 var shows_act_button: bool = false
+## False for places where left does nothing (the clock only winds on): no
+## left arrow, and the left arm never lights. Can change while showing.
+var shows_left: bool = true:
+	set(new_shows_left):
+		shows_left = new_shows_left
+		if not shows_left:
+			actions.erase("left")
+			glow.erase("left")
+		elif not actions.is_empty():
+			actions["left"] = "move_left"
+			glow["left"] = 0.0
+		queue_redraw()
 ## A short line under the card, for controls that need words
 ## ("Tap: 1 minute · Hold: 5 minutes"). Empty for none.
 var caption: String = "":
@@ -42,6 +54,8 @@ func _ready() -> void:
 		actions["down"] = "move_down"
 		if shows_act_button:
 			actions["jump"] = "act"
+	if not shows_left:
+		actions.erase("left")
 	for part in actions:
 		glow[part] = 0.0
 
