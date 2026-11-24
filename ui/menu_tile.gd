@@ -3,6 +3,7 @@ extends Button
 ## A big friendly menu tile: a picture and a word on a paint-coloured card.
 ## It grows, glows and bounces when the D-pad lands on it. A locked tile
 ## shows a padlock and wobbles when picked, and never does anything else.
+## A tile under construction is locked too, with builders' tape in place of the padlock.
 
 signal chosen
 
@@ -17,6 +18,15 @@ const CORNER_RADIUS: int = 48
 		queue_redraw()
 ## Locked tiles show a padlock, unless it's something not found yet in the book.
 @export var shows_padlock: bool = true
+## A place being rebuilt: locked (it wobbles and never opens), no padlock,
+## and yellow "UNDER CONSTRUCTION" tape across the middle.
+@export var is_under_construction: bool = false:
+	set(new_is_under_construction):
+		is_under_construction = new_is_under_construction
+		if is_under_construction:
+			is_locked = true
+			shows_padlock = false
+		queue_redraw()
 ## A full-colour picture in place of the icon, like "thing:dog" - see MenuIcons.draw_picture.
 @export var picture: String = ""
 ## A smaller line under the word, like a friend's recipe in the book.
@@ -125,6 +135,8 @@ func _draw() -> void:
 		MenuIcons.draw_icon(self, icon_kind, icon_centre, icon_size, Color.WHITE)
 	if is_locked and shows_padlock:
 		MenuIcons.draw_padlock(self, card.position + Vector2(size.x * 0.78, size.y * 0.2), size.x * 0.28, PaintColours.INK)
+	if is_under_construction:
+		draw_construction_tape(icon_centre)
 	if has_gold_star:
 		MenuIcons.draw_gold_star(self, card.position + Vector2(size.x * 0.93, size.y * 0.07), size.x * 0.32)
 	draw_word(card)
@@ -149,6 +161,39 @@ func draw_word(card: Rect2) -> void:
 		var subtitle_width: float = font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_CENTER, -1, subtitle_size).x
 		draw_string(font, card.position + Vector2((size.x - subtitle_width) / 2.0, size.y * 0.9), subtitle,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, subtitle_size, paint_colour.darkened(0.55))
+
+
+## A strip of yellow builders' tape, tilted across the icon, with black
+## stripes at each end and UNDER / CONSTRUCTION on two lines in the middle.
+func draw_construction_tape(icon_centre: Vector2) -> void:
+	var tape_size: Vector2 = Vector2(size.x * 1.1, size.y * 0.27)
+	var tape: Rect2 = Rect2(-tape_size / 2.0, tape_size)
+	draw_set_transform(icon_centre - Vector2(0, size.y * 0.04), -0.12, Vector2.ONE)
+	draw_rect(Rect2(tape.position + Vector2(0, 6), tape.size), Color(0, 0, 0, 0.18))
+	draw_rect(tape, PaintColours.YELLOW)
+	# Two slanted stripes at each end, in the outer seventh of the tape
+	var end_width: float = tape_size.x * 0.14
+	var stripe_width: float = end_width / 4.0
+	for end in [-1.0, 1.0]:
+		for stripe_index in 2:
+			var stripe_left: float = (tape.position.x + stripe_index * stripe_width * 2.0) if end < 0.0 \
+				else (tape.end.x - end_width + stripe_index * stripe_width * 2.0)
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(stripe_left, tape.end.y), Vector2(stripe_left + stripe_width, tape.position.y),
+				Vector2(stripe_left + stripe_width * 2.0, tape.position.y), Vector2(stripe_left + stripe_width, tape.end.y),
+			]), PaintColours.INK)
+	draw_rect(tape, PaintColours.INK, false, 3.0)
+	var font: Font = get_theme_default_font()
+	var lines: Array[String] = ["UNDER", "CONSTRUCTION"]
+	var words_room: float = tape_size.x - end_width * 2.0 - 12.0
+	var font_size: int = int(tape_size.y * 0.4)
+	while font_size > 10 and font.get_string_size(lines[1], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > words_room:
+		font_size -= 1
+	for line_index in lines.size():
+		var line_width: float = font.get_string_size(lines[line_index], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var baseline_y: float = (line_index - 0.5) * font_size * 1.05 + font_size * 0.36
+		draw_string(font, Vector2(-line_width / 2.0, baseline_y), lines[line_index], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, PaintColours.INK)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func rounded_box(colour: Color, corner_radius: int) -> StyleBoxFlat:
