@@ -14,6 +14,8 @@ const PENTATONIC_STEPS: Array[int] = [0, 2, 4, 7, 9]
 const TRACKS: Dictionary = {
 	"title": {"beats_per_minute": 84, "melody_voice": "bell", "melody_busyness": 0.45, "seed": 11, "ticks": false},
 	"meadow": {"beats_per_minute": 96, "melody_voice": "marimba", "melody_busyness": 0.6, "seed": 23, "ticks": true},
+	# The Evening Meadow (Medium): the Meadow's tune, calmer - slower, sparser, on the bell, no ticks
+	"meadow_evening": {"beats_per_minute": 80, "melody_voice": "bell", "melody_busyness": 0.4, "seed": 23, "ticks": false},
 	"hills": {"beats_per_minute": 112, "melody_voice": "marimba", "melody_busyness": 0.7, "seed": 37, "ticks": true},
 	# Slow and calm for thinking, with the ticks keeping time like a clock
 	"clock": {"beats_per_minute": 72, "melody_voice": "bell", "melody_busyness": 0.35, "seed": 59, "ticks": true},

@@ -34,9 +34,13 @@ var is_celebrating: bool = false
 
 
 func _ready() -> void:
-	Music.play_track("meadow")
+	var is_evening: bool = difficulty == TaskRunner.MEDIUM
+	var theme: MeadowTheme = MeadowTheme.evening() if is_evening else MeadowTheme.day()
+	Music.play_track("meadow_evening" if is_evening else "meadow")
 	add_to_group("gameplay")
-	add_child(MeadowGround.new())
+	var ground: MeadowGround = MeadowGround.new()
+	ground.theme = theme
+	add_child(ground)
 	spelled_things = ThingsInTheMeadow.new()
 	spelled_things.name = "SpelledThings"
 	spelled_things.keep_clear_of(RAINBOW_CENTRE + Vector2(0, -60), RainbowBoard.OUTER_RADIUS + 60)
@@ -74,6 +78,7 @@ func _ready() -> void:
 		bush.position = bush_details.position
 		bush.radius = bush_details.radius
 		bush.berry_colour = bush_details.berries
+		bush.theme = theme
 		things_on_the_grass.add_child(bush)
 	blob = BLOB_SCENE.instantiate()
 	blob.position = Vector2(960, 740)
@@ -82,8 +87,10 @@ func _ready() -> void:
 	trail.follow(blob)
 	effects_layer = Node2D.new()
 	add_child(effects_layer)
-	add_child(Hedge.new())
-	add_child(CloudShadows.new())
+	var hedge: Hedge = Hedge.new()
+	hedge.theme = theme
+	add_child(hedge)
+	add_child(Fireflies.new() if is_evening else CloudShadows.new())
 
 	var hud: CanvasLayer = CanvasLayer.new()
 	hud.layer = 10

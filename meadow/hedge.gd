@@ -7,6 +7,7 @@ const HEDGE_THICKNESS: float = 56.0
 
 var bump_centres: Array[Vector2] = []
 var bump_radii: Array[float] = []
+var theme: MeadowTheme = MeadowTheme.day()
 
 
 func _ready() -> void:
@@ -44,9 +45,9 @@ func lay_out_bumps() -> void:
 
 func _draw() -> void:
 	for bump_index in bump_centres.size():
-		draw_circle(bump_centres[bump_index] + Vector2(0, 8), bump_radii[bump_index], Color(0.18, 0.4, 0.2))
+		draw_circle(bump_centres[bump_index] + Vector2(0, 8), bump_radii[bump_index], theme.hedge_shadow)
 	for bump_index in bump_centres.size():
-		draw_circle(bump_centres[bump_index], bump_radii[bump_index], Color(0.27, 0.55, 0.27))
+		draw_circle(bump_centres[bump_index], bump_radii[bump_index], theme.hedge)
 	for bump_index in bump_centres.size():
 		var highlight: Vector2 = bump_centres[bump_index] + Vector2(-8, -10)
-		draw_circle(highlight, bump_radii[bump_index] * 0.45, Color(0.4, 0.7, 0.35, 0.6))
+		draw_circle(highlight, bump_radii[bump_index] * 0.45, theme.hedge_highlight)
