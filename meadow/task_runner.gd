@@ -99,6 +99,10 @@ func has_wash_lesson() -> bool:
 	return not is_medium()
 
 
+## Medium is still being built: debug builds (playing from Godot on the Mac)
+## can play it, released games show its tile taped off. Tests flip it.
+static var medium_is_built: bool = OS.is_debug_build()
+
 ## Medium opens once Easy has dealt every card once, or early if a grown-up
 ## has switched "Open Medium" on (it opens the Hills' Medium too).
 static func is_medium_unlocked() -> bool:

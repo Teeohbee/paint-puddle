@@ -1,6 +1,7 @@
 extends MenuScreen
 ## Easy or Medium, for the Hills or the Meadow. Medium stays locked until Easy
 ## is done: every Hills level finished, or every Meadow card dealt once.
+## The Meadow's Medium is taped off in released games until it's finished.
 
 const DIFFICULTY_TILE_SIZE: Vector2 = Vector2(320, 320)
 const MeadowScript = preload("res://meadow/meadow.gd")
@@ -18,6 +19,9 @@ func _ready() -> void:
 	var easy: MenuTile = make_tile("Easy", place, PaintColours.GREEN, DIFFICULTY_TILE_SIZE)
 	var medium: MenuTile = make_tile("Medium", place, PaintColours.ORANGE, DIFFICULTY_TILE_SIZE)
 	medium.is_locked = not is_medium_unlocked()
+	if place == "meadow" and not TaskRunner.medium_is_built:
+		medium.is_under_construction = true
+		medium.subtitle = "Coming soon!"
 	for tile in [back, easy, medium]:
 		tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(tile)

@@ -59,6 +59,7 @@ func reset_world() -> void:
 	TracingModeScript.letter_just_finished = -1
 	HillsLevelScript.difficulty = HillsLevels.EASY
 	MeadowScript.difficulty = TaskRunner.EASY
+	TaskRunner.medium_is_built = OS.is_debug_build()
 	HillsLevelScript.level_just_finished = -1
 	PaintStudioScript.colour_set = "paint"
 

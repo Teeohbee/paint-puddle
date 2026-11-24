@@ -39,6 +39,11 @@ The Meadow asks Easy or Medium first, like the Hills. Medium opens once Easy
 has dealt every card once (`tasks_completed` reaches the Easy pack's size), or
 early with "Open Medium", which opens both places' Medium.
 
+While it's being finished, released games (`--export-release`) show Meadow
+Medium taped off "Coming soon!" whatever the save says.
+`TaskRunner.medium_is_built` is `OS.is_debug_build()`, so playing from Godot on
+the Mac still opens it. Delete the flag when Medium ships.
+
 Medium has its own cards in `data/tasks_medium.json`, not the Easy ones made
 harder. Each difficulty keeps its own shuffled deck and next card in the save
 (`task_deck` and `next_task_index`, `medium_task_deck` and
