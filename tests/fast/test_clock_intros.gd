@@ -32,7 +32,7 @@ func test_rung_8_counts_minutes_with_the_marks_lighting_up() -> void:
 	check(mode.task_runner.current_card != null, "then the first card")
 	check(mode.clock_face.lit_minutes.is_empty(), "and the marks go out")
 
-func test_other_rungs_have_no_intro_and_no_caption() -> void:
+func test_other_rungs_have_no_intro_and_the_plain_caption() -> void:
 	var mode: ClockMode = await open_rung(4)
 	check(mode.task_runner.current_card != null, "straight into the first card")
-	check(mode.controls_hint.caption == "", "no caption")
+	check(mode.controls_hint.caption == ClockMode.CONTROLS, "the wind-on caption: '%s'" % mode.controls_hint.caption)
