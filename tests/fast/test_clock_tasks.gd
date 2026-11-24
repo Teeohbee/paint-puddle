@@ -1,6 +1,8 @@
 extends GameSuite
 # Clock mode's cards: set the hands and press A, or pick the time the clock shows. Time only goes
 # forward, so a card's time is the next time the face shows it, and there's no am/pm anywhere.
+# Wrong is clearly wrong but gentle (the blob shakes its head, the house stays put), and help comes
+# one step per miss: the number glows, then ghost hands, then the words. First tries earn stars.
 
 func open_with_deck(rung: int, cards: Array[ClockCard]) -> ClockMode:
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
@@ -65,16 +67,25 @@ func test_going_round_again_still_reads_right() -> void:
 	await tap("act")
 	check(mode.task_banner.main_text.begins_with("Yes!"), "the face reads 9 o'clock: '%s'" % mode.task_banner.main_text)
 
-func test_a_second_miss_glows_the_number_to_aim_for() -> void:
+func test_help_comes_one_step_per_miss() -> void:
 	var mode: ClockMode = await open_with_deck(3, [set_card(9, 30), set_card(9, 0)])
 	await tap("act")
-	check(mode.clock_face.glow == 0.0, "no glow after one miss")
-	await tap("act")
-	check(mode.clock_face.glow > 0.0 and mode.clock_face.glowing_number == 9, "the 9 glows after two: %d" % mode.clock_face.glowing_number)
+	check(mode.task_banner.main_text == "Not quite - try again!", "a gentle no: '%s'" % mode.task_banner.main_text)
+	check(mode.clock_face.head_shake > 0.0, "the blob shakes its head")
+	check(mode.clock_face.glow > 0.0 and mode.clock_face.glowing_number == 9, "the 9 glows after one miss: %d" % mode.clock_face.glowing_number)
 	check(mode.clock_face.glowing_minute == -1, "only the number on rung 3")
+	check(mode.clock_face.ghost_minutes == -1, "no ghost hands yet")
+	await tap("act")
+	check(mode.clock_face.ghost_minutes == 9 * 60 + 30, "after two, ghost hands show half past 9: %d" % mode.clock_face.ghost_minutes)
+	await seconds(3.0)
+	check(mode.task_banner.small_text == "", "no words yet: '%s'" % mode.task_banner.small_text)
+	await tap("act")
+	await seconds(3.0)
+	check(mode.task_banner.small_text == "The minute hand is on 6 and the hour hand is halfway from 9 to 10. It's half past 9!", "after three, the words: '%s'" % mode.task_banner.small_text)
 	await tap("move_right")
 	await seconds(0.6)
 	check(mode.clock_face.glow == 0.0, "moving the hands fades the glow")
+	check(mode.clock_face.ghost_minutes == 9 * 60 + 30, "but the ghost hands stay till the card is done")
 
 func test_from_rung_4_the_minute_mark_glows_too_and_to_times_glow_the_next_hour() -> void:
 	var mode: ClockMode = await open_with_deck(5, [set_card(9, 45), set_card(9, 0)])
@@ -106,24 +117,24 @@ func test_picking_the_right_answer_moves_on() -> void:
 	await seconds(2.0)
 	check(mode.task_runner.card_index == 1, "on to the next card")
 
-func test_a_wrong_pick_shows_its_time_winds_back_and_fades_away() -> void:
+func test_a_wrong_pick_greys_out_where_it_is_and_nothing_moves() -> void:
 	var mode: ClockMode = await open_with_deck(3, [read_card(15, 30), set_card(9, 0)])
 	await seconds(1.7)
 	var wrong_index: int = 0 if mode.answer_cards.answers[0] != 15 * 60 + 30 else 1
-	var wrong_time: int = mode.answer_cards.answers[wrong_index]
 	for move in wrong_index:
 		await tap("move_right")
 	await tap("act")
-	await seconds(1.2)
-	check(mode.minutes_of_the_day() == wrong_time, "the hands wind to the picked time: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
-	check(mode.task_banner.main_text == "That's %s." % ClockTime.time_words(wrong_time), "and say it: '%s'" % mode.task_banner.main_text)
-	await seconds(3.0)
-	check(mode.minutes_of_the_day() == 15 * 60 + 30, "then wind back")
-	check(not mode.answer_cards.is_still_in(wrong_index), "the picked card has gone")
+	await seconds(1.0)
+	check(mode.minutes_of_the_day() == 15 * 60 + 30, "the hands stay on the card's time: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
+	check(mode.clock_face.head_shake > 0.0 or mode.clock_face.glow > 0.0, "the blob shook its head and the number glows")
+	check(not mode.answer_cards.is_still_in(wrong_index), "the picked card is out")
+	check(mode.answer_cards.opacities[wrong_index] > 0.3, "but still there, greyed out: %.2f" % mode.answer_cards.opacities[wrong_index])
 	check(mode.answer_cards.chosen_index != wrong_index, "and the choice moved off it")
 	mode.answer_cards.move_choice(-1)
 	mode.answer_cards.move_choice(1)
 	check(mode.answer_cards.chosen_index != wrong_index, "it can't be picked again")
+	check(mode.task_banner.main_text == "What time is it?", "the card still asks: '%s'" % mode.task_banner.main_text)
+	check(mode.clock_face.ghost_minutes == -1, "no ghost hands on a read card - the real ones are already there")
 
 func test_a_deck_never_opens_on_a_set_card() -> void:
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
@@ -189,18 +200,38 @@ func test_a_read_card_shows_its_moment_once_the_clock_has_wound() -> void:
 	await seconds(1.7)
 	check(mode.house.moment["name"] == "Bath time", "then the blobs play the card's moment, so the house and sky agree: %s" % mode.house.moment["name"])
 
-func test_a_wrong_read_pick_plays_its_moment_then_goes_back_to_the_cards() -> void:
+func test_a_wrong_answer_leaves_the_house_alone() -> void:
 	var mode: ClockMode = await open_with_deck(3, [read_card(18, 30), set_card(9, 0)])
 	await seconds(1.7)
 	var wrong_index: int = 0 if mode.answer_cards.answers[0] != 18 * 60 + 30 else 1
-	var wrong_time: int = mode.answer_cards.answers[wrong_index]
 	for move in wrong_index:
 		await tap("move_right")
 	await tap("act")
-	check(mode.house.moment["name"] == DayMoments.moment_at(wrong_time)["name"], "the picked time's moment plays")
-	await seconds(4.5)
-	check(mode.house.moment["name"] == "Bath time", "then back to the card's own moment: %s" % mode.house.moment["name"])
+	check(mode.house.moment["name"] == "Bath time", "a wrong pick doesn't play its moment: %s" % mode.house.moment["name"])
+	mode = await open_with_deck(1, [set_card(19, 0), set_card(9, 0)])
+	await tap("move_right")
+	await tap("act")
+	check(mode.house.moment["name"] == "A banana", "nor does a wrong set time: %s" % mode.house.moment["name"])
 
+func test_first_tries_earn_stars_and_the_blob_cheers() -> void:
+	var mode: ClockMode = await open_with_deck(1, [set_card(8, 0), set_card(9, 0), set_card(10, 0)])
+	check(mode.task_banner.stars_total == 3 and mode.task_banner.stars_earned == 0, "a star for each card, none yet")
+	await tap("move_right")
+	await tap("act")
+	check(mode.clock_face.cheer > 0.0, "the blob cheers")
+	check(mode.task_banner.stars_earned == 1, "first try: a star")
+	await seconds(2.0)
+	await tap("act")
+	await tap("move_right")
+	await tap("act")
+	check(mode.task_banner.main_text.begins_with("Yes!"), "right on the second go: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.stars_earned == 1, "but no star after a miss")
+
+func test_the_words_follow_the_rung() -> void:
+	check(ClockTaskRunner.explanation_for(15 * 60, 1) == "The hour hand points at the 3. It's 3 o'clock!", "rung 1: the hour hand alone")
+	check(ClockTaskRunner.explanation_for(15 * 60 + 30, 2) == "The hour hand is halfway from 3 to 4. It's half past 3!", "rung 2: halfway between")
+	check(ClockTaskRunner.explanation_for(12 * 60 + 30, 2) == "The hour hand is halfway from 12 to 1. It's half past 12!", "round past 12")
+	check(ClockTaskRunner.explanation_for(15 * 60, 3) == "The minute hand is on 12 and the hour hand points at the 3. It's 3 o'clock!", "rung 3: the minute hand too")
 
 # ---- answer card layout
 
