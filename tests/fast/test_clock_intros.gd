@@ -46,6 +46,9 @@ func test_the_second_time_goes_straight_to_the_cards() -> void:
 	var mode: ClockMode = await open_rung(1)
 	check(mode.task_runner.current_card != null, "straight into the first card")
 	check(mode.controls_hint.caption == "", "no words under the controls: '%s'" % mode.controls_hint.caption)
+	check(mode.task_runner.current_card.is_read and mode.controls_hint.glow.has("left"), "a read card shows left, to pick an answer")
+	mode.task_runner.play_set_card()
+	check(not mode.controls_hint.glow.has("left"), "a set card hides it again: only right winds")
 
 func test_rung_3_brings_the_minute_hand_on_first() -> void:
 	GameSettings.record_progress("clock_rung_intros_seen", 2)
