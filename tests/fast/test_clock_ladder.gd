@@ -1,13 +1,15 @@
 extends GameSuite
-# The Clock mode ladder: the rung menu, the climbing rung's saved deck, clearing a rung, replays,
-# and the grown-up "open all rungs" setting.
+# The Clock mode ladder: which rungs the menu opens, the climbing rung's saved deck, clearing a
+# rung, replays, and the grown-up "open all rungs" setting.
 
 func open_menu() -> Control:
 	get_tree().change_scene_to_file("res://ui/clock_menu.tscn")
 	await frames(4)
 	return get_tree().current_scene
 
+## Opens a rung with its first-time intro already seen, straight onto the cards.
 func open_rung(rung: int) -> ClockMode:
+	GameSettings.record_progress("clock_rung_intros_seen", maxi(GameSettings.get_progress("clock_rung_intros_seen"), rung))
 	ClockMode.rung_to_play = rung
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
 	await frames(4)
@@ -41,23 +43,15 @@ func finish_a_one_card_deck(mode: ClockMode) -> void:
 
 # ---- the menu
 
-func test_a_fresh_game_opens_on_rung_1_with_the_rest_locked() -> void:
+func test_a_fresh_game_has_rung_1_open_and_the_rest_locked() -> void:
 	var menu = await open_menu()
-	check(menu.rung_tiles.size() == 8, "eight rungs")
-	check(focused_word() == "o'clock", "on the first rung: '%s'" % focused_word())
-	check(locked_rungs(menu) == [2, 3, 4, 5, 6, 7, 8], "rungs 2-8 locked: %s" % [locked_rungs(menu)])
+	check(not menu.rung_tiles[0].is_locked, "rung 1 is open")
+	check(locked_rungs(menu) == [2, 3], "rungs 2 and 3 locked: %s" % [locked_rungs(menu)])
 
-func test_the_menu_opens_on_the_climbing_rung() -> void:
-	GameSettings.record_progress("clock_rungs_cleared", 3)
-	var menu = await open_menu()
-	check(focused_word() == ClockRungs.title(4), "on rung 4: '%s'" % focused_word())
-	check(locked_rungs(menu) == [5, 6, 7, 8], "past rung 4 is locked: %s" % [locked_rungs(menu)])
-
-func test_open_all_rungs_opens_everything_and_leaves_the_count_alone() -> void:
+func test_open_all_rungs_leaves_the_count_alone() -> void:
 	GameSettings.record_progress("clock_rungs_cleared", 1)
 	GameSettings.set_setting("open_all_clock_rungs", 1)
-	var menu = await open_menu()
-	check(locked_rungs(menu).is_empty(), "nothing locked")
+	await open_menu()
 	check(GameSettings.get_progress("clock_rungs_cleared") == 1, "rungs cleared unchanged")
 
 func test_picking_a_rung_plays_it() -> void:
@@ -97,7 +91,7 @@ func test_clearing_the_climbing_rung_opens_the_next_and_goes_back_to_the_menu_on
 	check(GameSettings.get_progress("clock_rungs_cleared") == 1, "one rung cleared: %d" % GameSettings.get_progress("clock_rungs_cleared"))
 	check(GameSettings.get_clock_task_deck().is_empty(), "the deck is cleared")
 	check(get_tree().current_scene.scene_file_path == "res://ui/clock_menu.tscn", "back on the Clock menu")
-	check(focused_word() == ClockRungs.title(2), "on the next rung: '%s'" % focused_word())
+	check(focused_word() == get_tree().current_scene.free_play.word, "the next rung isn't built, so on Play with the clock: '%s'" % focused_word())
 
 func test_a_replay_saves_nothing_and_counts_nothing() -> void:
 	GameSettings.record_progress("clock_rungs_cleared", 2)
@@ -112,6 +106,7 @@ func test_a_replay_saves_nothing_and_counts_nothing() -> void:
 
 func test_a_rung_opened_by_a_grown_up_isnt_climbed() -> void:
 	GameSettings.set_setting("open_all_clock_rungs", 1)
+	GameSettings.record_progress("clock_rung_intros_seen", 8)
 	var mode: ClockMode = await open_rung(5)
 	check(not mode.is_climbing, "rung 5 isn't being climbed")
 	await finish_a_one_card_deck(mode)

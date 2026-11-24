@@ -21,8 +21,10 @@ signal card_started(card: ClockCard)
 ## first_try: answered right with no miss before it (so no help either).
 signal card_finished(card: ClockCard, first_try: bool)
 signal deck_finished
+## The copy turn of a rung's intro is done.
+signal copied
 
-enum State { BETWEEN_CARDS, SETTING, CHOOSING }
+enum State { BETWEEN_CARDS, SETTING, CHOOSING, COPYING }
 
 const SECONDS_TO_WIND_TO_A_READ_TIME: float = 1.5
 const SECONDS_TO_CELEBRATE: float = 1.6
@@ -32,8 +34,16 @@ const MISSES_BEFORE_THE_GHOST: int = 2
 const MISSES_BEFORE_THE_EXPLANATION: int = 3
 ## From this rung the minute mark glows too, not just the number.
 const FIRST_RUNG_TO_GLOW_THE_MINUTES: int = 4
-const RUNGS_WITH_AN_INTRO: Array[int] = [3, 8]
 const SECONDS_FOR_THE_INTRO_LAP: float = 3.0
+const SECONDS_TO_WIND_IN_THE_INTRO: float = 1.5
+const SECONDS_TO_WATCH: float = 2.5
+## Each rung's intro: the time the blob shows, then a different one he copies.
+## Rungs without one use their example time and two hours on.
+const INTRO_TIMES: Dictionary = {
+	1: [3 * 60, 5 * 60],
+	2: [3 * 60 + 30, 5 * 60 + 30],
+	3: [3 * 60, 5 * 60 + 30],
+}
 
 var mode: ClockMode
 var rung: int = 1
@@ -43,6 +53,8 @@ var current_card: ClockCard
 ## The current card's time, as the next time the face shows it.
 var target_minutes: int = 0
 var misses: int = 0
+## The time to copy in a rung's intro.
+var copy_target: int = 0
 ## Cards right first time this deck, one star each.
 var stars_earned: int = 0
 var state: State = State.BETWEEN_CARDS
@@ -57,7 +69,7 @@ func _init(clock_mode: ClockMode) -> void:
 
 
 ## Every deck starts at 7 in the morning, and the day carries on from card to
-## card. Rungs 3 and 8 can open with a short intro to what's new on them.
+## card. The first time a rung opens, a short intro shows what's new on it.
 func start_deck(new_rung: int, new_deck: Array[ClockCard], with_intro: bool = false) -> void:
 	rung = new_rung
 	deck = new_deck
@@ -69,21 +81,65 @@ func start_deck(new_rung: int, new_deck: Array[ClockCard], with_intro: bool = fa
 	mode.show_rung(rung)
 	mode.answer_cards.hide_answers()
 	mode.start_the_day()
-	if with_intro and RUNGS_WITH_AN_INTRO.has(rung):
-		await play_intro()
+	if with_intro and GameSettings.get_progress("clock_rung_intros_seen") < rung:
+		await play_intro(new_deck)
 		if deck != new_deck:
 			return
+		GameSettings.record_progress("clock_rung_intros_seen", rung)
 		mode.start_the_day()
 	play_card()
 
 
-func play_intro() -> void:
+## Rung 3 first brings the minute hand on, and rung 8 counts single minutes;
+## then every rung shows its idea and lets him copy it.
+func play_intro(this_deck: Array[ClockCard]) -> void:
 	mode.player_can_wind = false
 	if rung == ClockRungs.FIRST_RUNG_WITH_THE_MINUTE_HAND:
 		await play_minute_hand_intro()
-	else:
+	elif rung == ClockRungs.SINGLE_MINUTES_RUNG:
 		await play_single_minutes_intro()
 	mode.clock_face.clear_lit_minutes()
+	if deck != this_deck:
+		return
+	await show_then_copy(this_deck)
+
+
+## "Watch!": the blob winds to a time and says how to read it. Then "Your
+## turn": he winds to another, with ghost hands showing where. The copy turn
+## never counts towards moving up.
+func show_then_copy(this_deck: Array[ClockCard]) -> void:
+	var times: Array = INTRO_TIMES.get(rung, [ClockRungs.example_minutes(rung), ClockTime.wound(ClockRungs.example_minutes(rung), 120)])
+	mode.task_banner.show_text("Watch!", explanation_for(times[0], rung))
+	await mode.wind_itself_by(ClockTime.minutes_until_the_face_shows(mode.minutes_of_the_day(), times[0]), SECONDS_TO_WIND_IN_THE_INTRO)
+	if deck != this_deck:
+		return
+	await get_tree().create_timer(SECONDS_TO_WATCH).timeout
+	if deck != this_deck:
+		return
+	copy_target = ClockTime.wound(mode.minutes_of_the_day(), ClockTime.minutes_until_the_face_shows(mode.minutes_of_the_day(), times[1]))
+	mode.clock_face.show_ghost_hand(copy_target)
+	mode.task_banner.show_text("Your turn - make it %s" % ClockTime.time_words(times[1]))
+	state = State.COPYING
+	mode.player_can_wind = true
+	await copied
+
+
+func confirm_copy() -> void:
+	if not ClockTime.faces_match(mode.minutes_of_the_day(), copy_target):
+		Sound.play("wobble", 0.02)
+		mode.clock_face.shake_blob()
+		return
+	state = State.BETWEEN_CARDS
+	mode.player_can_wind = false
+	mode.clock_face.clear_ghost_hand()
+	mode.clock_face.cheer_blob()
+	Sound.play("chime")
+	mode.task_banner.celebrate()
+	mode.task_banner.show_text("Yes! It's %s" % ClockTime.time_words(copy_target))
+	var this_deck: Array[ClockCard] = deck
+	await get_tree().create_timer(SECONDS_TO_CELEBRATE).timeout
+	if deck == this_deck:
+		copied.emit()
 
 
 ## Rung 3: the big minute hand slides on, then goes once round while the
@@ -194,6 +250,9 @@ func _process(_delta: float) -> void:
 		State.SETTING:
 			if Input.is_action_just_pressed("act"):
 				confirm_set_time()
+		State.COPYING:
+			if Input.is_action_just_pressed("act"):
+				confirm_copy()
 		State.CHOOSING:
 			if Input.is_action_just_pressed("move_left"):
 				mode.answer_cards.move_choice(-1)
