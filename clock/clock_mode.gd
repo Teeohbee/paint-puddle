@@ -14,7 +14,7 @@ const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
 ## The house fills the space right of the clock, under the banner.
 const HOUSE_BOX: Rect2 = Rect2(895, 175, 1000, 890)
 ## The read answers sit under the clock, their bottoms on this line.
-const ANSWER_CARDS_BOTTOM: float = 1066.0
+const ANSWER_CARDS_BOTTOM: float = 1072.0
 ## The answer cards stay this far clear of the house and the screen's left edge.
 const ANSWER_CARDS_MARGIN: float = 20.0
 ## Every visit starts at 7 in the morning.
@@ -22,7 +22,7 @@ const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
 const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
 ## The part-of-the-day word sits under the clock, above the read answers.
-const DAY_LABEL_POSITION: Vector2 = Vector2(480, 906)
+const DAY_LABEL_POSITION: Vector2 = Vector2(480, 918)
 
 ## The rung picked on the Clock menu.
 static var rung_to_play: int = 1
