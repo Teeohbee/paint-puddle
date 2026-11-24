@@ -5,6 +5,10 @@ extends Node2D
 ## day. Time only goes forward (clockwise), so left does nothing. One press
 ## winds one step of the rung; holding speeds up. A word under the clock says
 ## the part of the day.
+##
+## Play with the clock (free_play) has no cards: right or A winds the day on
+## and the house acts it out, on the climbing rung's hands and step. It opens
+## with ClockNumberLineIntro every time.
 
 const CLOCK_CENTRE: Vector2 = Vector2(480, 540)
 ## The house fills the space right of the clock, under the banner.
@@ -18,6 +22,7 @@ const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
 const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
 const CONTROLS: String = "Right: wind on"
+const FREE_PLAY_CONTROLS: String = "Right or A: wind on"
 ## The part-of-the-day word sits under the clock, above the read answers.
 const DAY_LABEL_POSITION: Vector2 = Vector2(480, 906)
 
@@ -28,6 +33,8 @@ static var rung_just_finished: int = 0
 ## Tricky replay, chosen on the Clock menu: each card deals a random unlocked
 ## tricky face. Kept for the session, so the menu comes back in tricky mode.
 static var tricky_replay: bool = false
+## Play with the clock, chosen on the Clock menu: no cards, just winding.
+static var free_play: bool = false
 
 var rung: int = 1
 ## Whether this is the rung being climbed: only its deck is saved, and only
@@ -44,6 +51,9 @@ var effects_layer: Node2D
 var task_banner: ClockTaskBanner
 var answer_cards: ClockAnswerCards
 var task_runner: ClockTaskRunner
+var intro: ClockNumberLineIntro
+## After the intro is skipped with a wind button, that press mustn't also wind.
+var waiting_for_wind_release: bool = false
 ## Minutes wound since midnight on the first day. Not wrapped, so the hands
 ## sweep forwards across midnight; minutes_of_the_day() wraps it.
 var wound_minutes: int = STARTING_MINUTES
@@ -72,6 +82,12 @@ func _ready() -> void:
 	effects_layer = Node2D.new()
 	effects_layer.name = "Effects"
 	add_hud()
+	var pause_menu: PauseMenu = PauseMenu.new()
+	pause_menu.name = "PauseMenu"
+	if free_play:
+		start_free_play()
+		add_child(pause_menu)
+		return
 	task_runner = ClockTaskRunner.new(self)
 	task_runner.name = "TaskRunner"
 	add_child(task_runner)
@@ -79,9 +95,31 @@ func _ready() -> void:
 	task_runner.card_started.connect(on_card_started)
 	task_runner.deck_finished.connect(on_deck_finished)
 	task_runner.start_deck(rung, first_deck(), true)
-	var pause_menu: PauseMenu = PauseMenu.new()
-	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
+
+
+## The climbing rung's hands and step (the top built rung once it's past them),
+## from 7 in the morning, after the intro.
+func start_free_play() -> void:
+	is_climbing = false
+	var climbing: int = ClockRungs.climbing_rung(GameSettings.get_progress("clock_rungs_cleared"))
+	rung = mini(climbing if climbing > 0 else ClockRungs.RUNG_COUNT, ClockRungs.RUNGS_BUILT)
+	show_rung(rung)
+	controls_hint.caption = FREE_PLAY_CONTROLS
+	start_the_day()
+	player_can_wind = false
+	intro = ClockNumberLineIntro.new(clock_face)
+	intro.name = "Intro"
+	intro.position = CLOCK_CENTRE
+	add_child(intro)
+	intro.finished.connect(on_intro_finished)
+	intro.play()
+
+
+func on_intro_finished() -> void:
+	start_the_day()
+	player_can_wind = true
+	waiting_for_wind_release = is_wind_held()
 
 
 func add_hud() -> void:
@@ -192,6 +230,13 @@ func show_rung(new_rung: int) -> void:
 func _process(delta: float) -> void:
 	house.live_minutes_of_the_day = clock_face.shown_minutes
 	day_label.show_time(ClockTime.wound(int(clock_face.shown_minutes), 0))
+	if intro != null and intro.is_playing():
+		if any_button_just_pressed():
+			intro.skip()
+		return
+	if waiting_for_wind_release:
+		waiting_for_wind_release = is_wind_held()
+		return
 	var direction: int = 0
 	if player_can_wind:
 		direction = held_direction()
@@ -204,15 +249,29 @@ func _process(delta: float) -> void:
 		wind_by_steps(steps)
 
 
-## Only forward: right winds on, and nothing winds back.
+## Only forward: right winds on (and A, in free play), and nothing winds back.
 func held_direction() -> int:
-	return 1 if Input.is_action_pressed("move_right") else 0
+	return 1 if is_wind_held() else 0
+
+
+func is_wind_held() -> bool:
+	return Input.is_action_pressed("move_right") or (free_play and Input.is_action_pressed("act"))
+
+
+func any_button_just_pressed() -> bool:
+	for action in ["act", "move_right", "move_left", "move_up", "move_down"]:
+		if Input.is_action_just_pressed(action):
+			return true
+	return false
 
 
 func wind_by_steps(steps: int) -> void:
 	wound_minutes += steps * ClockRungs.step_minutes(rung)
 	clock_face.wind_to(wound_minutes)
 	Sound.play("tick", 0.02, 1.0 + 0.12 * signi(steps))
+	if free_play:
+		# Nothing to work out in free play, so the blobs get on with the day straight away
+		house.show_moment(minutes_of_the_day())
 
 
 func start_the_day() -> void:
