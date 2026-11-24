@@ -5,6 +5,9 @@ extends RefCounted
 ## the hands and cards look. Rungs are numbered 1 to 8.
 
 const RUNG_COUNT: int = 8
+## How many rungs the reworked Clock mode can play so far. The rest show as
+## "Coming soon" and are never climbed past.
+const RUNGS_BUILT: int = 1
 
 ## title: what the rung teaches, on its menu tile.
 ## example_minutes: the time its menu tile's little clock shows.

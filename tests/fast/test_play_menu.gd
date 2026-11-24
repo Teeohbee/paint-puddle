@@ -87,3 +87,15 @@ func test_write_opens_the_letter_picker() -> void:
 	await frames(2)
 	check(SceneManager.is_changing_scene, "picking Write goes somewhere")
 	check(MenuScreen.last_choice("play_menu", "") == "write", "and it's remembered")
+
+# Any tile can be taped off while its place is rebuilt: locked, no padlock, and pressing it never opens it
+func test_a_tile_under_construction_is_locked_without_a_padlock() -> void:
+	var tile := MenuTile.new()
+	add_child(tile)
+	var opened := [false]
+	tile.chosen.connect(func(): opened[0] = true)
+	tile.is_under_construction = true
+	check(tile.is_locked and not tile.shows_padlock, "locked, no padlock")
+	tile.pressed.emit()
+	check(not opened[0], "pressing it doesn't open it")
+	tile.queue_free()
