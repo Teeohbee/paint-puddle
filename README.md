@@ -47,26 +47,37 @@ cards only. Resetting the Meadow resets both.
 
 ## Clock mode
 
-Clock mode teaches reading and setting an analogue clock, to five minutes,
-with single minutes as a stretch. The clock is on the left and the blob
-household's doll's house is on the right, and the house shows what's
-happening at that time of a real 24-hour day.
+Clock mode teaches reading and setting an analogue clock the way UK Year 1
+does: o'clock, then half past, with the hour hand on its own, before the
+minute hand joins. The clock is on the left and the blob household's doll's
+house is on the right, showing what's happening at that time of a real
+24-hour day. A word under the clock says the part of the day (morning,
+afternoon, evening, night); there's no am/pm anywhere.
 
-- **Set cards** ("Bath time - make it half past 6 in the evening"): wind the hands
-  with left and right (hold to speed up), then press A. The half of the day
-  counts. A wrong time plays its own moment, then the card asks again.
-- **Read cards** ("What time is it?"): the clock winds itself to a time;
-  pick one of three answers under it.
-- **Eight rungs**, in the order schools teach them: o'clock, half past, both
-  hands, quarter past, quarter to, 5 past, 5 to, minutes. Getting through a
-  rung's deck once opens the next rung and a tricky clock face. Rung 8 is
-  tap for a minute, hold for fives.
-- **Tricky clocks**: once a rung is cleared, the Tricky tile on the Clock
-  menu replays cleared rungs with a random unlocked face on every card.
+Time only goes forward: right winds on (hold to speed up), and left does
+nothing.
 
-"Open everything" in the grown-up settings opens every rung and face without
+- **Play with the clock**: the big tile on the Clock menu. No cards, no
+  wrong: right or A winds the day on and the house acts it out. It opens
+  every time with a short intro (skippable with any button) where a 0-12
+  number line's numbers hop round into the face.
+- **Rungs**: o'clock, half past, then both hands. Only rung 1 is built so
+  far; the rest say "Coming soon". The first time a rung opens, the blob
+  shows its idea and then he copies it with ghost hands showing.
+- **Set cards** ("Wind it to 8 o'clock", with the moment - "Breakfast" - underneath; orange ring and arrow round the clock) ask for the next time the
+  face shows that time. **Read cards** ("Look! What time is it?", blue ring) wind the clock
+  on by themselves and offer three answers.
+- **Wrong is gentle but clear**: a soft boing, the clock's blob shakes its
+  head, a wrong answer greys out where it is, and the house stays put. Help
+  comes one step per miss: the number glows, then ghost hands, then the
+  words. Right gets a chime, a cheer and, first time, a star.
+- **Moving up** takes 5 cards right first time in a row, on two different
+  days. A miss, or an answer after help, breaks the run.
+
+"Open everything" in the grown-up settings opens every built rung without
 changing how far the player has climbed. The Clock part of Reset clears the
-climb and never the setting. Moments of the day live in
+climb, the run and the intros seen, never the setting. Tricky clock faces
+and rungs 4-8 are kept in the code but parked. Moments of the day live in
 `data/clock_moments.json`; the words for Clock mode are in `GLOSSARY.md`.
 
 ## Write
@@ -86,6 +97,21 @@ the D-pad (a slow test proves it).
 
 Splat is archived: it has no tile, but its code and tests stay, to be
 reworked.
+
+## Birthdays
+
+The title screen throws a party on a birthday. The name and date of birth
+live in `user://birthday.json` on the machine that plays the game (on Linux,
+`~/.local/share/godot/app_userdata/Paint Puddle/birthday.json`), never in
+this repo:
+
+```json
+{"name": "Sam", "born": "2021-03-14"}
+```
+
+On the day: "Happy 6th birthday, Sam!", party hats, bunting, balloons with
+the age on and confetti. For the six days after: "Sam's birthday week!", with
+hats, bunting and the odd balloon. No file means no party.
 
 ## Tests
 

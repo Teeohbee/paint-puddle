@@ -1,11 +1,6 @@
 extends GameSuite
-# Tricky clock faces: one unlocks per rung cleared, and a tricky replay of a cleared rung deals a
-# random unlocked face on every card.
-
-func open_menu() -> Control:
-	get_tree().change_scene_to_file("res://ui/clock_menu.tscn")
-	await frames(4)
-	return get_tree().current_scene
+# Tricky clock faces are parked (no Tricky tile on the Clock menu) but kept: a tricky replay of a
+# cleared rung still deals a random unlocked face on every card.
 
 func open_tricky_rung(rung: int) -> ClockMode:
 	ClockMode.tricky_replay = true
@@ -13,27 +8,6 @@ func open_tricky_rung(rung: int) -> ClockMode:
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
 	await frames(4)
 	return get_tree().current_scene
-
-func locked_rungs(menu) -> Array[int]:
-	var locked: Array[int] = []
-	for index in menu.rung_tiles.size():
-		if menu.rung_tiles[index].is_locked:
-			locked.append(index + 1)
-	return locked
-
-func test_there_is_no_tricky_tile_before_a_rung_is_cleared() -> void:
-	var menu = await open_menu()
-	check(not menu.tricky.visible, "no Tricky tile yet")
-
-func test_the_tricky_tile_switches_to_cleared_rungs_only() -> void:
-	GameSettings.record_progress("clock_rungs_cleared", 2)
-	var menu = await open_menu()
-	check(menu.tricky.visible and menu.tricky.subtitle == "off", "a Tricky tile, off")
-	check(locked_rungs(menu) == [4, 5, 6, 7, 8], "plain: up to the climbing rung: %s" % [locked_rungs(menu)])
-	menu.tricky.chosen.emit()
-	await frames(2)
-	check(ClockMode.tricky_replay and menu.tricky.subtitle == "on" and menu.heading.text == "Tricky clocks", "tricky is on")
-	check(locked_rungs(menu) == [3, 4, 5, 6, 7, 8], "tricky: only the cleared rungs: %s" % [locked_rungs(menu)])
 
 func test_a_tricky_replay_deals_unlocked_faces_and_saves_nothing() -> void:
 	GameSettings.record_progress("clock_rungs_cleared", 3)
@@ -48,7 +22,10 @@ func test_a_tricky_replay_deals_unlocked_faces_and_saves_nothing() -> void:
 	for face in faces_seen:
 		check(unlocked.has(face), "only unlocked faces: %s" % face)
 
-func test_clearing_a_rung_shows_off_its_new_tricky_face() -> void:
+# Tricky faces are parked while the ladder is rebuilt: clearing a rung keeps the home face
+func test_clearing_a_rung_keeps_the_home_face() -> void:
+	GameSettings.record_progress("clock_run_day", 20000101)
+	GameSettings.record_progress("clock_first_try_run", 4)
 	ClockMode.rung_to_play = 1
 	get_tree().change_scene_to_file("res://clock/clock_mode.tscn")
 	await frames(4)
@@ -60,8 +37,8 @@ func test_clearing_a_rung_shows_off_its_new_tricky_face() -> void:
 	await frames(2)
 	Input.action_release("act")
 	await frames(roundi(60 * (ClockTaskRunner.SECONDS_TO_CELEBRATE + 0.5)))
-	check(mode.clock_face.face_name == "four numbers", "the first tricky face shows: '%s'" % mode.clock_face.face_name)
-	check(mode.task_banner.small_text == "A new tricky clock!", "and the banner says so")
+	check(GameSettings.get_progress("clock_rungs_cleared") == 1, "the rung is cleared")
+	check(mode.clock_face.face_name == "", "no tricky face shows: '%s'" % mode.clock_face.face_name)
 
 func test_every_tricky_face_draws_without_errors() -> void:
 	var mode: ClockMode = await open_tricky_rung(3)

@@ -81,10 +81,12 @@ func _draw() -> void:
 		var letter_width: float = font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		var baseline_offset: Vector2 = Vector2(-letter_width / 2.0, font_size * 0.33)
 		var colour: Color = letter_colour(letter_index)
+		# The outlines were made for the 170 title, so they shrink with smaller text
+		var outline_scale: float = font_size / 170.0
 		draw_set_transform(centre + Vector2(0, 12), tilt, Vector2(letter_size, letter_size))
-		draw_string_outline(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 34, Color(0, 0, 0, 0.18))
+		draw_string_outline(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, roundi(34 * outline_scale), Color(0, 0, 0, 0.18))
 		draw_set_transform(centre, tilt, Vector2(letter_size, letter_size))
-		draw_string_outline(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 34, Color.WHITE)
-		draw_string_outline(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 12, colour.darkened(0.3))
+		draw_string_outline(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, roundi(34 * outline_scale), Color.WHITE)
+		draw_string_outline(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, roundi(12 * outline_scale), colour.darkened(0.3))
 		draw_string(font, baseline_offset, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, colour)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
