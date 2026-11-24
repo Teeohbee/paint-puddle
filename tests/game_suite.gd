@@ -53,6 +53,7 @@ func reset_world() -> void:
 	ClockModeScript.rung_to_play = 1
 	ClockModeScript.rung_just_finished = 0
 	ClockModeScript.tricky_replay = false
+	ClockModeScript.free_play = false
 	TracingModeScript.letter_to_play = 0
 	TracingModeScript.letter_just_finished = -1
 	HillsLevelScript.difficulty = HillsLevels.EASY
