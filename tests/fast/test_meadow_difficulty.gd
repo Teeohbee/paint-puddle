@@ -85,3 +85,33 @@ func test_back_goes_to_the_play_menu() -> void:
 	tile("Back").chosen.emit()
 	var new_scene = await SceneManager.scene_changed
 	check(new_scene.scene_file_path == "res://ui/play_menu.tscn", "Back is the play menu")
+
+# Meadow Medium is still being built: released games tape it off, debug builds on the Mac can play it
+func test_medium_is_built_only_in_debug_builds() -> void:
+	check(TaskRunner.medium_is_built == OS.is_debug_build(), "playable in debug builds, taped off in released ones")
+
+func test_in_a_released_game_medium_is_under_construction() -> void:
+	TaskRunner.medium_is_built = false
+	GameSettings.set_setting("open_hills_medium", 1)
+	await open_difficulty_menu()
+	var medium = tile("Medium")
+	check(medium.is_under_construction and medium.is_locked and not medium.shows_padlock, "taped off, locked, no padlock, even when opened")
+	check(medium.subtitle == "Coming soon!", "says it's coming: " + medium.subtitle)
+	check(focused_word() == "Easy", "it starts on Easy: " + focused_word())
+	medium.pressed.emit()
+	await frames(2)
+	check(not SceneManager.is_changing_scene, "pressing it stays put")
+
+func test_coming_back_after_medium_in_a_debug_build_lands_on_easy_in_a_released_one() -> void:
+	TaskRunner.medium_is_built = false
+	GameSettings.set_setting("open_hills_medium", 1)
+	MenuScreen.remember_choice("meadow_difficulty", TaskRunner.MEDIUM)
+	await open_difficulty_menu()
+	check(focused_word() == "Easy", "back on Easy, not a taped-off tile: " + focused_word())
+
+func test_the_hills_medium_is_never_taped_off() -> void:
+	TaskRunner.medium_is_built = false
+	GameSettings.set_setting("open_hills_medium", 1)
+	get_tree().change_scene_to_file("res://ui/hills_difficulty_menu.tscn")
+	await frames(4)
+	check(not tile("Medium").is_under_construction and not tile("Medium").is_locked, "the Hills' Medium still plays")
