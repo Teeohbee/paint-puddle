@@ -22,6 +22,7 @@ const STARTING_MINUTES: int = 7 * 60
 const SECONDS_TO_CHEER: float = 3.0
 const RUNG_8_CONTROLS: String = "Tap: 1 minute · Hold: 5 minutes"
 ## The part-of-the-day word sits under the clock, above the read answers.
+const YOUR_TURN_WORDS: String = "Your turn - wind the clock!"
 const DAY_LABEL_POSITION: Vector2 = Vector2(480, 918)
 
 ## The rung picked on the Clock menu.
@@ -53,6 +54,8 @@ var task_runner: ClockTaskRunner
 var intro: ClockNumberLineIntro
 ## After the intro is skipped with a wind button, that press mustn't also wind.
 var waiting_for_wind_release: bool = false
+## The free-play "Your turn" banner is up, until the first wind.
+var your_turn_showing: bool = false
 ## Minutes wound since midnight on the first day. Not wrapped, so the hands
 ## sweep forwards across midnight; minutes_of_the_day() wraps it.
 var wound_minutes: int = STARTING_MINUTES
@@ -119,10 +122,17 @@ func start_free_play() -> void:
 	intro.play()
 
 
+## Over to him: the wind ring and arrow, a cheer from the blob, a chime and
+## a "Your turn" banner, which goes once he winds.
 func on_intro_finished() -> void:
 	start_the_day()
 	player_can_wind = true
 	waiting_for_wind_release = is_wind_held()
+	show_job(ClockJob.Job.WIND)
+	clock_face.cheer_blob()
+	Sound.play("chime")
+	task_banner.show_text(YOUR_TURN_WORDS)
+	your_turn_showing = true
 
 
 func add_hud() -> void:
@@ -283,6 +293,9 @@ func wind_by_steps(steps: int) -> void:
 	wound_minutes += steps * ClockRungs.step_minutes(rung)
 	clock_face.wind_to(wound_minutes)
 	Sound.play("tick", 0.02, 1.0 + 0.12 * signi(steps))
+	if your_turn_showing:
+		your_turn_showing = false
+		task_banner.hide_card()
 	if free_play:
 		# Nothing to work out in free play, so the blobs get on with the day straight away
 		house.show_moment(minutes_of_the_day())

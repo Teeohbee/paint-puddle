@@ -36,7 +36,7 @@ Words the code and the planning use, so they mean one thing each.
 
 **Free play** (on screen "Play with the clock"): the Clock menu's big tile. No cards and nothing wrong; winding moves the house's day on. Uses the climbing rung's hands and step. Avoid: sandbox, practice.
 
-**Number-line intro**: free play's opening, every visit: a 0-12 number line whose numbers hop round into the face, then the hour hand ticks to 7 in the morning. Any button skips it.
+**Number-line intro**: free play's opening, every visit: a 1-12 number line whose numbers hop round into the face, then the hour hand ticks to 7 in the morning. Any button skips it. Then the wind ring, a cheer, a chime and "Your turn - wind the clock!" (gone on the first wind).
 
 **Rung intro**: the first time a rung opens, the blob shows its idea ("Watch!") and then the player copies it ("Your turn") with ghost hands. Saved as `clock_rung_intros_seen`; the copy never counts towards moving up.
 
