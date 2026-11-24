@@ -1,28 +1,28 @@
 class_name ClockNumberLineIntro
 extends Node2D
-## Opens Play with the clock, every time: a 0-12 number line, then its
+## Opens Play with the clock, every time: a 1-12 number line, then its
 ## numbers hop off one at a time, in order, round into their places on the
 ## face - so the hours of the line go round the clock (the way Year 1 builds
 ## a clock from a number line). Then the hour hand ticks from 12 round to 7 in
 ## the morning.
-## About 12 seconds, slow enough to follow each number round; any button
-## skips straight to the end.
+## About 7 seconds: slow hops, worth watching, then quick ticks. Any button
+## skips straight to the end. Then it's his turn (ClockMode.on_intro_finished).
 ##
 ## Drawn round the clock's centre, over the face, which stays hidden until the
 ## line has curled.
 
 signal finished
 
-const SECONDS_TO_SHOW_THE_LINE: float = 1.0
+const SECONDS_TO_SHOW_THE_LINE: float = 0.6
 ## The straight line sits still for a moment, so it's seen as a line first.
-const SECONDS_TO_HOLD_THE_LINE: float = 1.0
-const SECONDS_TO_CURL: float = 6.0
-const SECONDS_PER_TICK: float = 0.5
+const SECONDS_TO_HOLD_THE_LINE: float = 0.8
+const SECONDS_TO_CURL: float = 4.5
+const SECONDS_PER_TICK: float = 0.18
 const LINE_Y: float = 250.0
 const LINE_HALF_WIDTH: float = 420.0
 ## Each number's hop, as a share of the whole curl; the next one sets off this much later.
 const HOP_SHARE: float = 0.3
-const HOP_GAP: float = (1.0 - HOP_SHARE) / 12.0
+const HOP_GAP: float = (1.0 - HOP_SHARE) / 11.0
 const STARTING_HOUR: int = 7
 
 var clock_face: ClockFace
@@ -93,17 +93,17 @@ func _process(_delta: float) -> void:
 
 
 ## How far a number is on its hop from the line to the face, 0 to 1.
-## 0 and 1 go first, 12 last.
+## 1 goes first, 12 last.
 func hop_progress(number: int) -> float:
-	var progress: float = clampf((curl - number * HOP_GAP) / HOP_SHARE, 0.0, 1.0)
+	var progress: float = clampf((curl - (number - 1) * HOP_GAP) / HOP_SHARE, 0.0, 1.0)
 	return progress * progress * (3.0 - 2.0 * progress)
 
 
 func spot_on_the_line(number: int) -> Vector2:
-	return Vector2(-LINE_HALF_WIDTH + LINE_HALF_WIDTH * 2.0 * number / 12.0, LINE_Y)
+	return Vector2(-LINE_HALF_WIDTH + LINE_HALF_WIDTH * 2.0 * (number - 1) / 11.0, LINE_Y)
 
 
-## Where the number goes on the face: 0 goes up to the 12.
+## Where the number goes on the face.
 func spot_on_the_face(number: int) -> Vector2:
 	return ClockFace.point_at(ClockFace.angle_of_turns(number / 12.0), ClockFace.RADIUS - 90)
 
@@ -121,15 +121,14 @@ func _draw() -> void:
 	var font: Font = clock_face.game_font()
 	# The line fades as its numbers leave it; a ring shows where they're going
 	var line_colour: Color = Color(PaintColours.INK, line_opacity * (1.0 - curl))
-	draw_line(spot_on_the_line(0), spot_on_the_line(12), line_colour, 8.0, true)
+	draw_line(spot_on_the_line(1), spot_on_the_line(12), line_colour, 8.0, true)
 	draw_arc(Vector2.ZERO, ClockFace.RADIUS, 0.0, TAU, 96, Color(PaintColours.INK, line_opacity * curl * 0.6), 6.0, true)
-	for number in 13:
+	for number in range(1, 13):
 		draw_circle(spot_on_the_line(number), 7.0, line_colour)
-	for number in 13:
+	for number in range(1, 13):
 		var label: String = str(number)
-		# 0 fades as it lands on the 12's place
-		var opacity: float = line_opacity * ((1.0 - hop_progress(0)) if number == 0 else 1.0)
-		var colour: Color = ClockFace.number_colour(12 if number == 0 else number).darkened(0.15)
+		var opacity: float = line_opacity
+		var colour: Color = ClockFace.number_colour(number).darkened(0.15)
 		var size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, ClockFace.NUMBER_FONT_SIZE)
 		# Above its dot on the line, centred on its place on the face
 		var centre: Vector2 = number_spot(number) + Vector2(0, -50).lerp(Vector2.ZERO, hop_progress(number))

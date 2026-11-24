@@ -89,7 +89,7 @@ nothing.
 
 - **Play with the clock**: the big tile on the Clock menu. No cards, no
   wrong: right or A winds the day on and the house acts it out. It opens
-  every time with a short intro (skippable with any button) where a 0-12
+  every time with a short intro (skippable with any button) where a 1-12
   number line's numbers hop round into the face.
 - **Rungs**: o'clock, half past, then both hands. Only rung 1 is built so
   far; the rest say "Coming soon". The first time a rung opens, the blob

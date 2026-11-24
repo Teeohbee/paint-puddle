@@ -1,6 +1,6 @@
 extends GameSuite
 # Play with the clock: no cards and no wrong, just winding the day on and watching the house. Every
-# time it opens, a slow intro curls a 0-12 number line into the clock face and the hour hand ticks
+# time it opens, an intro curls a 1-12 number line into the clock face and the hour hand ticks
 # round to the morning; any button skips it. It uses the climbing rung's hands and step.
 
 func open_free_play(skip_intro: bool = true) -> ClockMode:
@@ -23,7 +23,7 @@ func test_free_play_has_no_cards() -> void:
 	var mode: ClockMode = await open_free_play()
 	check(mode.task_runner == null, "no task runner")
 	check(not mode.answer_cards.visible, "no answers")
-	check(mode.task_banner.main_text == "", "no banner text: '%s'" % mode.task_banner.main_text)
+	check(mode.task_banner.main_text == ClockMode.YOUR_TURN_WORDS, "the banner only says it's his turn: '%s'" % mode.task_banner.main_text)
 
 func test_right_and_a_both_wind_on_by_the_rung_s_step() -> void:
 	var mode: ClockMode = await open_free_play()
@@ -79,3 +79,18 @@ func test_the_controls_hint_shows_no_left_and_no_words() -> void:
 	check(mode.controls_hint.caption == "", "no caption: '%s'" % mode.controls_hint.caption)
 	check(not mode.controls_hint.glow.has("left"), "no left arrow in free play, so left never lights")
 	check(mode.controls_hint.glow.has("right") and mode.controls_hint.glow.has("jump"), "right and A still show")
+
+func test_when_the_intro_ends_it_is_his_turn_until_he_winds() -> void:
+	var mode: ClockMode = await open_free_play()
+	check(mode.job_ring.job == ClockJob.Job.WIND, "the wind ring shows")
+	check(mode.task_banner.main_text == ClockMode.YOUR_TURN_WORDS and mode.your_turn_showing, "and says it's his turn: '%s'" % mode.task_banner.main_text)
+	check(mode.clock_face.cheer > 0.0, "the blob cheers")
+	await tap("move_right")
+	await frames(2)
+	check(not mode.your_turn_showing, "the banner goes on the first wind")
+	check(mode.job_ring.job == ClockJob.Job.WIND, "the ring stays: winding is the job")
+
+func test_the_number_line_has_no_0() -> void:
+	var mode: ClockMode = await open_free_play(false)
+	check(mode.intro.spot_on_the_line(1).x == -ClockNumberLineIntro.LINE_HALF_WIDTH, "1 starts the line")
+	check(mode.intro.spot_on_the_line(12).x == ClockNumberLineIntro.LINE_HALF_WIDTH, "12 ends it")
