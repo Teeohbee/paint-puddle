@@ -33,7 +33,18 @@ const FREE_SPOTS: Array[Vector2] = [
 ]
 
 ## EASY or MEDIUM. Set before the runner joins the tree.
-var difficulty: String = EASY
+var difficulty: String = EASY## Medium's flying letters start here: the roomiest spots, apart from each
+## other, for a figure of eight that clears the rainbow, pots, puddles,
+## fountain and bushes (found by search, .tmp_test/probe_flying_spots.gd).
+## Ten: eight for Medium's longest words, and two spare for when the blob is
+## in the way. The meadow is crowded, so most loops are smaller than 90.
+const FLYING_SPOTS: Array[Vector2] = [
+	Vector2(1630, 460), Vector2(450, 400), Vector2(1450, 360), Vector2(190, 840), Vector2(1650, 840),
+	Vector2(250, 400), Vector2(1190, 840), Vector2(730, 840), Vector2(430, 600), Vector2(1490, 620),
+]
+## A free spot this close to a flying spot is too close to use as well.
+const ROOM_BETWEEN_SPOTS: float = 150.0
+
 var tasks: Array[MeadowTask] = []
 var current_task: MeadowTask
 var is_between_tasks: bool = false
@@ -43,6 +54,11 @@ var effects_layer: Node2D
 var banner: TaskBanner
 ## The blob, so new stones and drops keep away from it. Can be left null.
 var blob_to_keep_clear_of: Node2D
+## Medium: every letter rides a butterfly. Numbers and drops stay put.
+var letters_fly: bool = false
+## What a flying letter's loop keeps clear of: {"centre", "radius"} each.
+var places_to_keep_clear: Array[Dictionary] = []
+var loop_size_at: Dictionary = {}
 
 
 func _init(layer_for_stones: Node2D, layer_for_effects: Node2D, task_banner: TaskBanner) -> void:
@@ -136,8 +152,12 @@ func new_shuffled_deck(task_index_just_played: int) -> Array[int]:
 
 
 func put_things_in_the_grass() -> void:
-	var spots: Array[Vector2] = spots_away_from_the_blob()
-	spots.shuffle()
+	var spots: Array[Vector2]
+	if letters_fly and has_letters():
+		spots = spots_for_flying_letters()
+	else:
+		spots = spots_away_from_the_blob(FREE_SPOTS)
+		spots.shuffle()
 	var delay: float = 0.4
 	for value in current_task.stone_values():
 		var stone: LetterStone = LetterStone.new()
@@ -145,6 +165,8 @@ func put_things_in_the_grass() -> void:
 		stone.paint_colour = PaintColours.RAINBOW[things_in_the_grass.size() % PaintColours.RAINBOW.size()]
 		stone.position = spots.pop_back()
 		stone.blob_entered.connect(on_stone_entered)
+		if letters_fly and is_a_letter(value):
+			give_wings(stone)
 		add_to_grass(stone, delay)
 		delay += 0.08
 	if current_task.type == "collect":
@@ -158,9 +180,46 @@ func put_things_in_the_grass() -> void:
 			delay += 0.08
 
 
-func spots_away_from_the_blob() -> Array[Vector2]:
+static func is_a_letter(value: String) -> bool:
+	return value.to_upper() != value.to_lower()
+
+
+## A butterfly behind it and a figure of eight to fly round where it was put.
+func give_wings(stone: LetterStone) -> void:
+	var butterfly: Butterfly = Butterfly.new()
+	butterfly.colour = stone.paint_colour
+	stone.add_child(butterfly)
+	var flight: LetterFlight = LetterFlight.new(stone.position, places_to_keep_clear)
+	stone.add_child(flight)
+	stone.position = flight.start_position()
+
+
+func has_letters() -> bool:
+	return current_task.stone_values().any(is_a_letter)
+
+
+## The flying spots, shuffled, dealt first (from the end). If the blob is in
+## the way of some, free spots that aren't near a flying spot come before
+## them, the roomiest last.
+func spots_for_flying_letters() -> Array[Vector2]:
+	var flying: Array[Vector2] = spots_away_from_the_blob(FLYING_SPOTS)
+	flying.shuffle()
+	var fallback: Array[Vector2] = spots_away_from_the_blob(FREE_SPOTS).filter(func(spot: Vector2) -> bool:
+		return FLYING_SPOTS.all(func(flying_spot: Vector2) -> bool: return spot.distance_to(flying_spot) >= ROOM_BETWEEN_SPOTS))
+	fallback.sort_custom(func(a: Vector2, b: Vector2) -> bool: return room_to_fly(a) < room_to_fly(b))
+	return fallback + flying
+
+
+## How big a loop fits at a spot. Remembered: the meadow doesn't change.
+func room_to_fly(spot: Vector2) -> float:
+	if not loop_size_at.has(spot):
+		loop_size_at[spot] = LetterFlight.fitted_loop(spot, places_to_keep_clear).size
+	return loop_size_at[spot]
+
+
+func spots_away_from_the_blob(all_spots: Array[Vector2] = FREE_SPOTS) -> Array[Vector2]:
 	var spots: Array[Vector2] = []
-	for spot in FREE_SPOTS:
+	for spot in all_spots:
 		var is_near_the_blob: bool = blob_to_keep_clear_of != null \
 			and spot.distance_to(blob_to_keep_clear_of.position) < CLEAR_DISTANCE_FROM_BLOB
 		if not is_near_the_blob:
