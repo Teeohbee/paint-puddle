@@ -5,16 +5,19 @@ extends Node2D
 ## face - so the hours of the line go round the clock (the way Year 1 builds
 ## a clock from a number line). Then the hour hand ticks from 12 round to 7 in
 ## the morning.
-## About 3 seconds; any button skips straight to the end.
+## About 12 seconds, slow enough to follow each number round; any button
+## skips straight to the end.
 ##
 ## Drawn round the clock's centre, over the face, which stays hidden until the
 ## line has curled.
 
 signal finished
 
-const SECONDS_TO_SHOW_THE_LINE: float = 0.4
-const SECONDS_TO_CURL: float = 1.3
-const SECONDS_PER_TICK: float = 0.17
+const SECONDS_TO_SHOW_THE_LINE: float = 1.0
+## The straight line sits still for a moment, so it's seen as a line first.
+const SECONDS_TO_HOLD_THE_LINE: float = 1.0
+const SECONDS_TO_CURL: float = 6.0
+const SECONDS_PER_TICK: float = 0.5
 const LINE_Y: float = 250.0
 const LINE_HALF_WIDTH: float = 420.0
 ## Each number's hop, as a share of the whole curl; the next one sets off this much later.
@@ -42,7 +45,7 @@ func play() -> void:
 	clock_face.jump_to(0)
 	sequence = create_tween()
 	sequence.tween_property(self, "line_opacity", 1.0, SECONDS_TO_SHOW_THE_LINE)
-	sequence.tween_property(self, "curl", 1.0, SECONDS_TO_CURL)
+	sequence.tween_property(self, "curl", 1.0, SECONDS_TO_CURL).set_delay(SECONDS_TO_HOLD_THE_LINE)
 	sequence.tween_callback(show_the_face)
 	for hour in range(1, STARTING_HOUR + 1):
 		sequence.tween_callback(tick_to.bind(hour)).set_delay(SECONDS_PER_TICK)

@@ -1,6 +1,6 @@
 extends GameSuite
 # Play with the clock: no cards and no wrong, just winding the day on and watching the house. Every
-# time it opens, a short intro curls a 0-12 number line into the clock face and the hour hand ticks
+# time it opens, a slow intro curls a 0-12 number line into the clock face and the hour hand ticks
 # round to the morning; any button skips it. It uses the climbing rung's hands and step.
 
 func open_free_play(skip_intro: bool = true) -> ClockMode:
@@ -50,8 +50,12 @@ func test_the_intro_plays_by_itself_and_ends_in_time() -> void:
 	var mode: ClockMode = await open_free_play(false)
 	check(mode.intro.is_playing(), "the intro plays on opening")
 	check(not mode.player_can_wind, "no winding while it plays")
-	await frames(roundi(60 * 3.5))
-	check(not mode.intro.is_playing(), "it's over within 3.5 s")
+	var intro_seconds: float = ClockNumberLineIntro.SECONDS_TO_SHOW_THE_LINE + ClockNumberLineIntro.SECONDS_TO_HOLD_THE_LINE \
+		+ ClockNumberLineIntro.SECONDS_TO_CURL + ClockNumberLineIntro.SECONDS_PER_TICK * (ClockNumberLineIntro.STARTING_HOUR + 1)
+	await frames(roundi(60 * (intro_seconds - 0.5)))
+	check(mode.intro.is_playing(), "still playing just before %.1f s, slow enough to follow" % intro_seconds)
+	await frames(60)
+	check(not mode.intro.is_playing(), "it's over by %.1f s" % (intro_seconds + 0.5))
 	check(mode.player_can_wind, "then winding is on")
 	check(mode.minutes_of_the_day() == 7 * 60, "at 7 in the morning: %s" % ClockTime.digital_text(mode.minutes_of_the_day()))
 
